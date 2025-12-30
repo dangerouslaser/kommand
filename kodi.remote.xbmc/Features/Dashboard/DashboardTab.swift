@@ -8,11 +8,15 @@ import SwiftUI
 struct DashboardTab: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = DashboardViewModel()
+    @State private var searchText = ""
 
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.isInitialLoad && viewModel.isLoadingInProgress && viewModel.isLoadingRecent {
+                if !searchText.isEmpty {
+                    // Search Results
+                    searchResultsView
+                } else if viewModel.isInitialLoad && viewModel.isLoadingInProgress && viewModel.isLoadingRecent {
                     ProgressView("Loading...")
                 } else if !viewModel.hasContinueWatching && !viewModel.hasRecentlyAdded {
                     ContentUnavailableView {
@@ -43,8 +47,18 @@ struct DashboardTab: View {
                 }
             }
             .navigationTitle("Home")
+            .searchable(text: $searchText, prompt: "Search movies & shows")
+            .onChange(of: searchText) { _, newValue in
+                Task {
+                    try? await Task.sleep(for: .milliseconds(300)) // Debounce
+                    await viewModel.search(query: newValue)
+                }
+            }
             .navigationDestination(for: Movie.self) { movie in
                 DashboardMovieDetailWrapper(movie: movie)
+            }
+            .navigationDestination(for: TVShow.self) { show in
+                DashboardTVShowDetailWrapper(show: show)
             }
             .navigationDestination(for: RecentShowInfo.self) { showInfo in
                 DashboardShowDetailWrapper(showInfo: showInfo)
@@ -59,6 +73,65 @@ struct DashboardTab: View {
         .task {
             viewModel.configure(appState: appState)
             await viewModel.loadAll()
+        }
+        .onChange(of: appState.currentHost?.id) { _, _ in
+            // Host changed - reconfigure client and reload
+            viewModel.configure(appState: appState)
+            Task {
+                await viewModel.refresh()
+            }
+        }
+    }
+
+    // MARK: - Search Results
+
+    private var searchResultsView: some View {
+        Group {
+            if viewModel.isSearching {
+                ProgressView("Searching...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if !viewModel.hasSearchResults {
+                ContentUnavailableView.search(text: searchText)
+            } else {
+                List {
+                    // Live TV Section
+                    if !viewModel.searchChannels.isEmpty {
+                        Section("Live TV") {
+                            ForEach(viewModel.searchChannels) { channel in
+                                Button {
+                                    Task { await viewModel.playChannel(channel) }
+                                } label: {
+                                    SearchChannelRow(channel: channel, host: appState.currentHost)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
+                    // Movies Section
+                    if !viewModel.searchMovies.isEmpty {
+                        Section("Movies") {
+                            ForEach(viewModel.searchMovies) { movie in
+                                NavigationLink(value: movie) {
+                                    SearchMovieRow(movie: movie, host: appState.currentHost)
+                                }
+                            }
+                        }
+                    }
+
+                    // TV Shows Section
+                    if !viewModel.searchTVShows.isEmpty {
+                        Section("TV Shows") {
+                            ForEach(viewModel.searchTVShows) { show in
+                                NavigationLink(value: show) {
+                                    SearchTVShowRow(show: show, host: appState.currentHost)
+                                }
+                            }
+                        }
+                    }
+                }
+                .listStyle(.plain)
+            }
         }
     }
 
@@ -80,6 +153,7 @@ struct DashboardTab: View {
                                 title: movie.title,
                                 subtitle: movie.formattedRuntime,
                                 artworkPath: movie.fanartPath ?? movie.posterPath,
+                                clearlogoPath: movie.clearlogoPath,
                                 progress: movie.resume?.progress ?? 0,
                                 host: appState.currentHost
                             )
@@ -94,6 +168,7 @@ struct DashboardTab: View {
                                 title: episode.showtitle ?? episode.title,
                                 subtitle: "\(episode.episodeNumber) - \(episode.title)",
                                 artworkPath: episode.fanart ?? episode.thumbnail,
+                                clearlogoPath: nil,
                                 progress: episode.resume?.progress ?? 0,
                                 host: appState.currentHost
                             )
@@ -185,12 +260,13 @@ struct ContinueWatchingCardView: View {
     let title: String
     let subtitle: String?
     let artworkPath: String?
+    let clearlogoPath: String?
     let progress: Double
     let host: KodiHost?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ZStack(alignment: .bottomLeading) {
+            ZStack {
                 // Background artwork
                 Color.clear
                     .aspectRatio(16/9, contentMode: .fit)
@@ -203,18 +279,29 @@ struct ContinueWatchingCardView: View {
 
                 // Gradient overlay
                 LinearGradient(
-                    colors: [.clear, .black.opacity(0.7)],
+                    colors: [.black.opacity(0.3), .black.opacity(0.8)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                // Title and progress
+                // Clearlogo centered (vertically and horizontally)
+                if let clearlogoPath = clearlogoPath {
+                    AsyncArtworkImage(path: clearlogoPath, host: host)
+                        .frame(height: 50)
+                        .frame(maxWidth: 200)
+                }
+
+                // Subtitle and progress at bottom
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
+                    Spacer()
+
+                    if clearlogoPath == nil {
+                        Text(title)
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                    }
 
                     if let subtitle = subtitle {
                         Text(subtitle)
@@ -227,20 +314,7 @@ struct ContinueWatchingCardView: View {
                         .tint(.white)
                 }
                 .padding(12)
-
-                // Play button overlay
-                HStack {
-                    Spacer()
-                    VStack {
-                        Spacer()
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(.white)
-                            .shadow(radius: 4)
-                        Spacer()
-                    }
-                    Spacer()
-                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -305,6 +379,7 @@ struct RecentShowCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topTrailing) {
+                // Background artwork
                 Color.clear
                     .aspectRatio(16/9, contentMode: .fit)
                     .frame(width: 200)
@@ -539,6 +614,184 @@ struct DashboardEpisodeDetailWrapper: View {
         .task {
             viewModel.configure(appState: appState)
         }
+    }
+}
+
+// MARK: - Search Row Views
+
+struct SearchMovieRow: View {
+    let movie: Movie
+    let host: KodiHost?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            AsyncArtworkImage(path: movie.posterPath, host: host)
+                .frame(width: 50, height: 75)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(movie.title)
+                    .font(.headline)
+                    .lineLimit(2)
+
+                HStack(spacing: 8) {
+                    if let year = movie.year {
+                        Text(String(year))
+                    }
+                    if let runtime = movie.formattedRuntime {
+                        Text("•")
+                        Text(runtime)
+                    }
+                    if let rating = movie.formattedRating {
+                        Text("•")
+                        HStack(spacing: 2) {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(.yellow)
+                            Text(rating)
+                        }
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if movie.isWatched {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct SearchTVShowRow: View {
+    let show: TVShow
+    let host: KodiHost?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            AsyncArtworkImage(path: show.posterPath, host: host)
+                .frame(width: 50, height: 75)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(show.title)
+                    .font(.headline)
+                    .lineLimit(2)
+
+                HStack(spacing: 8) {
+                    if let year = show.year {
+                        Text(String(year))
+                    }
+                    if let seasons = show.season, seasons > 0 {
+                        Text("•")
+                        Text("\(seasons) Season\(seasons == 1 ? "" : "s")")
+                    }
+                    if let rating = show.formattedRating {
+                        Text("•")
+                        HStack(spacing: 2) {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(.yellow)
+                            Text(rating)
+                        }
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if show.isFullyWatched {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct SearchChannelRow: View {
+    let channel: PVRChannel
+    let host: KodiHost?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Channel icon
+            AsyncArtworkImage(path: channel.thumbnail, host: host)
+                .frame(width: 50, height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay {
+                    if channel.thumbnail == nil {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.secondary.opacity(0.2))
+                            .overlay {
+                                Image(systemName: "tv")
+                                    .foregroundStyle(.secondary)
+                            }
+                    }
+                }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    if let number = channel.channelNumber {
+                        Text(number)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 4))
+                    }
+                    Text(channel.label)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
+
+                // Now playing
+                if let nowPlaying = channel.broadcastnow {
+                    Text(nowPlaying.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    if let timeRange = nowPlaying.formattedTimeRange {
+                        Text(timeRange)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            // Recording indicator
+            if channel.isrecording == true {
+                Image(systemName: "record.circle.fill")
+                    .foregroundStyle(.red)
+            }
+
+            Image(systemName: "play.fill")
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - TV Show Detail Wrapper (for search results)
+
+struct DashboardTVShowDetailWrapper: View {
+    let show: TVShow
+    @Environment(AppState.self) private var appState
+    @State private var viewModel = TVShowsViewModel()
+    @State private var libraryState = LibraryState()
+
+    var body: some View {
+        TVShowDetailView(show: show, viewModel: viewModel)
+            .task {
+                viewModel.configure(appState: appState, libraryState: libraryState)
+            }
     }
 }
 

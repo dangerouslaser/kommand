@@ -18,7 +18,7 @@ struct QuickActionsBar: View {
             Divider().frame(height: 24)
             QuickActionButton(icon: "arrow.backward", label: "Back", action: onBack)
             Divider().frame(height: 24)
-            QuickActionButton(icon: "keyboard", label: "Text", action: onKeyboard)
+            QuickActionButton(icon: "keyboard", label: "Keyboard", action: onKeyboard)
             Divider().frame(height: 24)
             QuickActionButton(icon: "info.circle", label: "Info", action: onInfo)
             Divider().frame(height: 24)

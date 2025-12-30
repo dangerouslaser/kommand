@@ -11,7 +11,7 @@ struct EditHostView: View {
 
     let host: KodiHost
 
-    @State private var displayName: String
+    @State private var name: String
     @State private var address: String
     @State private var httpPort: String
     @State private var tcpPort: String
@@ -21,7 +21,7 @@ struct EditHostView: View {
 
     init(host: KodiHost) {
         self.host = host
-        _displayName = State(initialValue: host.displayName)
+        _name = State(initialValue: host.name)
         _address = State(initialValue: host.address)
         _httpPort = State(initialValue: String(host.httpPort))
         _tcpPort = State(initialValue: String(host.tcpPort))
@@ -31,14 +31,14 @@ struct EditHostView: View {
     }
 
     var isValid: Bool {
-        !displayName.isEmpty && !address.isEmpty && Int(httpPort) != nil
+        !name.isEmpty && !address.isEmpty && Int(httpPort) != nil
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Host Information") {
-                    TextField("Display Name", text: $displayName)
+                    TextField("Display Name", text: $name)
                         .textContentType(.name)
                         .autocorrectionDisabled()
 
@@ -108,7 +108,7 @@ struct EditHostView: View {
         guard let port = Int(httpPort) else { return }
 
         var updatedHost = host
-        updatedHost.displayName = displayName
+        updatedHost.name = name
         updatedHost.address = address
         updatedHost.httpPort = port
         updatedHost.tcpPort = Int(tcpPort) ?? 9090

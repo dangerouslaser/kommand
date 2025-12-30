@@ -21,7 +21,7 @@ struct RecentShowInfo: Identifiable, Hashable {
 @Observable
 final class DashboardViewModel {
     private var appState: AppState?
-    private let client = KodiClient()
+    private var client = KodiClient()
 
     // Continue Watching
     var inProgressMovies: [Movie] = []
@@ -30,6 +30,12 @@ final class DashboardViewModel {
     // Recently Added
     var recentMovies: [Movie] = []
     var recentEpisodes: [Episode] = []
+
+    // Search Results
+    var searchMovies: [Movie] = []
+    var searchTVShows: [TVShow] = []
+    var searchChannels: [PVRChannel] = []
+    var isSearching = false
 
     // Loading states
     var isLoadingInProgress = false
@@ -103,10 +109,13 @@ final class DashboardViewModel {
 
             let (moviesResponse, episodesResponse) = try await (moviesTask, episodesTask)
 
+            // Filter to only items with actual resume points
+            let movies = (moviesResponse.movies ?? []).filter { $0.hasResume }
+            let episodes = (episodesResponse.episodes ?? []).filter { $0.hasResume }
+
             await MainActor.run {
-                // Filter to only items with actual resume points
-                inProgressMovies = (moviesResponse.movies ?? []).filter { $0.hasResume }
-                inProgressEpisodes = (episodesResponse.episodes ?? []).filter { $0.hasResume }
+                inProgressMovies = movies
+                inProgressEpisodes = episodes
                 isLoadingInProgress = false
             }
         } catch {
@@ -130,9 +139,11 @@ final class DashboardViewModel {
 
             let (moviesResponse, episodesResponse) = try await (moviesTask, episodesTask)
 
+            let episodes = episodesResponse.episodes ?? []
+
             await MainActor.run {
                 recentMovies = moviesResponse.movies ?? []
-                recentEpisodes = episodesResponse.episodes ?? []
+                recentEpisodes = episodes
                 isLoadingRecent = false
             }
         } catch {
@@ -169,6 +180,76 @@ final class DashboardViewModel {
 
     func refresh() async {
         await loadAll()
+    }
+
+    // MARK: - Search
+
+    func search(query: String) async {
+        guard !query.isEmpty else {
+            await MainActor.run {
+                searchMovies = []
+                searchTVShows = []
+                searchChannels = []
+                isSearching = false
+            }
+            return
+        }
+
+        await MainActor.run {
+            isSearching = true
+        }
+
+        do {
+            async let moviesTask = client.searchMovies(query: query)
+            async let showsTask = client.searchTVShows(query: query)
+            async let channelsTask = client.getAllTVChannels()
+
+            let (moviesResponse, showsResponse, channelsResponse) = try await (moviesTask, showsTask, channelsTask)
+
+            // Filter channels client-side by name
+            let queryLower = query.lowercased()
+            let filteredChannels = (channelsResponse.channels ?? []).filter { channel in
+                channel.label.lowercased().contains(queryLower) ||
+                channel.broadcastnow?.title.lowercased().contains(queryLower) == true
+            }
+
+            await MainActor.run {
+                searchMovies = moviesResponse.movies ?? []
+                searchTVShows = showsResponse.tvshows ?? []
+                searchChannels = filteredChannels
+                isSearching = false
+            }
+        } catch {
+            await MainActor.run {
+                searchMovies = []
+                searchTVShows = []
+                searchChannels = []
+                isSearching = false
+            }
+        }
+    }
+
+    func clearSearch() {
+        searchMovies = []
+        searchTVShows = []
+        searchChannels = []
+        isSearching = false
+    }
+
+    var hasSearchResults: Bool {
+        !searchMovies.isEmpty || !searchTVShows.isEmpty || !searchChannels.isEmpty
+    }
+
+    // MARK: - Play Channel
+
+    func playChannel(_ channel: PVRChannel) async {
+        do {
+            try await client.playChannel(channelId: channel.channelid)
+            triggerHaptic(.success)
+        } catch {
+            print("Failed to play channel: \(error)")
+            triggerHaptic(.error)
+        }
     }
 
     // MARK: - Helpers

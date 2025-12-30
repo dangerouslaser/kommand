@@ -38,14 +38,9 @@ struct AsyncArtworkImage: View {
         }
 
         guard let url = host.imageURL(for: path) else {
-            print("❌ Failed to create image URL for path: \(path)")
+            print("Failed to create image URL for path: \(path)")
             return
         }
-
-        // Debug: print the URL being requested
-        #if DEBUG
-        print("🖼️ Loading image: \(url.absoluteString)")
-        #endif
 
         isLoading = true
         loadFailed = false
@@ -67,12 +62,6 @@ struct AsyncArtworkImage: View {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             if let httpResponse = response as? HTTPURLResponse {
-                #if DEBUG
-                if httpResponse.statusCode != 200 {
-                    print("❌ Image load failed with status: \(httpResponse.statusCode) for \(url.absoluteString)")
-                }
-                #endif
-
                 guard httpResponse.statusCode == 200 else {
                     await MainActor.run {
                         isLoading = false
@@ -88,18 +77,12 @@ struct AsyncArtworkImage: View {
                     isLoading = false
                 }
             } else {
-                #if DEBUG
-                print("❌ Failed to decode image data for \(url.absoluteString)")
-                #endif
                 await MainActor.run {
                     isLoading = false
                     loadFailed = true
                 }
             }
         } catch {
-            #if DEBUG
-            print("❌ Image load error: \(error.localizedDescription) for \(url.absoluteString)")
-            #endif
             await MainActor.run {
                 isLoading = false
                 loadFailed = true

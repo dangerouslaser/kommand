@@ -10,7 +10,7 @@ import SwiftUI
 final class TVShowsViewModel {
     private var appState: AppState?
     private var libraryState: LibraryState?
-    private let client = KodiClient()
+    private var client = KodiClient()
 
     // Cached data for detail views
     var seasons: [Season] = []
@@ -43,18 +43,18 @@ final class TVShowsViewModel {
         }
 
         do {
-            let sortField = await MainActor.run { libraryState.tvShowSortField.rawValue }
+            let sortField = await MainActor.run { libraryState.tvShowSortField }
             let sortAscending = await MainActor.run { libraryState.tvShowSortAscending }
 
-            let response = try await client.getTVShows(
-                sort: (field: sortField, ascending: sortAscending),
+            let result = try await client.getTVShows(
+                sort: (field: sortField.rawValue, ascending: sortAscending),
                 start: 0,
                 limit: 1000
             )
 
             await MainActor.run {
-                libraryState.tvShows = response.tvshows ?? []
-                libraryState.tvShowsTotalCount = response.limits?.total ?? libraryState.tvShows.count
+                libraryState.tvShows = result.tvshows ?? []
+                libraryState.tvShowsTotalCount = result.limits?.total ?? 0
                 libraryState.lastTVShowsSync = Date()
                 libraryState.isLoadingTVShows = false
             }

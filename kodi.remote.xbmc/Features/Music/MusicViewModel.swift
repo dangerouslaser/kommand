@@ -9,7 +9,7 @@ import SwiftUI
 @Observable
 final class MusicViewModel {
     private var appState: AppState?
-    private let client = KodiClient()
+    private var client = KodiClient()
 
     var artists: [Artist] = []
     var albums: [Album] = []
@@ -82,9 +82,13 @@ final class MusicViewModel {
         await MainActor.run { isLoading = true }
 
         do {
-            let response = try await client.getArtists()
+            let result = try await client.getArtists(
+                sort: (field: "artist", ascending: true),
+                start: 0,
+                limit: 1000
+            )
             await MainActor.run {
-                artists = response.artists ?? []
+                artists = result.artists ?? []
                 loadedSections.insert(.artists)
                 isLoading = false
             }
@@ -102,9 +106,14 @@ final class MusicViewModel {
         await MainActor.run { isLoading = true }
 
         do {
-            let response = try await client.getAlbums()
+            let result = try await client.getAlbums(
+                artistId: nil,
+                sort: (field: "title", ascending: true),
+                start: 0,
+                limit: 1000
+            )
             await MainActor.run {
-                albums = response.albums ?? []
+                albums = result.albums ?? []
                 loadedSections.insert(.albums)
                 isLoading = false
             }
@@ -118,8 +127,13 @@ final class MusicViewModel {
 
     func loadAlbumsForArtist(_ artist: Artist) async -> [Album] {
         do {
-            let response = try await client.getAlbums(artistId: artist.artistid)
-            return response.albums ?? []
+            let result = try await client.getAlbums(
+                artistId: artist.artistid,
+                sort: (field: "year", ascending: false),
+                start: 0,
+                limit: 100
+            )
+            return result.albums ?? []
         } catch {
             print("Error loading albums for artist: \(error)")
             return []
@@ -133,7 +147,11 @@ final class MusicViewModel {
         }
 
         do {
-            let response = try await client.getSongs(albumId: album.albumid)
+            let response = try await client.getSongs(
+                albumId: album.albumid,
+                start: 0,
+                limit: 500
+            )
             await MainActor.run {
                 songs = response.songs ?? []
                 isLoading = false

@@ -10,7 +10,7 @@ import SwiftUI
 final class MoviesViewModel {
     private var appState: AppState?
     private var libraryState: LibraryState?
-    private let client = KodiClient()
+    private var client = KodiClient()
 
     func configure(appState: AppState, libraryState: LibraryState) {
         self.appState = appState
@@ -42,18 +42,18 @@ final class MoviesViewModel {
         }
 
         do {
-            let sortField = await MainActor.run { libraryState.movieSortField.rawValue }
+            let sortField = await MainActor.run { libraryState.movieSortField }
             let sortAscending = await MainActor.run { libraryState.movieSortAscending }
 
-            let response = try await client.getMovies(
-                sort: (field: sortField, ascending: sortAscending),
+            let result = try await client.getMovies(
+                sort: (field: sortField.rawValue, ascending: sortAscending),
                 start: 0,
                 limit: 1000
             )
 
             await MainActor.run {
-                libraryState.movies = response.movies ?? []
-                libraryState.moviesTotalCount = response.limits?.total ?? libraryState.movies.count
+                libraryState.movies = result.movies ?? []
+                libraryState.moviesTotalCount = result.limits?.total ?? 0
                 libraryState.lastMoviesSync = Date()
                 libraryState.isLoadingMovies = false
             }
@@ -65,21 +65,16 @@ final class MoviesViewModel {
         }
     }
 
-    func loadMoviesByActor(_ actorName: String, host: KodiHost?) async {
-        // Ensure client is configured
-        if let host = host {
-            await client.configure(with: host)
-        }
-
+    func loadMoviesByActor(_ actorName: String) async {
         await MainActor.run {
             isLoadingActorMovies = true
             actorMovies = []
         }
 
         do {
-            let response = try await client.getMoviesByActor(actorName: actorName)
+            let result = try await client.getMoviesByActor(actorName: actorName)
             await MainActor.run {
-                actorMovies = response.movies ?? []
+                actorMovies = result.movies ?? []
                 isLoadingActorMovies = false
             }
         } catch {

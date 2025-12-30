@@ -123,6 +123,7 @@ struct ContentView: View {
             let isCoreELEC = await client.detectCoreELEC()
             await MainActor.run {
                 appState.isCoreELEC = isCoreELEC
+                appState.serverCapabilities.isCoreELEC = isCoreELEC
             }
         } catch {
             await MainActor.run {
@@ -165,15 +166,18 @@ struct OnboardingView: View {
                     Button {
                         showingAddHost = true
                     } label: {
-                        Text("Add Kodi Host")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(.tint, in: RoundedRectangle(cornerRadius: 12))
-                            .foregroundStyle(.white)
+                        HStack {
+                            Image(systemName: "play.tv")
+                            Text("Add Kodi Host")
+                        }
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.blue, in: RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(.white)
                     }
 
-                    Text("Make sure Kodi is running and JSON-RPC is enabled in Settings → Services → Control")
+                    Text("Make sure Kodi is running and the web server is enabled")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

@@ -337,7 +337,7 @@ struct ActorFilmographyView: View {
         .navigationTitle(actor.name)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await viewModel.loadMoviesByActor(actor.name, host: appState.currentHost)
+            await viewModel.loadMoviesByActor(actor.name)
         }
     }
 

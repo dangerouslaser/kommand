@@ -80,6 +80,15 @@ struct MoviesTab: View {
             viewModel.configure(appState: appState, libraryState: libraryState)
             await viewModel.loadMovies()
         }
+        .onChange(of: appState.currentHost?.id) { _, _ in
+            // Host changed - reconfigure client and reload
+            libraryState.movies = []
+            libraryState.moviesError = nil
+            viewModel.configure(appState: appState, libraryState: libraryState)
+            Task {
+                await viewModel.loadMovies(forceRefresh: true)
+            }
+        }
     }
 
     private var movieGrid: some View {

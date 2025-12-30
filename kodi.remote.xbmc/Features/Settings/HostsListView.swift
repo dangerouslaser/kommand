@@ -16,7 +16,7 @@ struct HostsListView: View {
                 ContentUnavailableView {
                     Label("No Hosts", systemImage: "server.rack")
                 } description: {
-                    Text("Add a Kodi host to get started")
+                    Text("Add a Kodi server to get started")
                 } actions: {
                     Button("Add Host") {
                         showingAddHost = true
@@ -72,10 +72,17 @@ struct HostRow: View {
     let isSelected: Bool
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Server type icon
+            Image(systemName: "play.tv")
+                .font(.title2)
+                .foregroundStyle(.blue)
+                .frame(width: 32)
+
             VStack(alignment: .leading, spacing: 4) {
-                Text(host.displayName)
+                Text(host.name)
                     .font(.headline)
+
                 Text("\(host.address):\(host.httpPort)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
