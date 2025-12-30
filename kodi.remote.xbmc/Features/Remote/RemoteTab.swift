@@ -9,8 +9,10 @@ struct RemoteTab: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = RemoteViewModel()
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
+    @AppStorage("useVolumeButtons") private var useVolumeButtons = true
     @State private var showingTextInput = false
     @State private var textInput = ""
+    @State private var volumeButtonHandler = VolumeButtonHandler()
 
     var body: some View {
         NavigationStack {
@@ -51,7 +53,17 @@ struct RemoteTab: View {
                     )
                     .padding(.horizontal)
 
-                    // Volume Slider (optional)
+                    // CEC Volume Control (for CoreELEC - controls TV/AVR)
+                    if appState.isCoreELEC {
+                        CECVolumeControl(
+                            onVolumeUp: viewModel.cecVolumeUp,
+                            onVolumeDown: viewModel.cecVolumeDown,
+                            onMute: viewModel.cecMute
+                        )
+                        .padding(.horizontal)
+                    }
+
+                    // Kodi Volume Slider (optional)
                     if showVolumeSlider {
                         VolumeSlider(
                             volume: Binding(
@@ -68,13 +80,34 @@ struct RemoteTab: View {
                 }
                 .padding(.top)
             }
-            .navigationTitle("Remote")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ConnectionStatusBadge(state: appState.connectionState)
+            .background {
+                // Hidden volume view to suppress system volume HUD
+                if appState.isCoreELEC && useVolumeButtons {
+                    HiddenVolumeView()
+                        .frame(width: 0, height: 0)
                 }
             }
-            .alert("Send Text to Kodi", isPresented: $showingTextInput) {
+            .toolbar {
+                if appState.isCoreELEC {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Button {
+                                viewModel.cecWakeUp()
+                            } label: {
+                                Label("Wake Up TV", systemImage: "power.circle")
+                            }
+                            Button(role: .destructive) {
+                                viewModel.cecStandby()
+                            } label: {
+                                Label("Turn Off TV & AVR", systemImage: "power")
+                            }
+                        } label: {
+                            Image(systemName: "power")
+                        }
+                    }
+                }
+            }
+            .alert("Send Text", isPresented: $showingTextInput) {
                 TextField("Enter text", text: $textInput)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -88,13 +121,38 @@ struct RemoteTab: View {
                     textInput = ""
                 }
             } message: {
-                Text("Text will be sent to the active input field in Kodi")
+                Text("Text will be sent to the active input field")
             }
         }
         .task {
             viewModel.configure(appState: appState)
             await viewModel.startPolling()
         }
+        .onAppear {
+            setupVolumeButtonHandler()
+        }
+        .onDisappear {
+            volumeButtonHandler.stop()
+        }
+        .onChange(of: appState.isCoreELEC) { _, isCoreELEC in
+            if isCoreELEC && useVolumeButtons {
+                setupVolumeButtonHandler()
+            } else {
+                volumeButtonHandler.stop()
+            }
+        }
+    }
+
+    private func setupVolumeButtonHandler() {
+        guard appState.isCoreELEC && useVolumeButtons else { return }
+
+        volumeButtonHandler.onVolumeUp = { [viewModel] in
+            viewModel.cecVolumeUp()
+        }
+        volumeButtonHandler.onVolumeDown = { [viewModel] in
+            viewModel.cecVolumeDown()
+        }
+        volumeButtonHandler.start()
     }
 }
 
@@ -102,18 +160,18 @@ struct RemoteTab: View {
 
 struct NothingPlayingCard: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "play.tv")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
+        HStack(spacing: 10) {
+            Image(systemName: "play.slash")
+                .font(.body)
+                .foregroundStyle(.tertiary)
 
             Text("Nothing Playing")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+                .font(.subheadline)
+                .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 120)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .padding(.vertical, 12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
     }
 }
 

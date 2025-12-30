@@ -9,7 +9,7 @@ struct AddHostView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
 
-    @State private var displayName = ""
+    @State private var name = ""
     @State private var address = ""
     @State private var httpPort = "8080"
     @State private var tcpPort = "9090"
@@ -26,14 +26,14 @@ struct AddHostView: View {
     }
 
     var isValid: Bool {
-        !displayName.isEmpty && !address.isEmpty && Int(httpPort) != nil
+        !name.isEmpty && !address.isEmpty && Int(httpPort) != nil
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Host Information") {
-                    TextField("Display Name", text: $displayName)
+                    TextField("Display Name", text: $name)
                         .textContentType(.name)
                         .autocorrectionDisabled()
 
@@ -132,7 +132,7 @@ struct AddHostView: View {
         testResult = nil
 
         let host = KodiHost(
-            displayName: displayName,
+            name: name,
             address: address,
             httpPort: port,
             tcpPort: Int(tcpPort) ?? 9090,
@@ -162,7 +162,7 @@ struct AddHostView: View {
         guard let port = Int(httpPort) else { return }
 
         let host = KodiHost(
-            displayName: displayName,
+            name: name,
             address: address,
             httpPort: port,
             tcpPort: Int(tcpPort) ?? 9090,

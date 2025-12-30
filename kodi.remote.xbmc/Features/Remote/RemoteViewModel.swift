@@ -9,7 +9,7 @@ import SwiftUI
 @Observable
 final class RemoteViewModel {
     private var appState: AppState?
-    private let client = KodiClient()
+    private var client = KodiClient()
     private var pollingTask: Task<Void, Never>?
     private var isPolling = false
 
@@ -18,6 +18,12 @@ final class RemoteViewModel {
 
     func configure(appState: AppState) {
         self.appState = appState
+
+        if let host = appState.currentHost {
+            Task {
+                await client.configure(with: host)
+            }
+        }
     }
 
     // MARK: - Polling
@@ -26,12 +32,13 @@ final class RemoteViewModel {
         guard !isPolling else { return }
         isPolling = true
 
-        // Configure client with current host
+        // Ensure client is configured
         if let host = appState?.currentHost {
             await client.configure(with: host)
-            await MainActor.run {
-                appState?.connectionState = .connecting
-            }
+        }
+
+        await MainActor.run {
+            appState?.connectionState = .connecting
         }
 
         // Test connection first
@@ -64,8 +71,10 @@ final class RemoteViewModel {
 
     private func checkCoreELEC() async {
         let isCoreELEC = await client.detectCoreELEC()
+
         await MainActor.run {
             appState?.isCoreELEC = isCoreELEC
+            appState?.serverCapabilities.isCoreELEC = isCoreELEC
         }
     }
 
@@ -80,54 +89,40 @@ final class RemoteViewModel {
 
         do {
             let players = try await client.getActivePlayers()
+            let playerId = players.first?.playerid
 
             await MainActor.run {
-                appState?.activePlayerId = players.first?.playerid
+                appState?.activePlayerId = playerId
             }
 
-            guard let playerId = players.first?.playerid else {
+            guard let playerId = playerId else {
                 await MainActor.run {
                     appState?.nowPlaying = nil
                 }
                 return
             }
 
-            async let itemTask = client.getPlayerItem(playerId: playerId)
-            async let propsTask = client.getPlayerProperties(playerId: playerId)
+            let itemResponse = try await client.getPlayerItem(playerId: playerId)
+            let properties = try await client.getPlayerProperties(playerId: playerId)
 
-            let (itemResponse, props) = try await (itemTask, propsTask)
             let item = itemResponse.item
-
+            let mediaType = MediaType(rawValue: item.type ?? "unknown") ?? .unknown
             let nowPlaying = NowPlayingItem(
-                type: MediaType(from: item.type),
-                title: item.title ?? item.label ?? "Unknown",
-                subtitle: buildSubtitle(from: item),
+                type: mediaType,
+                title: item.title ?? "Unknown",
+                subtitle: item.showtitle ?? item.artist?.first,
                 artworkPath: item.thumbnail,
                 fanartPath: item.fanart,
-                duration: props.totaltime?.totalSeconds ?? 0,
-                position: props.time?.totalSeconds ?? 0,
-                speed: props.speed ?? 0,
-                audioStreams: (props.audiostreams ?? []).enumerated().map { index, stream in
-                    AudioStream(
-                        id: stream.index ?? index,
-                        name: stream.name ?? "",
-                        language: stream.language,
-                        codec: stream.codec,
-                        channels: stream.channels
-                    )
-                },
-                subtitles: (props.subtitles ?? []).enumerated().map { index, sub in
-                    Subtitle(
-                        id: sub.index ?? index,
-                        name: sub.name ?? "",
-                        language: sub.language
-                    )
-                },
-                currentAudioStreamIndex: props.currentaudiostream?.index ?? 0,
-                currentSubtitleIndex: props.currentsubtitle?.index ?? -1,
-                videoCodec: props.currentvideostream?.codec,
-                audioCodec: props.currentaudiostream?.codec,
-                hdrType: props.currentvideostream?.hdrtype
+                duration: properties.totaltime?.totalSeconds ?? 0,
+                position: properties.time?.totalSeconds ?? 0,
+                speed: properties.speed ?? 0,
+                audioStreams: [],
+                subtitles: [],
+                currentAudioStreamIndex: properties.currentaudiostream?.index ?? 0,
+                currentSubtitleIndex: properties.currentsubtitle?.index ?? -1,
+                videoCodec: nil,
+                audioCodec: nil,
+                hdrType: nil
             )
 
             await MainActor.run {
@@ -136,7 +131,7 @@ final class RemoteViewModel {
             }
         } catch {
             await MainActor.run {
-                if case .notConnected = error as? KodiError {
+                if case KodiError.notConnected = error {
                     appState?.connectionState = .disconnected
                 }
             }
@@ -145,38 +140,13 @@ final class RemoteViewModel {
 
     private func updateVolume() async {
         do {
-            let volume = try await client.getVolume()
+            let volumeInfo = try await client.getVolume()
             await MainActor.run {
-                appState?.volume = volume.volume
-                appState?.isMuted = volume.muted
+                appState?.volume = volumeInfo.volume
+                appState?.isMuted = volumeInfo.muted
             }
         } catch {
             // Ignore volume errors
-        }
-    }
-
-    private func buildSubtitle(from item: PlayerItemResponse.MediaItem) -> String? {
-        switch item.type {
-        case "episode":
-            if let show = item.showtitle, let season = item.season, let episode = item.episode {
-                return "\(show) S\(season)E\(episode)"
-            }
-            return item.showtitle
-        case "song":
-            if let artist = item.artist?.first {
-                if let album = item.album {
-                    return "\(artist) — \(album)"
-                }
-                return artist
-            }
-            return item.album
-        case "movie":
-            if let year = item.year {
-                return String(year)
-            }
-            return nil
-        default:
-            return nil
         }
     }
 
@@ -214,9 +184,9 @@ final class RemoteViewModel {
         Task {
             guard let playerId = appState?.activePlayerId else { return }
             do {
-                let result = try await client.playPause(playerId: playerId)
+                let response = try await client.playPause(playerId: playerId)
                 await MainActor.run {
-                    appState?.nowPlaying?.speed = result.speed
+                    appState?.nowPlaying?.speed = response.speed
                 }
             } catch {
                 print("Play/pause error: \(error)")
@@ -316,6 +286,70 @@ final class RemoteViewModel {
                 }
             } catch {
                 print("Mute error: \(error)")
+            }
+        }
+    }
+
+    // MARK: - CEC Volume Commands (for TV/AVR control)
+
+    func cecVolumeUp() {
+        triggerHaptic(.light)
+
+        Task {
+            do {
+                try await client.cecVolumeUp()
+            } catch {
+                print("CEC volume up error: \(error)")
+            }
+        }
+    }
+
+    func cecVolumeDown() {
+        triggerHaptic(.light)
+
+        Task {
+            do {
+                try await client.cecVolumeDown()
+            } catch {
+                print("CEC volume down error: \(error)")
+            }
+        }
+    }
+
+    func cecMute() {
+        triggerHaptic(.medium)
+
+        Task {
+            do {
+                try await client.cecMute()
+            } catch {
+                print("CEC mute error: \(error)")
+            }
+        }
+    }
+
+    // MARK: - CEC Power Commands
+
+    func cecStandby() {
+        triggerHaptic(.heavy)
+
+        Task {
+            do {
+                try await client.cecStandby()
+            } catch {
+                print("CEC standby error: \(error)")
+            }
+        }
+    }
+
+    func cecWakeUp() {
+        triggerHaptic(.medium)
+
+        Task {
+            do {
+                try await client.cecActivateSource()
+            } catch {
+                print("CEC wake error: \(error)")
             }
         }
     }

@@ -21,7 +21,7 @@ struct SettingsTab: View {
                                 Text("Kodi Hosts")
                                 Spacer()
                                 if let host = appState.currentHost {
-                                    Text(host.displayName)
+                                    Text(host.name)
                                         .foregroundStyle(.secondary)
                                 }
                             }

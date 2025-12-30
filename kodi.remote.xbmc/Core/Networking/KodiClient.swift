@@ -191,6 +191,45 @@ actor KodiClient {
         try await send(method: "Application.SetMute", params: ["mute": "toggle"])
     }
 
+    // MARK: - CEC Volume Control (for TV/AVR via HDMI-CEC)
+
+    /// Execute an action via Input.ExecuteAction - used for CEC volume passthrough
+    func executeAction(_ action: String) async throws {
+        let _: String = try await send(method: "Input.ExecuteAction", params: ["action": action])
+    }
+
+    /// Increase volume via CEC (sends to TV/AVR if CEC is configured)
+    func cecVolumeUp() async throws {
+        try await executeAction("volumeup")
+    }
+
+    /// Decrease volume via CEC (sends to TV/AVR if CEC is configured)
+    func cecVolumeDown() async throws {
+        try await executeAction("volumedown")
+    }
+
+    /// Toggle mute via CEC (sends to TV/AVR if CEC is configured)
+    func cecMute() async throws {
+        try await executeAction("mute")
+    }
+
+    // MARK: - CEC Power Control
+
+    /// Put TV/AVR to standby via CEC (does not affect the CoreELEC box)
+    func cecStandby() async throws {
+        try await executeAction("cecstandby")
+    }
+
+    /// Activate CEC source (wake TV and switch input to CoreELEC)
+    func cecActivateSource() async throws {
+        try await executeAction("cecactivatesource")
+    }
+
+    /// Toggle CEC device state
+    func cecToggleState() async throws {
+        try await executeAction("cectogglestate")
+    }
+
     // MARK: - System Commands
 
     func quit() async throws {
@@ -373,7 +412,7 @@ actor KodiClient {
         try await send(method: "VideoLibrary.GetTVShowDetails", params: [
             "tvshowid": tvShowId,
             "properties": ["title", "year", "rating", "plot", "genre", "studio", "cast",
-                          "thumbnail", "fanart", "episode", "watchedepisodes", "season",
+                          "thumbnail", "fanart", "art", "episode", "watchedepisodes", "season",
                           "playcount", "file", "imdbnumber", "premiered", "dateadded"]
         ])
     }
@@ -686,6 +725,51 @@ actor KodiClient {
         let _: String = try await send(method: "PVR.Record", params: [
             "record": "toggle",
             "channel": channelId
+        ])
+    }
+
+    // MARK: - Search
+
+    func searchMovies(query: String, limit: Int = 25) async throws -> MoviesResponse {
+        try await send(method: "VideoLibrary.GetMovies", params: [
+            "properties": ["title", "year", "runtime", "rating", "plot", "genre", "director",
+                          "writer", "studio", "tagline", "cast", "thumbnail", "fanart", "art",
+                          "playcount", "resume", "file", "trailer", "mpaa", "imdbnumber",
+                          "dateadded", "lastplayed", "streamdetails"],
+            "filter": ["field": "title", "operator": "contains", "value": query],
+            "sort": ["method": "title", "order": "ascending"],
+            "limits": ["start": 0, "end": limit]
+        ])
+    }
+
+    func searchTVShows(query: String, limit: Int = 25) async throws -> TVShowsResponse {
+        try await send(method: "VideoLibrary.GetTVShows", params: [
+            "properties": ["title", "year", "rating", "plot", "genre", "studio", "cast",
+                          "thumbnail", "fanart", "art", "episode", "watchedepisodes", "season",
+                          "playcount", "file", "imdbnumber", "premiered", "dateadded"],
+            "filter": ["field": "title", "operator": "contains", "value": query],
+            "sort": ["method": "title", "order": "ascending"],
+            "limits": ["start": 0, "end": limit]
+        ])
+    }
+
+    func searchEpisodes(query: String, limit: Int = 25) async throws -> EpisodesResponse {
+        try await send(method: "VideoLibrary.GetEpisodes", params: [
+            "properties": ["title", "episode", "season", "showtitle", "tvshowid", "runtime",
+                          "rating", "plot", "director", "writer", "thumbnail", "fanart",
+                          "playcount", "resume", "file", "firstaired", "dateadded", "streamdetails"],
+            "filter": ["field": "title", "operator": "contains", "value": query],
+            "sort": ["method": "title", "order": "ascending"],
+            "limits": ["start": 0, "end": limit]
+        ])
+    }
+
+    func getAllTVChannels() async throws -> PVRChannelsResponse {
+        // Use "alltv" to get all TV channels regardless of channel group
+        try await send(method: "PVR.GetChannels", params: [
+            "channelgroupid": "alltv",
+            "properties": ["channeltype", "thumbnail", "hidden", "locked", "channel",
+                          "broadcastnow", "broadcastnext", "isrecording"]
         ])
     }
 }

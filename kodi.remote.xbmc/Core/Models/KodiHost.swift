@@ -5,9 +5,9 @@
 
 import Foundation
 
-struct KodiHost: Identifiable, Codable, Hashable {
+struct KodiHost: Codable, Identifiable, Hashable {
     let id: UUID
-    var displayName: String
+    var name: String
     var address: String
     var httpPort: Int
     var tcpPort: Int
@@ -19,7 +19,7 @@ struct KodiHost: Identifiable, Codable, Hashable {
 
     init(
         id: UUID = UUID(),
-        displayName: String,
+        name: String,
         address: String,
         httpPort: Int = 8080,
         tcpPort: Int = 9090,
@@ -28,7 +28,7 @@ struct KodiHost: Identifiable, Codable, Hashable {
         isDefault: Bool = false
     ) {
         self.id = id
-        self.displayName = displayName
+        self.name = name
         self.address = address
         self.httpPort = httpPort
         self.tcpPort = tcpPort
@@ -72,7 +72,7 @@ struct KodiHost: Identifiable, Codable, Hashable {
 
 extension KodiHost {
     static let preview = KodiHost(
-        displayName: "Living Room Kodi",
+        name: "Living Room Kodi",
         address: "192.168.1.100",
         httpPort: 8080,
         tcpPort: 9090,

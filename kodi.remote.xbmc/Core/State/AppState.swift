@@ -42,6 +42,9 @@ final class AppState {
     var activePlayerId: Int?
     var isCoreELEC: Bool = false
 
+    // Server capabilities
+    var serverCapabilities: ServerCapabilities = ServerCapabilities()
+
     private let hostsKey = "saved_hosts"
 
     init() {
@@ -59,7 +62,11 @@ final class AppState {
            let decoded = try? JSONDecoder().decode([KodiHost].self, from: data) {
             hosts = decoded
             currentHost = hosts.first { $0.isDefault } ?? hosts.first
+            return
         }
+
+        hosts = []
+        currentHost = nil
     }
 
     func saveHosts() {
@@ -67,6 +74,8 @@ final class AppState {
             UserDefaults.standard.set(encoded, forKey: hostsKey)
         }
     }
+
+    // MARK: - Add Host
 
     func addHost(_ host: KodiHost) {
         var newHost = host
@@ -80,6 +89,8 @@ final class AppState {
         }
     }
 
+    // MARK: - Update Host
+
     func updateHost(_ host: KodiHost) {
         if let index = hosts.firstIndex(where: { $0.id == host.id }) {
             hosts[index] = host
@@ -90,13 +101,20 @@ final class AppState {
         }
     }
 
+    // MARK: - Delete Host
+
     func deleteHost(_ host: KodiHost) {
         hosts.removeAll { $0.id == host.id }
         if currentHost?.id == host.id {
             currentHost = hosts.first
         }
         saveHosts()
+
+        // Clean up credentials
+        KeychainHelper.deletePassword(for: host.id)
     }
+
+    // MARK: - Set Default
 
     func setDefaultHost(_ host: KodiHost) {
         for i in hosts.indices {
@@ -104,5 +122,21 @@ final class AppState {
         }
         currentHost = host
         saveHosts()
+
+        // Reset connection state when switching hosts
+        connectionState = .disconnected
+        nowPlaying = nil
+        activePlayerId = nil
+        isCoreELEC = false
+        serverCapabilities = ServerCapabilities()
     }
+}
+
+// MARK: - Server Capabilities
+
+struct ServerCapabilities {
+    var isCoreELEC: Bool = false
+    var supportsSuspend: Bool = false
+    var supportsDolbyVision: Bool = false
+    var supportsHDR10Plus: Bool = false
 }
