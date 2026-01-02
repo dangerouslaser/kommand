@@ -117,7 +117,7 @@ actor KodiClient {
         try await send(method: "Player.GetItem", params: [
             "playerid": playerId,
             "properties": ["title", "artist", "album", "showtitle", "season", "episode",
-                          "year", "runtime", "thumbnail", "fanart", "file"]
+                          "year", "runtime", "thumbnail", "fanart", "file", "art", "streamdetails"]
         ])
     }
 
@@ -213,23 +213,6 @@ actor KodiClient {
         try await executeAction("mute")
     }
 
-    // MARK: - CEC Power Control
-
-    /// Put TV/AVR to standby via CEC (does not affect the CoreELEC box)
-    func cecStandby() async throws {
-        try await executeAction("cecstandby")
-    }
-
-    /// Activate CEC source (wake TV and switch input to CoreELEC)
-    func cecActivateSource() async throws {
-        try await executeAction("cecactivatesource")
-    }
-
-    /// Toggle CEC device state
-    func cecToggleState() async throws {
-        try await executeAction("cectogglestate")
-    }
-
     // MARK: - System Commands
 
     func quit() async throws {
@@ -283,6 +266,26 @@ actor KodiClient {
     func getApplicationProperties() async throws -> ApplicationPropertiesResponse {
         try await send(method: "Application.GetProperties", params: [
             "properties": ["name", "version"]
+        ])
+    }
+
+    func getDolbyVisionInfo() async throws -> DolbyVisionInfoResponse {
+        try await send(method: "XBMC.GetInfoLabels", params: [
+            "labels": [
+                "Player.Process(video.dovi.profile)",
+                "Player.Process(video.dovi.el.type)",
+                "Player.Process(video.dovi.el.present)",
+                "Player.Process(video.dovi.bl.present)",
+                "Player.Process(video.dovi.bl.signal.compatibility)"
+            ]
+        ])
+    }
+
+    func getPlayerAudioInfo() async throws -> PlayerAudioInfoResponse {
+        try await send(method: "XBMC.GetInfoLabels", params: [
+            "labels": [
+                "VideoPlayer.AudioCodec"
+            ]
         ])
     }
 
@@ -826,6 +829,99 @@ struct SystemInfoResponse: Decodable {
     var friendlyName: String? { values["System.FriendlyName"] }
     var uptime: String? { values["System.Uptime"] }
     var totalUptime: String? { values["System.TotalUptime"] }
+}
+
+struct DolbyVisionInfoResponse: Decodable {
+    private let values: [String: String]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        values = try container.decode([String: String].self)
+    }
+
+    /// DV profile number (4, 5, 7, 8)
+    var profile: Int? {
+        guard let str = values["Player.Process(video.dovi.profile)"], !str.isEmpty else { return nil }
+        return Int(str)
+    }
+
+    /// Enhancement layer type: "minimum" (MEL), "full" (FEL), or "none"
+    var enhancementLayerType: String? {
+        let value = values["Player.Process(video.dovi.el.type)"]
+        return value?.isEmpty == false ? value : nil
+    }
+
+    /// Whether enhancement layer is present
+    var hasEnhancementLayer: Bool {
+        values["Player.Process(video.dovi.el.present)"]?.lowercased() == "true"
+    }
+
+    /// Whether base layer is present
+    var hasBaseLayer: Bool {
+        values["Player.Process(video.dovi.bl.present)"]?.lowercased() == "true"
+    }
+
+    /// Signal compatibility ID (determines profile extension like .1, .2, .4)
+    var signalCompatibility: Int? {
+        guard let str = values["Player.Process(video.dovi.bl.signal.compatibility)"], !str.isEmpty else { return nil }
+        return Int(str)
+    }
+
+    /// Returns formatted DV string like "P7 FEL" or "P8.1 MEL"
+    var formattedProfile: String? {
+        guard let profile = profile else { return nil }
+
+        var result = "P\(profile)"
+
+        // Add compatibility extension for profile 8
+        if profile == 8, let compat = signalCompatibility {
+            switch compat {
+            case 1: result += ".1"
+            case 2: result += ".2"
+            case 4: result += ".4"
+            case 6: result += ".6"
+            default: break
+            }
+        }
+
+        // Add enhancement layer type
+        if let elType = enhancementLayerType {
+            switch elType.lowercased() {
+            case "full": result += " FEL"
+            case "minimum": result += " MEL"
+            default: break
+            }
+        }
+
+        return result
+    }
+}
+
+struct PlayerAudioInfoResponse: Decodable {
+    private let values: [String: String]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        values = try container.decode([String: String].self)
+    }
+
+    /// Raw audio codec string (e.g., "truehd_atmos", "eac3_ddp_atmos", "truehd", "dts")
+    var audioCodec: String? {
+        let value = values["VideoPlayer.AudioCodec"]
+        return value?.isEmpty == false ? value : nil
+    }
+
+    /// Whether Atmos is active
+    var hasAtmos: Bool {
+        guard let codec = audioCodec?.lowercased() else { return false }
+        return codec.contains("atmos")
+    }
+
+    /// Whether DTS:X is active
+    var hasDTSX: Bool {
+        guard let codec = audioCodec?.lowercased() else { return false }
+        return codec.contains("dtshd_ma_x")
+    }
 }
 
 struct SettingValueResponse: Decodable {
