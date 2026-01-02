@@ -141,6 +141,12 @@ struct BehaviorSettingsView: View {
     @AppStorage("keepScreenOn") private var keepScreenOn = true
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
 
+    // Power Menu Settings
+    @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
+    @AppStorage("powerMenuSuspend") private var powerMenuSuspend = false
+    @AppStorage("powerMenuReboot") private var powerMenuReboot = false
+    @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
+
     var body: some View {
         Form {
             Section("Feedback") {
@@ -161,6 +167,17 @@ struct BehaviorSettingsView: View {
 
             Section("Display") {
                 Toggle("Keep Screen On", isOn: $keepScreenOn)
+            }
+
+            Section {
+                Toggle("Restart Kodi", isOn: $powerMenuRestartKodi)
+                Toggle("Suspend Device", isOn: $powerMenuSuspend)
+                Toggle("Reboot Device", isOn: $powerMenuReboot)
+                Toggle("Shutdown Device", isOn: $powerMenuShutdown)
+            } header: {
+                Text("Power Menu")
+            } footer: {
+                Text("Choose which options appear in the power menu on the Remote tab. The power menu is only visible when connected to a CoreELEC device.")
             }
         }
         .navigationTitle("Behavior")

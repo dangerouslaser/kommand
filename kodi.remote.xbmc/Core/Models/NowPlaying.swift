@@ -39,6 +39,14 @@ struct NowPlayingItem: Equatable {
     let videoCodec: String?
     let audioCodec: String?
     let hdrType: String?
+    let videoWidth: Int?
+    let videoHeight: Int?
+    let audioChannels: Int?
+    let audioLanguage: String?
+    let subtitleLanguage: String?
+    let filePath: String?
+    var dolbyVisionProfile: String? // e.g., "P7 FEL", "P8.1 MEL"
+    var hasAtmos: Bool
 
     var isPlaying: Bool {
         speed != 0
@@ -68,7 +76,15 @@ struct NowPlayingItem: Equatable {
         currentSubtitleIndex: 0,
         videoCodec: nil,
         audioCodec: nil,
-        hdrType: nil
+        hdrType: nil,
+        videoWidth: nil,
+        videoHeight: nil,
+        audioChannels: nil,
+        audioLanguage: nil,
+        subtitleLanguage: nil,
+        filePath: nil,
+        dolbyVisionProfile: nil,
+        hasAtmos: false
     )
 }
 

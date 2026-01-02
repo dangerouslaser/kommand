@@ -14,6 +14,18 @@ struct RemoteTab: View {
     @State private var textInput = ""
     @State private var volumeButtonHandler = VolumeButtonHandler()
 
+    // Power Menu Settings
+    @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
+    @AppStorage("powerMenuSuspend") private var powerMenuSuspend = false
+    @AppStorage("powerMenuReboot") private var powerMenuReboot = false
+    @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
+
+    // Power Menu Confirmation States
+    @State private var showRestartKodiConfirm = false
+    @State private var showSuspendConfirm = false
+    @State private var showRebootConfirm = false
+    @State private var showShutdownConfirm = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -91,15 +103,33 @@ struct RemoteTab: View {
                 if appState.isCoreELEC {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
-                            Button {
-                                viewModel.cecWakeUp()
-                            } label: {
-                                Label("Wake Up TV", systemImage: "power.circle")
+                            if powerMenuRestartKodi {
+                                Button {
+                                    showRestartKodiConfirm = true
+                                } label: {
+                                    Label("Restart Kodi", systemImage: "arrow.clockwise")
+                                }
                             }
-                            Button(role: .destructive) {
-                                viewModel.cecStandby()
-                            } label: {
-                                Label("Turn Off TV & AVR", systemImage: "power")
+                            if powerMenuSuspend {
+                                Button {
+                                    showSuspendConfirm = true
+                                } label: {
+                                    Label("Suspend Device", systemImage: "moon.fill")
+                                }
+                            }
+                            if powerMenuReboot {
+                                Button {
+                                    showRebootConfirm = true
+                                } label: {
+                                    Label("Reboot Device", systemImage: "arrow.triangle.2.circlepath")
+                                }
+                            }
+                            if powerMenuShutdown {
+                                Button(role: .destructive) {
+                                    showShutdownConfirm = true
+                                } label: {
+                                    Label("Shutdown Device", systemImage: "power")
+                                }
                             }
                         } label: {
                             Image(systemName: "power")
@@ -122,6 +152,30 @@ struct RemoteTab: View {
                 }
             } message: {
                 Text("Text will be sent to the active input field")
+            }
+            .confirmationDialog("Restart Kodi?", isPresented: $showRestartKodiConfirm, titleVisibility: .visible) {
+                Button("Restart") { viewModel.restartKodi() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Kodi will restart. Any playback will be interrupted.")
+            }
+            .confirmationDialog("Suspend Device?", isPresented: $showSuspendConfirm, titleVisibility: .visible) {
+                Button("Suspend") { viewModel.suspendDevice() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("The device will enter sleep mode. Wake it with CEC or Wake-on-LAN.")
+            }
+            .confirmationDialog("Reboot Device?", isPresented: $showRebootConfirm, titleVisibility: .visible) {
+                Button("Reboot", role: .destructive) { viewModel.rebootDevice() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("The device will restart. This may take a minute.")
+            }
+            .confirmationDialog("Shutdown Device?", isPresented: $showShutdownConfirm, titleVisibility: .visible) {
+                Button("Shutdown", role: .destructive) { viewModel.shutdownDevice() }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("The device will power off completely.")
             }
         }
         .task {

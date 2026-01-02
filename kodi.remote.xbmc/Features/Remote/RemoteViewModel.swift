@@ -106,23 +106,55 @@ final class RemoteViewModel {
             let properties = try await client.getPlayerProperties(playerId: playerId)
 
             let item = itemResponse.item
-            let mediaType = MediaType(rawValue: item.type ?? "unknown") ?? .unknown
+            let mediaType = MediaType(rawValue: item.type) ?? .unknown
+            let videoStream = properties.currentvideostream
+            let audioStream = properties.currentaudiostream
+            let subtitle = properties.currentsubtitle
+
+            // Get stream details from item (has more accurate HDR info)
+            let videoStreamDetail = item.streamdetails?.video?.first
+            let audioStreamDetail = item.streamdetails?.audio?.first
+
+            let hdrType = videoStreamDetail?.hdrtype ?? videoStream?.hdrtype
+
+            // Fetch Dolby Vision profile info if playing DV content
+            var dvProfile: String?
+            if hdrType?.lowercased() == "dolbyvision" {
+                if let dvInfo = try? await client.getDolbyVisionInfo() {
+                    dvProfile = dvInfo.formattedProfile
+                }
+            }
+
+            // Fetch audio info for Atmos detection
+            var hasAtmos = false
+            if let audioInfo = try? await client.getPlayerAudioInfo() {
+                hasAtmos = audioInfo.hasAtmos
+            }
+
             let nowPlaying = NowPlayingItem(
                 type: mediaType,
                 title: item.title ?? "Unknown",
                 subtitle: item.showtitle ?? item.artist?.first,
-                artworkPath: item.thumbnail,
-                fanartPath: item.fanart,
+                artworkPath: item.artworkPath,
+                fanartPath: item.art?.fanart ?? item.fanart,
                 duration: properties.totaltime?.totalSeconds ?? 0,
                 position: properties.time?.totalSeconds ?? 0,
                 speed: properties.speed ?? 0,
                 audioStreams: [],
                 subtitles: [],
-                currentAudioStreamIndex: properties.currentaudiostream?.index ?? 0,
-                currentSubtitleIndex: properties.currentsubtitle?.index ?? -1,
-                videoCodec: nil,
-                audioCodec: nil,
-                hdrType: nil
+                currentAudioStreamIndex: audioStream?.index ?? 0,
+                currentSubtitleIndex: subtitle?.index ?? -1,
+                videoCodec: videoStreamDetail?.codec ?? videoStream?.codec,
+                audioCodec: audioStreamDetail?.codec ?? audioStream?.codec,
+                hdrType: hdrType,
+                videoWidth: videoStreamDetail?.width ?? videoStream?.width,
+                videoHeight: videoStreamDetail?.height ?? videoStream?.height,
+                audioChannels: audioStreamDetail?.channels ?? audioStream?.channels,
+                audioLanguage: audioStreamDetail?.language ?? audioStream?.language,
+                subtitleLanguage: subtitle?.language,
+                filePath: item.file,
+                dolbyVisionProfile: dvProfile,
+                hasAtmos: hasAtmos
             )
 
             await MainActor.run {
@@ -328,28 +360,52 @@ final class RemoteViewModel {
         }
     }
 
-    // MARK: - CEC Power Commands
+    // MARK: - System Power Commands
 
-    func cecStandby() {
+    func restartKodi() {
         triggerHaptic(.heavy)
 
         Task {
             do {
-                try await client.cecStandby()
+                try await client.quit()
             } catch {
-                print("CEC standby error: \(error)")
+                print("Restart Kodi error: \(error)")
             }
         }
     }
 
-    func cecWakeUp() {
-        triggerHaptic(.medium)
+    func suspendDevice() {
+        triggerHaptic(.heavy)
 
         Task {
             do {
-                try await client.cecActivateSource()
+                try await client.suspend()
             } catch {
-                print("CEC wake error: \(error)")
+                print("Suspend error: \(error)")
+            }
+        }
+    }
+
+    func rebootDevice() {
+        triggerHaptic(.heavy)
+
+        Task {
+            do {
+                try await client.reboot()
+            } catch {
+                print("Reboot error: \(error)")
+            }
+        }
+    }
+
+    func shutdownDevice() {
+        triggerHaptic(.heavy)
+
+        Task {
+            do {
+                try await client.shutdown()
+            } catch {
+                print("Shutdown error: \(error)")
             }
         }
     }

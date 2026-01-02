@@ -199,6 +199,65 @@ struct PlayerItemResponse: Decodable {
         let thumbnail: String?
         let fanart: String?
         let file: String?
+        let art: MediaArt?
+        let streamdetails: StreamDetails?
+
+        /// Returns the best available artwork path
+        var artworkPath: String? {
+            art?.poster ?? art?.thumb ?? thumbnail ?? fanart
+        }
+    }
+
+    struct StreamDetails: Decodable {
+        let video: [VideoStreamDetail]?
+        let audio: [AudioStreamDetail]?
+        let subtitle: [SubtitleStreamDetail]?
+    }
+
+    struct VideoStreamDetail: Decodable {
+        let codec: String?
+        let width: Int?
+        let height: Int?
+        let hdrtype: String?
+        let aspect: Double?
+        let duration: Int?
+        let stereomode: String?
+    }
+
+    struct AudioStreamDetail: Decodable {
+        let codec: String?
+        let channels: Int?
+        let language: String?
+    }
+
+    struct SubtitleStreamDetail: Decodable {
+        let language: String?
+    }
+
+    struct MediaArt: Decodable {
+        let poster: String?
+        let thumb: String?
+        let fanart: String?
+        let banner: String?
+
+        enum CodingKeys: String, CodingKey {
+            case poster
+            case thumb
+            case fanart
+            case banner
+            case tvshowPoster = "tvshow.poster"
+            case seasonPoster = "season.poster"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            poster = try container.decodeIfPresent(String.self, forKey: .poster)
+                ?? container.decodeIfPresent(String.self, forKey: .tvshowPoster)
+                ?? container.decodeIfPresent(String.self, forKey: .seasonPoster)
+            thumb = try container.decodeIfPresent(String.self, forKey: .thumb)
+            fanart = try container.decodeIfPresent(String.self, forKey: .fanart)
+            banner = try container.decodeIfPresent(String.self, forKey: .banner)
+        }
     }
 }
 
