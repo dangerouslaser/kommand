@@ -12,6 +12,8 @@ struct QuickActionsBar: View {
     let onOSD: () -> Void
     let onKeyboard: () -> Void
 
+    @Environment(\.themeColors) private var colors
+
     var body: some View {
         HStack(spacing: 0) {
             QuickActionButton(icon: "house.fill", label: "Home", action: onHome)
@@ -25,7 +27,9 @@ struct QuickActionsBar: View {
             QuickActionButton(icon: "rectangle.on.rectangle", label: "OSD", action: onOSD)
         }
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: .infinity)
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .themeCardBorder(cornerRadius: 20)
     }
 }
 
@@ -33,6 +37,8 @@ struct QuickActionButton: View {
     let icon: String
     let label: String
     let action: () -> Void
+
+    @Environment(\.themeColors) private var colors
 
     var body: some View {
         Button {
@@ -48,7 +54,7 @@ struct QuickActionButton: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.primary)
+        .foregroundStyle(colors.textPrimary)
         .accessibilityLabel(label)
     }
 }

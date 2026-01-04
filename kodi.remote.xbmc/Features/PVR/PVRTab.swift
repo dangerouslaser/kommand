@@ -74,6 +74,7 @@ struct PVRTab: View {
                     }
                 }
             }
+            .themedBackground()
         }
         .task {
             viewModel.configure(appState: appState)
@@ -133,6 +134,7 @@ struct PVRTab: View {
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
     }
@@ -171,6 +173,7 @@ struct PVRTab: View {
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
     }
@@ -218,6 +221,7 @@ struct PVRTab: View {
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
     }
@@ -264,6 +268,7 @@ struct PVRTab: View {
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
     }

@@ -46,6 +46,7 @@ struct MusicTab: View {
             .refreshable {
                 await viewModel.refresh(section: selectedSection)
             }
+            .themedBackground()
         }
         .task {
             viewModel.configure(appState: appState)
@@ -147,6 +148,7 @@ struct MusicTab: View {
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
                 .navigationDestination(for: Artist.self) { artist in
                     ArtistDetailView(artist: artist, viewModel: viewModel)
                 }

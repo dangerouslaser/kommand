@@ -174,6 +174,7 @@ struct KodiSettingsView: View {
         }
         .navigationTitle("Kodi Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .themedScrollBackground()
         .task {
             viewModel.configure(host: appState.currentHost)
             await viewModel.loadSections()
@@ -232,6 +233,7 @@ struct KodiCategoriesView: View {
         }
         .navigationTitle(section.label)
         .navigationBarTitleDisplayMode(.inline)
+        .themedScrollBackground()
         .task {
             await viewModel.loadCategories(for: section)
         }
@@ -269,6 +271,7 @@ struct KodiSettingsListView: View {
         }
         .navigationTitle(category.label)
         .navigationBarTitleDisplayMode(.inline)
+        .themedScrollBackground()
         .task {
             await viewModel.loadSettings(for: category, in: section)
         }
@@ -469,6 +472,7 @@ struct OptionPickerView: View {
         }
         .navigationTitle(setting.label)
         .navigationBarTitleDisplayMode(.inline)
+        .themedScrollBackground()
     }
 
     private func isSelected(_ option: SettingOption) -> Bool {

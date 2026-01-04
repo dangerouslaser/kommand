@@ -49,6 +49,7 @@ struct HostsListView: View {
         }
         .navigationTitle("Hosts")
         .navigationBarTitleDisplayMode(.inline)
+        .themedScrollBackground()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

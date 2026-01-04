@@ -144,6 +144,7 @@ struct PlayerPropertiesResponse: Decodable {
     let `repeat`: String?
     let currentaudiostream: AudioStreamInfo?
     let currentsubtitle: SubtitleInfo?
+    let subtitleenabled: Bool?
     let audiostreams: [AudioStreamInfo]?
     let subtitles: [SubtitleInfo]?
     let currentvideostream: VideoStreamInfo?

@@ -14,6 +14,8 @@ struct PlaybackControls: View {
     let onSeekBack: () -> Void
     let onSeekForward: () -> Void
 
+    @Environment(\.themeColors) private var colors
+
     var body: some View {
         HStack(spacing: 20) {
             // Skip back
@@ -37,8 +39,8 @@ struct PlaybackControls: View {
                 Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                     .font(.title)
                     .frame(width: 64, height: 64)
-                    .background(.tint, in: Circle())
-                    .foregroundStyle(.white)
+                    .background(colors.accent, in: Circle())
+                    .foregroundStyle(colors.invertAccentText ? colors.textPrimary : .white)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(isPlaying ? "Pause" : "Play")
@@ -65,7 +67,9 @@ struct PlaybackControls: View {
             )
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .frame(maxWidth: .infinity)
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .themeCardBorder(cornerRadius: 20)
     }
 }
 
@@ -74,6 +78,8 @@ struct ControlButton: View {
     let label: String
     let action: () -> Void
 
+    @Environment(\.themeColors) private var colors
+
     var body: some View {
         Button {
             action()
@@ -81,7 +87,7 @@ struct ControlButton: View {
             Image(systemName: icon)
                 .font(.title2)
                 .frame(width: 44, height: 44)
-                .foregroundStyle(.primary)
+                .foregroundStyle(colors.textPrimary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

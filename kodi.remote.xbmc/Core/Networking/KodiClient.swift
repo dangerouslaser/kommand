@@ -109,7 +109,7 @@ actor KodiClient {
             "playerid": playerId,
             "properties": ["time", "totaltime", "percentage", "speed", "playlistid",
                           "position", "shuffled", "repeat", "currentaudiostream",
-                          "currentsubtitle", "audiostreams", "subtitles", "currentvideostream"]
+                          "currentsubtitle", "subtitleenabled", "audiostreams", "subtitles", "currentvideostream"]
         ])
     }
 
@@ -165,11 +165,18 @@ actor KodiClient {
         ])
     }
 
-    func setSubtitle(playerId: Int, subtitleIndex: Int, enable: Bool = true) async throws {
+    func setSubtitle(playerId: Int, subtitleIndex: Int) async throws {
         let _: EmptyResponse = try await send(method: "Player.SetSubtitle", params: [
             "playerid": playerId,
             "subtitle": subtitleIndex,
-            "enable": enable
+            "enable": true
+        ])
+    }
+
+    func disableSubtitles(playerId: Int) async throws {
+        let _: EmptyResponse = try await send(method: "Player.SetSubtitle", params: [
+            "playerid": playerId,
+            "subtitle": "off"
         ])
     }
 

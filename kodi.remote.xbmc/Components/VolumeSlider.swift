@@ -54,7 +54,7 @@ struct VolumeSlider: View {
                 .frame(width: 36, alignment: .trailing)
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var volumeIcon: String {

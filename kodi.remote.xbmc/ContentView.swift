@@ -5,6 +5,67 @@
 
 import SwiftUI
 
+// MARK: - Themed Background Modifiers
+
+/// A view modifier that applies the theme background to navigation-based views
+struct ThemedBackgroundModifier: ViewModifier {
+    @Environment(\.themeColors) private var colors
+
+    func body(content: Content) -> some View {
+        content
+            .scrollContentBackground(.hidden)
+            .background(colors.background.ignoresSafeArea())
+            .toolbarBackground(colors.background, for: .navigationBar)
+    }
+}
+
+/// A view modifier that applies the themed scrollable background (for List/Form)
+struct ThemedScrollBackgroundModifier: ViewModifier {
+    @Environment(\.themeColors) private var colors
+
+    func body(content: Content) -> some View {
+        content
+            .scrollContentBackground(.hidden)
+            .background(colors.background.ignoresSafeArea())
+            .toolbarBackground(colors.background, for: .navigationBar)
+    }
+}
+
+/// A view modifier that adds subtle card borders when theme requires it
+struct ThemeCardBorderModifier: ViewModifier {
+    @Environment(\.themeColors) private var colors
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if let borderColor = colors.cardBorder {
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(borderColor, lineWidth: 0.5)
+                }
+            }
+    }
+}
+
+extension View {
+    /// Applies themed background from current theme (for NavigationStack content)
+    func themedBackground() -> some View {
+        modifier(ThemedBackgroundModifier())
+    }
+
+    /// Applies themed scroll background (for List/Form content)
+    func themedScrollBackground() -> some View {
+        modifier(ThemedScrollBackgroundModifier())
+    }
+
+    /// Adds subtle border to cards when theme requires it
+    func themeCardBorder(cornerRadius: CGFloat = 12) -> some View {
+        modifier(ThemeCardBorderModifier(cornerRadius: cornerRadius))
+    }
+}
+
+// MARK: - App Tab
+
 enum AppTab: String, CaseIterable {
     case home
     case remote
@@ -15,22 +76,38 @@ enum AppTab: String, CaseIterable {
     case settings
 }
 
+// MARK: - Content View
+
 struct ContentView: View {
     @State private var appState = AppState()
     @State private var selectedTab: AppTab = .home
+    @Environment(\.colorScheme) private var systemColorScheme
 
     @AppStorage("showMoviesTab") private var showMoviesTab = true
     @AppStorage("showTVShowsTab") private var showTVShowsTab = true
     @AppStorage("showMusicTab") private var showMusicTab = true
     @AppStorage("showPVRTab") private var showPVRTab = false
-    @AppStorage("colorScheme") private var colorScheme = 0 // 0=System, 1=Light, 2=Dark
+    @AppStorage("colorScheme") private var colorSchemeSetting = 0 // 0=System, 1=Light, 2=Dark
+    @AppStorage("selectedTheme") private var selectedThemeId = "default"
 
     private var preferredColorScheme: ColorScheme? {
-        switch colorScheme {
+        switch colorSchemeSetting {
         case 1: return .light
         case 2: return .dark
         default: return nil // System
         }
+    }
+
+    private var effectiveColorScheme: ColorScheme {
+        preferredColorScheme ?? systemColorScheme
+    }
+
+    private var currentTheme: AppTheme {
+        AppTheme.theme(for: selectedThemeId)
+    }
+
+    private var themeColors: ThemeColorSet {
+        currentTheme.colors(for: effectiveColorScheme)
     }
 
     var body: some View {
@@ -42,7 +119,10 @@ struct ContentView: View {
             }
         }
         .environment(appState)
+        .environment(\.currentTheme, currentTheme)
+        .environment(\.themeColors, themeColors)
         .preferredColorScheme(preferredColorScheme)
+        .tint(themeColors.accent)
     }
 
     private var mainTabView: some View {
@@ -97,9 +177,26 @@ struct ContentView: View {
                 }
                 .tag(AppTab.settings)
         }
+        .onAppear {
+            updateTabBarAppearance()
+        }
+        .onChange(of: selectedThemeId) { _, _ in
+            updateTabBarAppearance()
+        }
+        .onChange(of: colorSchemeSetting) { _, _ in
+            updateTabBarAppearance()
+        }
         .task {
             await connectAndDetect()
         }
+    }
+
+    private func updateTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundColor = UIColor(themeColors.background)
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 
     private func connectAndDetect() async {
@@ -137,6 +234,7 @@ struct ContentView: View {
 
 struct OnboardingView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.themeColors) private var colors
     @State private var showingAddHost = false
 
     var body: some View {
@@ -146,7 +244,7 @@ struct OnboardingView: View {
 
                 Image(systemName: "play.tv")
                     .font(.system(size: 80))
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(colors.accent)
 
                 VStack(spacing: 12) {
                     Text("Welcome to Kommand")
@@ -173,7 +271,7 @@ struct OnboardingView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(.blue, in: RoundedRectangle(cornerRadius: 12))
+                        .background(colors.accent, in: RoundedRectangle(cornerRadius: 12))
                         .foregroundStyle(.white)
                     }
 

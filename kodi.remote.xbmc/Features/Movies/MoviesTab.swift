@@ -75,6 +75,7 @@ struct MoviesTab: View {
                     }
                 }
             }
+            .themedBackground()
         }
         .task {
             viewModel.configure(appState: appState, libraryState: libraryState)
@@ -115,6 +116,7 @@ struct MoviesTab: View {
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .navigationDestination(for: Movie.self) { movie in
             MovieDetailView(movie: movie, viewModel: viewModel)
         }

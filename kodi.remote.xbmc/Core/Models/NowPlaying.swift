@@ -36,6 +36,7 @@ struct NowPlayingItem: Equatable {
     let subtitles: [Subtitle]
     var currentAudioStreamIndex: Int
     var currentSubtitleIndex: Int
+    var subtitlesEnabled: Bool
     let videoCodec: String?
     let audioCodec: String?
     let hdrType: String?
@@ -74,6 +75,7 @@ struct NowPlayingItem: Equatable {
         subtitles: [],
         currentAudioStreamIndex: 0,
         currentSubtitleIndex: 0,
+        subtitlesEnabled: false,
         videoCodec: nil,
         audioCodec: nil,
         hdrType: nil,

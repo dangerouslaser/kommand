@@ -69,6 +69,7 @@ struct DashboardTab: View {
             .refreshable {
                 await viewModel.refresh()
             }
+            .themedBackground()
         }
         .task {
             viewModel.configure(appState: appState)
@@ -131,6 +132,7 @@ struct DashboardTab: View {
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
     }

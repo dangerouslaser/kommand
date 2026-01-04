@@ -29,11 +29,15 @@ struct RemoteTab: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
                     // Now Playing Card
                     if let nowPlaying = appState.nowPlaying, !nowPlaying.title.isEmpty {
-                        NowPlayingCard(item: nowPlaying)
-                            .padding(.horizontal)
+                        NowPlayingCard(
+                            item: nowPlaying,
+                            onAudioStreamChange: viewModel.setAudioStream,
+                            onSubtitleChange: viewModel.setSubtitle
+                        )
+                        .padding(.horizontal)
                     } else {
                         NothingPlayingCard()
                             .padding(.horizontal)
@@ -99,6 +103,7 @@ struct RemoteTab: View {
                         .frame(width: 0, height: 0)
                 }
             }
+            .themedScrollBackground()
             .toolbar {
                 if appState.isCoreELEC {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -225,7 +230,7 @@ struct NothingPlayingCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
     }
 }
 

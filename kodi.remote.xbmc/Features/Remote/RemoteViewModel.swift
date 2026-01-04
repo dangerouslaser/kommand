@@ -131,6 +131,28 @@ final class RemoteViewModel {
                 hasAtmos = audioInfo.hasAtmos
             }
 
+            // Parse subtitle tracks from player properties
+            let subtitleTracks = (properties.subtitles ?? []).compactMap { sub -> Subtitle? in
+                guard let index = sub.index else { return nil }
+                return Subtitle(
+                    id: index,
+                    name: sub.name ?? "",
+                    language: sub.language
+                )
+            }
+
+            // Parse audio tracks from player properties
+            let audioTracks = (properties.audiostreams ?? []).compactMap { audio -> AudioStream? in
+                guard let index = audio.index else { return nil }
+                return AudioStream(
+                    id: index,
+                    name: audio.name ?? "",
+                    language: audio.language,
+                    codec: audio.codec,
+                    channels: audio.channels
+                )
+            }
+
             let nowPlaying = NowPlayingItem(
                 type: mediaType,
                 title: item.title ?? "Unknown",
@@ -140,10 +162,11 @@ final class RemoteViewModel {
                 duration: properties.totaltime?.totalSeconds ?? 0,
                 position: properties.time?.totalSeconds ?? 0,
                 speed: properties.speed ?? 0,
-                audioStreams: [],
-                subtitles: [],
+                audioStreams: audioTracks,
+                subtitles: subtitleTracks,
                 currentAudioStreamIndex: audioStream?.index ?? 0,
                 currentSubtitleIndex: subtitle?.index ?? -1,
+                subtitlesEnabled: properties.subtitleenabled ?? false,
                 videoCodec: videoStreamDetail?.codec ?? videoStream?.codec,
                 audioCodec: audioStreamDetail?.codec ?? audioStream?.codec,
                 hdrType: hdrType,
@@ -291,6 +314,47 @@ final class RemoteViewModel {
                 try await client.seekRelative(playerId: playerId, seconds: 30)
             } catch {
                 print("Seek error: \(error)")
+            }
+        }
+    }
+
+    func setSubtitle(_ index: Int) {
+        triggerHaptic(.light)
+
+        Task {
+            guard let playerId = appState?.activePlayerId else { return }
+            do {
+                // Index of -1 means disable subtitles ("off")
+                if index == -1 {
+                    try await client.disableSubtitles(playerId: playerId)
+                    await MainActor.run {
+                        appState?.nowPlaying?.subtitlesEnabled = false
+                    }
+                } else {
+                    try await client.setSubtitle(playerId: playerId, subtitleIndex: index)
+                    await MainActor.run {
+                        appState?.nowPlaying?.currentSubtitleIndex = index
+                        appState?.nowPlaying?.subtitlesEnabled = true
+                    }
+                }
+            } catch {
+                print("Set subtitle error: \(error)")
+            }
+        }
+    }
+
+    func setAudioStream(_ index: Int) {
+        triggerHaptic(.light)
+
+        Task {
+            guard let playerId = appState?.activePlayerId else { return }
+            do {
+                try await client.setAudioStream(playerId: playerId, streamIndex: index)
+                await MainActor.run {
+                    appState?.nowPlaying?.currentAudioStreamIndex = index
+                }
+            } catch {
+                print("Set audio stream error: \(error)")
             }
         }
     }

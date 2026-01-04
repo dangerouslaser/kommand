@@ -11,6 +11,7 @@ struct TVShowDetailView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
+    @State private var isPlotExpanded = false
 
     private var isIPad: Bool {
         horizontalSizeClass == .regular
@@ -53,9 +54,22 @@ struct TVShowDetailView: View {
 
                     // Plot
                     if let plot = show.plot, !plot.isEmpty {
-                        Text(plot)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(plot)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(isPlotExpanded ? nil : 10)
+
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    isPlotExpanded.toggle()
+                                }
+                            } label: {
+                                Text(isPlotExpanded ? "Show Less" : "More")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                            }
+                        }
                     }
 
                     // Seasons

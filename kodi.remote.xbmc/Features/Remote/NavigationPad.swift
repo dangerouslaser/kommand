@@ -7,8 +7,11 @@ import SwiftUI
 
 struct NavigationPad: View {
     let onInput: (InputAction) -> Void
+    @Environment(\.themeColors) private var colors
+    @Environment(\.currentTheme) private var theme
 
-    private let buttonSize: CGFloat = 70
+    private let buttonWidth: CGFloat = 64
+    private let buttonHeight: CGFloat = 48
     private let centerButtonSize: CGFloat = 80
 
     var body: some View {
@@ -16,7 +19,8 @@ struct NavigationPad: View {
             // Up button
             DirectionButton(
                 direction: .up,
-                size: buttonSize,
+                width: buttonWidth,
+                height: buttonHeight,
                 action: { onInput(.up) }
             )
 
@@ -24,7 +28,8 @@ struct NavigationPad: View {
                 // Left button
                 DirectionButton(
                     direction: .left,
-                    size: buttonSize,
+                    width: buttonWidth,
+                    height: buttonHeight,
                     action: { onInput(.left) }
                 )
 
@@ -36,8 +41,8 @@ struct NavigationPad: View {
                         .font(.title2)
                         .fontWeight(.semibold)
                         .frame(width: centerButtonSize, height: centerButtonSize)
-                        .background(.tint, in: Circle())
-                        .foregroundStyle(.white)
+                        .background(colors.accent, in: Circle())
+                        .foregroundStyle(colors.invertAccentText ? colors.textPrimary : .white)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Select")
@@ -45,7 +50,8 @@ struct NavigationPad: View {
                 // Right button
                 DirectionButton(
                     direction: .right,
-                    size: buttonSize,
+                    width: buttonWidth,
+                    height: buttonHeight,
                     action: { onInput(.right) }
                 )
             }
@@ -53,12 +59,15 @@ struct NavigationPad: View {
             // Down button
             DirectionButton(
                 direction: .down,
-                size: buttonSize,
+                width: buttonWidth,
+                height: buttonHeight,
                 action: { onInput(.down) }
             )
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+        .frame(maxWidth: .infinity)
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .themeCardBorder(cornerRadius: 20)
     }
 }
 
@@ -86,9 +95,11 @@ struct DirectionButton: View {
     }
 
     let direction: Direction
-    let size: CGFloat
+    let width: CGFloat
+    let height: CGFloat
     let action: () -> Void
 
+    @Environment(\.themeColors) private var colors
     @State private var isPressed = false
 
     var body: some View {
@@ -98,12 +109,12 @@ struct DirectionButton: View {
             Image(systemName: direction.iconName)
                 .font(.title)
                 .fontWeight(.semibold)
-                .frame(width: size, height: size)
+                .frame(width: width, height: height)
                 .background(
-                    isPressed ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.15),
-                    in: Circle()
+                    isPressed ? colors.secondaryFill.opacity(1.5) : colors.secondaryFill,
+                    in: RoundedRectangle(cornerRadius: 12)
                 )
-                .foregroundStyle(.primary)
+                .foregroundStyle(colors.textPrimary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(direction.label)

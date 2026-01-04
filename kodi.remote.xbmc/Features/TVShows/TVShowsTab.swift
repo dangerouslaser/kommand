@@ -74,6 +74,7 @@ struct TVShowsTab: View {
                     }
                 }
             }
+            .themedBackground()
         }
         .task {
             viewModel.configure(appState: appState, libraryState: libraryState)
@@ -114,6 +115,7 @@ struct TVShowsTab: View {
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .navigationDestination(for: TVShow.self) { show in
             TVShowDetailView(show: show, viewModel: viewModel)
         }
