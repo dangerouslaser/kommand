@@ -14,6 +14,7 @@ A native iOS remote control app for [Kodi](https://kodi.tv) media center.
 
 <p align="center">
   <img src="screenshots/remote.png" width="200" alt="Remote">
+  <img src="screenshots/remote-2.png" width="200" alt="Remote-2">
   <img src="screenshots/dashboard.png" width="200" alt="Dashboard">
   <img src="screenshots/movie-detail.png" width="200" alt="Movie Detail">
   <img src="screenshots/tv-shows.png" width="200" alt="TV Shows">
