@@ -10,6 +10,7 @@ struct VolumeSlider: View {
     let isMuted: Bool
     let onMuteToggle: () -> Void
 
+    @Environment(\.themeColors) private var colors
     @State private var isDragging = false
 
     var body: some View {
@@ -20,7 +21,7 @@ struct VolumeSlider: View {
             } label: {
                 Image(systemName: isMuted ? "speaker.slash.fill" : volumeIcon)
                     .font(.title3)
-                    .foregroundStyle(isMuted ? .red : .primary)
+                    .foregroundStyle(isMuted ? .red : colors.textPrimary)
                     .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)
@@ -43,18 +44,19 @@ struct VolumeSlider: View {
             } onEditingChanged: { editing in
                 isDragging = editing
             }
-            .tint(.primary)
+            .tint(colors.textPrimary)
             .accessibilityValue("\(volume) percent")
 
             // Volume percentage
             Text("\(volume)")
                 .font(.subheadline)
                 .monospacedDigit()
-                .foregroundStyle(.secondary)
+                .foregroundStyle(colors.textSecondary)
                 .frame(width: 36, alignment: .trailing)
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .themeCardBorder(cornerRadius: 20)
     }
 
     private var volumeIcon: String {

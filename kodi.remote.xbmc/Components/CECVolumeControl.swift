@@ -10,19 +10,21 @@ struct CECVolumeControl: View {
     let onVolumeDown: () -> Void
     let onMute: () -> Void
 
+    @Environment(\.themeColors) private var colors
+
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 0) {
                 Text("TV Volume")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(colors.textSecondary)
 
                 Spacer()
 
                 Image(systemName: "tv")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(colors.textSecondary)
             }
 
             HStack(spacing: 16) {
@@ -32,9 +34,10 @@ struct CECVolumeControl: View {
                 } label: {
                     Image(systemName: "speaker.minus.fill")
                         .font(.title2)
+                        .foregroundStyle(colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+                        .background(colors.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Volume Down")
@@ -58,16 +61,18 @@ struct CECVolumeControl: View {
                 } label: {
                     Image(systemName: "speaker.plus.fill")
                         .font(.title2)
+                        .foregroundStyle(colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+                        .background(colors.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Volume Up")
             }
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .themeCardBorder(cornerRadius: 20)
     }
 }
 

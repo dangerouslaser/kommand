@@ -12,6 +12,7 @@ struct TVShowDetailView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @State private var isPlotExpanded = false
+    @State private var isPlotTruncated = false
 
     private var isIPad: Bool {
         horizontalSizeClass == .regular
@@ -59,15 +60,33 @@ struct TVShowDetailView: View {
                                 .font(.body)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(isPlotExpanded ? nil : 10)
+                                .background(
+                                    GeometryReader { visibleGeometry in
+                                        Text(plot)
+                                            .font(.body)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .background(
+                                                GeometryReader { fullGeometry in
+                                                    Color.clear.onAppear {
+                                                        isPlotTruncated = fullGeometry.size.height > visibleGeometry.size.height + 1
+                                                    }
+                                                }
+                                            )
+                                            .hidden()
+                                    }
+                                )
 
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    isPlotExpanded.toggle()
+                            if isPlotTruncated || isPlotExpanded {
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isPlotExpanded.toggle()
+                                    }
+                                } label: {
+                                    Text(isPlotExpanded ? "Show Less" : "More")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
                                 }
-                            } label: {
-                                Text(isPlotExpanded ? "Show Less" : "More")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
                             }
                         }
                     }
