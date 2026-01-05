@@ -109,6 +109,7 @@ struct NowPlayingCard: View {
                                 .foregroundStyle(.white)
                         }
                         .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .accessibilityLabel(item.isPlaying ? "Playing" : "Paused")
                     }
                     .padding(.horizontal, contentPadding)
 
@@ -172,6 +173,7 @@ struct NowPlayingCard: View {
                     .font(.body)
                     .foregroundStyle(.tertiary)
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    .accessibilityLabel(isExpanded ? "Collapse details" : "Show more details")
                 Spacer()
             }
             .padding(.top, 8)
@@ -182,6 +184,19 @@ struct NowPlayingCard: View {
                 isExpanded.toggle()
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Tap to \(isExpanded ? "collapse" : "expand") details")
+    }
+
+    private var accessibilityDescription: String {
+        var description = "Now playing: \(item.title)"
+        if let subtitle = item.subtitle {
+            description += ", \(subtitle)"
+        }
+        description += ". \(item.position.formattedDuration) of \(item.duration.formattedDuration)"
+        description += item.isPlaying ? ". Playing" : ". Paused"
+        return description
     }
 
     // MARK: - Background View

@@ -84,7 +84,6 @@ final class TVShowsViewModel {
             await MainActor.run {
                 isLoadingSeasons = false
             }
-            print("Load seasons error: \(error)")
         }
     }
 
@@ -111,7 +110,6 @@ final class TVShowsViewModel {
             await MainActor.run {
                 isLoadingEpisodes = false
             }
-            print("Load episodes error: \(error)")
         }
     }
 
@@ -120,20 +118,18 @@ final class TVShowsViewModel {
     func playEpisode(_ episode: Episode, resume: Bool = false) async {
         do {
             try await client.playEpisode(episodeId: episode.episodeid, resume: resume)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Play error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func queueEpisode(_ episode: Episode) async {
         do {
             try await client.queueEpisode(episodeId: episode.episodeid)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Queue error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -165,17 +161,9 @@ final class TVShowsViewModel {
                 )
                 await loadEpisodes(for: show, season: episode.season)
             }
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Toggle watched error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
-    }
-
-    // MARK: - Haptics
-
-    private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
     }
 }

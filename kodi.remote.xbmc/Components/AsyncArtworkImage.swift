@@ -38,7 +38,6 @@ struct AsyncArtworkImage: View {
         }
 
         guard let url = host.imageURL(for: path) else {
-            print("Failed to create image URL for path: \(path)")
             return
         }
 

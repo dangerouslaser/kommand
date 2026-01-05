@@ -135,7 +135,6 @@ final class MusicViewModel {
             )
             return result.albums ?? []
         } catch {
-            print("Error loading albums for artist: \(error)")
             return []
         }
     }
@@ -169,57 +168,45 @@ final class MusicViewModel {
     func playAlbum(_ album: Album, shuffle: Bool = false) async {
         do {
             try await client.playAlbum(albumId: album.albumid, shuffle: shuffle)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Play album error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func queueAlbum(_ album: Album) async {
         do {
             try await client.queueAlbum(albumId: album.albumid)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Queue album error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func playSong(_ song: Song) async {
         do {
             try await client.playSong(songId: song.songid)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Play song error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func queueSong(_ song: Song) async {
         do {
             try await client.queueSong(songId: song.songid)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Queue song error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func playArtist(_ artist: Artist, shuffle: Bool = true) async {
         do {
             try await client.playArtist(artistId: artist.artistid, shuffle: shuffle)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Play artist error: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
-    }
-
-    // MARK: - Haptics
-
-    private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
     }
 }

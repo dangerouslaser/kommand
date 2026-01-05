@@ -32,7 +32,6 @@ final class VolumeButtonHandler {
             try audioSession?.setCategory(.ambient, options: .mixWithOthers)
             try audioSession?.setActive(true)
         } catch {
-            print("Failed to set up audio session: \(error)")
             return
         }
 

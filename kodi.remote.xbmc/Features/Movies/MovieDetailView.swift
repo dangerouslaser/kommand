@@ -351,6 +351,20 @@ struct ActorMovieCard: View {
     let actorRole: String?
     let host: KodiHost?
 
+    private var accessibilityDescription: String {
+        var description = movie.title
+        if let year = movie.year {
+            description += ", \(year)"
+        }
+        if let role = actorRole, !role.isEmpty {
+            description += ", as \(role)"
+        }
+        if movie.isWatched {
+            description += ", watched"
+        }
+        return description
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topTrailing) {
@@ -368,6 +382,7 @@ struct ActorMovieCard: View {
                         .foregroundStyle(.white)
                         .background(Circle().fill(.green).padding(-2))
                         .padding(8)
+                        .accessibilityHidden(true)
                 }
             }
 
@@ -391,12 +406,21 @@ struct ActorMovieCard: View {
                 .foregroundStyle(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
     }
 }
 
 struct CastMemberCard: View {
     let member: CastMember
     let host: KodiHost?
+
+    private var accessibilityDescription: String {
+        if let role = member.role, !role.isEmpty {
+            return "\(member.name) as \(role)"
+        }
+        return member.name
+    }
 
     var body: some View {
         VStack(spacing: 4) {
@@ -417,6 +441,9 @@ struct CastMemberCard: View {
             }
         }
         .frame(width: 90)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Tap to see filmography")
     }
 }
 
@@ -430,27 +457,27 @@ struct MediaTagsView: View {
             HStack(spacing: 8) {
                 // Resolution
                 if let resolution = streamDetails.primaryVideo?.resolutionLabel {
-                    MediaTagBadge(text: resolution, icon: "tv", color: .blue)
+                    MediaTagBadge(text: resolution, icon: "tv", color: .blue, accessibilityLabel: "Resolution: \(resolution)")
                 }
 
                 // HDR
                 if let hdr = streamDetails.primaryVideo?.hdrBadge {
-                    MediaTagBadge(text: hdr, icon: "sun.max.fill", color: .orange)
+                    MediaTagBadge(text: hdr, icon: "sun.max.fill", color: .orange, accessibilityLabel: "HDR format: \(hdr)")
                 }
 
                 // Video Codec
                 if let videoCodec = streamDetails.primaryVideo?.codecLabel {
-                    MediaTagBadge(text: videoCodec, icon: "film", color: .purple)
+                    MediaTagBadge(text: videoCodec, icon: "film", color: .purple, accessibilityLabel: "Video codec: \(videoCodec)")
                 }
 
                 // Audio
                 if let audio = streamDetails.primaryAudio?.displayLabel {
-                    MediaTagBadge(text: audio, icon: "speaker.wave.3.fill", color: .green)
+                    MediaTagBadge(text: audio, icon: "speaker.wave.3.fill", color: .green, accessibilityLabel: "Audio: \(audio)")
                 }
 
                 // Subtitles count
                 if let subs = streamDetails.subtitle, !subs.isEmpty {
-                    MediaTagBadge(text: "\(subs.count) Subs", icon: "captions.bubble", color: .secondary)
+                    MediaTagBadge(text: "\(subs.count) Subs", icon: "captions.bubble", color: .secondary, accessibilityLabel: "\(subs.count) subtitle tracks available")
                 }
             }
         }
@@ -461,6 +488,7 @@ struct MediaTagBadge: View {
     let text: String
     var icon: String? = nil
     var color: Color = .secondary
+    var accessibilityLabel: String? = nil
 
     var body: some View {
         HStack(spacing: 4) {
@@ -476,6 +504,8 @@ struct MediaTagBadge: View {
         .padding(.vertical, 6)
         .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
         .foregroundStyle(color)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel ?? text)
     }
 }
 

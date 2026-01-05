@@ -105,26 +105,19 @@ final class KodiSettingsViewModel {
             if let categoryId = setting.id.components(separatedBy: ".").dropLast().joined(separator: ".").components(separatedBy: ".").first {
                 settings.removeValue(forKey: categoryId)
             }
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to update setting: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func resetSetting(_ setting: KodiSetting) async {
         do {
             try await client.resetSettingToDefault(setting: setting.id)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to reset setting: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
-    }
-
-    private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
     }
 }
 

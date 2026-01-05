@@ -159,20 +159,18 @@ final class DashboardViewModel {
     func playMovie(_ movie: Movie, resume: Bool = true) async {
         do {
             try await client.playMovie(movieId: movie.id, resume: resume)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to play movie: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func playEpisode(_ episode: Episode, resume: Bool = true) async {
         do {
             try await client.playEpisode(episodeId: episode.id, resume: resume)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to play episode: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -245,17 +243,9 @@ final class DashboardViewModel {
     func playChannel(_ channel: PVRChannel) async {
         do {
             try await client.playChannel(channelId: channel.channelid)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to play channel: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
-    }
-
-    // MARK: - Helpers
-
-    private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
     }
 }

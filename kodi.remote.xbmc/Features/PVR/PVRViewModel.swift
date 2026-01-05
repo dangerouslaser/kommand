@@ -197,20 +197,18 @@ final class PVRViewModel {
     func playChannel(_ channel: PVRChannel) async {
         do {
             try await client.playChannel(channelId: channel.id)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to play channel: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
     func playRecording(_ recording: PVRRecording, resume: Bool = false) async {
         do {
             try await client.playRecording(recordingId: recording.id, resume: resume)
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to play recording: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -220,10 +218,9 @@ final class PVRViewModel {
         do {
             try await client.deleteRecording(recordingId: recording.id)
             await loadRecordings()
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to delete recording: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -231,10 +228,9 @@ final class PVRViewModel {
         do {
             try await client.recordNow(channelId: channel.id)
             await checkPVRAvailability()
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to start recording: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -244,10 +240,9 @@ final class PVRViewModel {
         do {
             try await client.deleteTimer(timerId: timer.id)
             await loadTimers()
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to delete timer: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -255,10 +250,9 @@ final class PVRViewModel {
         do {
             try await client.addTimer(broadcastId: broadcastId)
             await loadTimers()
-            triggerHaptic(.success)
+            HapticService.notification(.success)
         } catch {
-            print("Failed to schedule recording: \(error)")
-            triggerHaptic(.error)
+            HapticService.notification(.error)
         }
     }
 
@@ -272,12 +266,5 @@ final class PVRViewModel {
             await loadRecordings()
             await loadTimers()
         }
-    }
-
-    // MARK: - Helpers
-
-    private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(type)
     }
 }

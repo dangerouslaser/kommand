@@ -74,9 +74,8 @@ final class LiveActivityManager {
                     pushType: nil
                 )
                 self.currentActivity = activity
-                print("[LiveActivity] Started activity successfully")
             } catch {
-                print("[LiveActivity] Failed to start: \(error)")
+                // Activity start failed silently
             }
         }
     }
@@ -304,7 +303,7 @@ final class LiveActivityManager {
             )
 
         } catch {
-            print("[LiveActivity] Cache error: \(error)")
+            // Image caching failed silently
         }
     }
 
@@ -331,10 +330,7 @@ final class LiveActivityManager {
     }
 
     private func updateSharedData(host: KodiHost, playerId: Int) {
-        print("[LiveActivityManager] updateSharedData called - host: \(host.address), port: \(host.httpPort), playerId: \(playerId)")
-
         guard let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
-            print("[LiveActivityManager] ERROR: Cannot create UserDefaults for suite: \(AppGroupConstants.suiteName)")
             return
         }
 
@@ -345,18 +341,12 @@ final class LiveActivityManager {
         // Get password from keychain if available
         if let password = KeychainHelper.getPassword(for: host.id) {
             defaults.set(password, forKey: AppGroupConstants.hostPasswordKey)
-            print("[LiveActivityManager] Password set from keychain")
         }
 
         defaults.set(playerId, forKey: AppGroupConstants.activePlayerIdKey)
 
         // Force synchronize for cross-process access
         defaults.synchronize()
-
-        // Verify the data was saved
-        let savedAddress = defaults.string(forKey: AppGroupConstants.hostAddressKey)
-        let savedPlayerId = defaults.integer(forKey: AppGroupConstants.activePlayerIdKey)
-        print("[LiveActivityManager] Verified saved data - address: \(savedAddress ?? "nil"), playerId: \(savedPlayerId)")
     }
 
     private func clearSharedData() {

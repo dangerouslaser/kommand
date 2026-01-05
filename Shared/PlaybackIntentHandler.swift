@@ -17,7 +17,6 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func playPause() async {
-        print("[PlaybackIntentHandler] playPause called")
         let success = await sendCommand("Player.PlayPause")
         if success {
             // Optimistic update: toggle isPlaying immediately
@@ -29,7 +28,6 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func stop() async {
-        print("[PlaybackIntentHandler] stop called")
         let success = await sendCommand("Player.Stop")
         if success {
             // Optimistic update: set isPlaying to false
@@ -41,21 +39,18 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func skipNext() async {
-        print("[PlaybackIntentHandler] skipNext called")
         await sendCommand("Player.GoTo", extraParams: ["to": "next"])
         // No UI update needed - title will change on next poll
     }
 
     @MainActor
     static func skipPrevious() async {
-        print("[PlaybackIntentHandler] skipPrevious called")
         await sendCommand("Player.GoTo", extraParams: ["to": "previous"])
         // No UI update needed - title will change on next poll
     }
 
     @MainActor
     static func seekForward() async {
-        print("[PlaybackIntentHandler] seekForward called")
         let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": 30]])
         if success {
             // Optimistic update: advance elapsed time
@@ -67,7 +62,6 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func seekBackward() async {
-        print("[PlaybackIntentHandler] seekBackward called")
         let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": -10]])
         if success {
             // Optimistic update: rewind elapsed time
@@ -92,7 +86,6 @@ enum PlaybackIntentHandler {
             await activity.update(
                 ActivityContent(state: updatedState, staleDate: nil)
             )
-            print("[PlaybackIntentHandler] Live Activity updated optimistically")
         }
     }
 
@@ -102,7 +95,6 @@ enum PlaybackIntentHandler {
     @MainActor
     private static func sendCommand(_ method: String, extraParams: [String: Any] = [:]) async -> Bool {
         guard let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
-            print("[PlaybackIntentHandler] ERROR: Cannot create UserDefaults")
             return false
         }
 
@@ -110,12 +102,10 @@ enum PlaybackIntentHandler {
 
         guard let address = defaults.string(forKey: AppGroupConstants.hostAddressKey),
               !address.isEmpty else {
-            print("[PlaybackIntentHandler] ERROR: No host address")
             return false
         }
 
         guard defaults.object(forKey: AppGroupConstants.activePlayerIdKey) != nil else {
-            print("[PlaybackIntentHandler] ERROR: No active player ID")
             return false
         }
         let playerId = defaults.integer(forKey: AppGroupConstants.activePlayerIdKey)
@@ -124,7 +114,6 @@ enum PlaybackIntentHandler {
         if port == 0 { port = 8080 }
 
         guard let url = URL(string: "http://\(address):\(port)/jsonrpc") else {
-            print("[PlaybackIntentHandler] ERROR: Invalid URL")
             return false
         }
 
@@ -141,7 +130,6 @@ enum PlaybackIntentHandler {
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
-            print("[PlaybackIntentHandler] ERROR: JSON serialization failed")
             return false
         }
 
@@ -166,13 +154,10 @@ enum PlaybackIntentHandler {
             let (_, response) = try await URLSession.shared.data(for: request)
 
             if let httpResponse = response as? HTTPURLResponse {
-                let success = httpResponse.statusCode == 200
-                print("[PlaybackIntentHandler] \(method) HTTP \(httpResponse.statusCode)")
-                return success
+                return httpResponse.statusCode == 200
             }
             return false
         } catch {
-            print("[PlaybackIntentHandler] Network error: \(error.localizedDescription)")
             return false
         }
     }

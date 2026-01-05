@@ -13,8 +13,14 @@ final class RemoteViewModel {
     private var pollingTask: Task<Void, Never>?
     private var isPolling = false
 
-    @ObservationIgnored
-    @AppStorage("hapticFeedback") private var hapticFeedback = true
+    // Cache for expensive lookups that don't change frequently
+    private var cachedDVProfile: String?
+    private var cachedHasAtmos: Bool = false
+    private var lastMediaFile: String?
+
+    deinit {
+        pollingTask?.cancel()
+    }
 
     func configure(appState: AppState) {
         self.appState = appState
@@ -107,11 +113,18 @@ final class RemoteViewModel {
                         LiveActivityManager.shared.endActivity()
                     }
                 }
+                // Clear cache when playback stops
+                lastMediaFile = nil
+                cachedDVProfile = nil
+                cachedHasAtmos = false
                 return
             }
 
-            let itemResponse = try await client.getPlayerItem(playerId: playerId)
-            let properties = try await client.getPlayerProperties(playerId: playerId)
+            // Run item and properties fetch in parallel
+            async let itemTask = client.getPlayerItem(playerId: playerId)
+            async let propertiesTask = client.getPlayerProperties(playerId: playerId)
+
+            let (itemResponse, properties) = try await (itemTask, propertiesTask)
 
             let item = itemResponse.item
             let mediaType = MediaType(rawValue: item.type) ?? .unknown
@@ -125,18 +138,31 @@ final class RemoteViewModel {
 
             let hdrType = videoStreamDetail?.hdrtype ?? videoStream?.hdrtype
 
-            // Fetch Dolby Vision profile info if playing DV content
-            var dvProfile: String?
-            if hdrType?.lowercased() == "dolbyvision" {
+            // Check if media file changed - reset cache if so
+            let currentFile = item.file
+            let mediaChanged = currentFile != lastMediaFile
+            if mediaChanged {
+                lastMediaFile = currentFile
+                cachedDVProfile = nil
+                cachedHasAtmos = false
+            }
+
+            // Fetch Dolby Vision profile info only when media changes or not cached
+            var dvProfile = cachedDVProfile
+            if dvProfile == nil && hdrType?.lowercased() == "dolbyvision" {
                 if let dvInfo = try? await client.getDolbyVisionInfo() {
                     dvProfile = dvInfo.formattedProfile
+                    cachedDVProfile = dvProfile
                 }
             }
 
-            // Fetch audio info for Atmos detection
-            var hasAtmos = false
-            if let audioInfo = try? await client.getPlayerAudioInfo() {
-                hasAtmos = audioInfo.hasAtmos
+            // Fetch audio info for Atmos detection only when media changes
+            var hasAtmos = cachedHasAtmos
+            if mediaChanged {
+                if let audioInfo = try? await client.getPlayerAudioInfo() {
+                    hasAtmos = audioInfo.hasAtmos
+                    cachedHasAtmos = hasAtmos
+                }
             }
 
             // Parse subtitle tracks from player properties
@@ -232,25 +258,25 @@ final class RemoteViewModel {
     // MARK: - Input Commands
 
     func sendInput(_ action: InputAction) {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             do {
                 try await client.sendInput(action)
             } catch {
-                print("Input error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func sendText(_ text: String, done: Bool = true) {
-        triggerHaptic(.medium)
+        HapticService.impact(.medium)
 
         Task {
             do {
                 try await client.sendText(text, done: done)
             } catch {
-                print("Send text error: \(error)")
+                // Error handled silently
             }
         }
     }
@@ -258,7 +284,7 @@ final class RemoteViewModel {
     // MARK: - Playback Commands
 
     func togglePlayPause() {
-        triggerHaptic(.medium)
+        HapticService.impact(.medium)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
@@ -272,13 +298,13 @@ final class RemoteViewModel {
                     }
                 }
             } catch {
-                print("Play/pause error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func stop() {
-        triggerHaptic(.medium)
+        HapticService.impact(.medium)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
@@ -291,65 +317,65 @@ final class RemoteViewModel {
                     LiveActivityManager.shared.endActivity()
                 }
             } catch {
-                print("Stop error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func skipPrevious() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.skipPrevious(playerId: playerId)
             } catch {
-                print("Skip previous error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func skipNext() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.skipNext(playerId: playerId)
             } catch {
-                print("Skip next error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func seekBackward() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.seekRelative(playerId: playerId, seconds: -30)
             } catch {
-                print("Seek error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func seekForward() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.seekRelative(playerId: playerId, seconds: 30)
             } catch {
-                print("Seek error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func setSubtitle(_ index: Int) {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
@@ -368,13 +394,13 @@ final class RemoteViewModel {
                     }
                 }
             } catch {
-                print("Set subtitle error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func setAudioStream(_ index: Int) {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             guard let playerId = appState?.activePlayerId else { return }
@@ -384,7 +410,7 @@ final class RemoteViewModel {
                     appState?.nowPlaying?.currentAudioStreamIndex = index
                 }
             } catch {
-                print("Set audio stream error: \(error)")
+                // Error handled silently
             }
         }
     }
@@ -396,13 +422,13 @@ final class RemoteViewModel {
             do {
                 _ = try await client.setVolume(volume)
             } catch {
-                print("Volume error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func toggleMute() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             do {
@@ -411,7 +437,7 @@ final class RemoteViewModel {
                     appState?.isMuted = muted
                 }
             } catch {
-                print("Mute error: \(error)")
+                // Error handled silently
             }
         }
     }
@@ -419,37 +445,37 @@ final class RemoteViewModel {
     // MARK: - CEC Volume Commands (for TV/AVR control)
 
     func cecVolumeUp() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             do {
                 try await client.cecVolumeUp()
             } catch {
-                print("CEC volume up error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func cecVolumeDown() {
-        triggerHaptic(.light)
+        HapticService.impact(.light)
 
         Task {
             do {
                 try await client.cecVolumeDown()
             } catch {
-                print("CEC volume down error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func cecMute() {
-        triggerHaptic(.medium)
+        HapticService.impact(.medium)
 
         Task {
             do {
                 try await client.cecMute()
             } catch {
-                print("CEC mute error: \(error)")
+                // Error handled silently
             }
         }
     }
@@ -457,58 +483,51 @@ final class RemoteViewModel {
     // MARK: - System Power Commands
 
     func restartKodi() {
-        triggerHaptic(.heavy)
+        HapticService.impact(.heavy)
 
         Task {
             do {
                 try await client.quit()
             } catch {
-                print("Restart Kodi error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func suspendDevice() {
-        triggerHaptic(.heavy)
+        HapticService.impact(.heavy)
 
         Task {
             do {
                 try await client.suspend()
             } catch {
-                print("Suspend error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func rebootDevice() {
-        triggerHaptic(.heavy)
+        HapticService.impact(.heavy)
 
         Task {
             do {
                 try await client.reboot()
             } catch {
-                print("Reboot error: \(error)")
+                // Error handled silently
             }
         }
     }
 
     func shutdownDevice() {
-        triggerHaptic(.heavy)
+        HapticService.impact(.heavy)
 
         Task {
             do {
                 try await client.shutdown()
             } catch {
-                print("Shutdown error: \(error)")
+                // Error handled silently
             }
         }
     }
 
-    // MARK: - Haptics
-
-    private func triggerHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        guard hapticFeedback else { return }
-        let generator = UIImpactFeedbackGenerator(style: style)
-        generator.impactOccurred()
-    }
 }
