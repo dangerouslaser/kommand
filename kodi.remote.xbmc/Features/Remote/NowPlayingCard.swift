@@ -203,18 +203,6 @@ struct NowPlayingCard: View {
                     .padding(.top, 12)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
-
-            // Expand indicator
-            HStack {
-                Spacer()
-                Image(systemName: "chevron.compact.down")
-                    .font(.body)
-                    .foregroundStyle(.tertiary)
-                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                    .accessibilityLabel(isExpanded ? "Collapse details" : "Show more details")
-                Spacer()
-            }
-            .padding(.top, 8)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -224,7 +212,7 @@ struct NowPlayingCard: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
-        .accessibilityHint("Tap to \(isExpanded ? "collapse" : "expand") details")
+        .accessibilityHint("Tap card to \(isExpanded ? "collapse" : "show") details")
     }
 
     private var accessibilityDescription: String {
