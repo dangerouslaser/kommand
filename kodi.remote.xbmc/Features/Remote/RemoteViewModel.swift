@@ -11,7 +11,9 @@ final class RemoteViewModel {
     private var appState: AppState?
     private var client = KodiClient()
     private var pollingTask: Task<Void, Never>?
+    private var notificationTask: Task<Void, Never>?
     private var isPolling = false
+    private var usePollingFallback = false
 
     // Cache for expensive lookups that don't change frequently
     private var cachedDVProfile: String?
@@ -20,6 +22,7 @@ final class RemoteViewModel {
 
     deinit {
         pollingTask?.cancel()
+        notificationTask?.cancel()
     }
 
     func configure(appState: AppState) {
@@ -32,7 +35,7 @@ final class RemoteViewModel {
         }
     }
 
-    // MARK: - Polling
+    // MARK: - Connection
 
     func startPolling() async {
         guard !isPolling else { return }
@@ -55,6 +58,64 @@ final class RemoteViewModel {
         // Check for CoreELEC on initial connection
         await checkCoreELEC()
 
+        // Try WebSocket first, fall back to polling if it fails
+        if !usePollingFallback {
+            await startWebSocketConnection()
+        }
+
+        // If WebSocket failed or isn't available, use polling
+        if usePollingFallback {
+            startPollingFallback()
+        }
+    }
+
+    private func startWebSocketConnection() async {
+        guard let stream = await client.connectWebSocket() else {
+            usePollingFallback = true
+            return
+        }
+
+        // Initial fetch to populate state
+        await updateNowPlaying()
+        await updateVolume()
+
+        notificationTask = Task {
+            for await notification in stream {
+                if Task.isCancelled { break }
+                await handleNotification(notification)
+            }
+
+            // Stream ended (WebSocket disconnected) - fall back to polling
+            if !Task.isCancelled {
+                await MainActor.run {
+                    usePollingFallback = true
+                }
+                startPollingFallback()
+            }
+        }
+    }
+
+    private func handleNotification(_ notification: JSONRPCNotification) async {
+        guard let type = KodiNotification(rawValue: notification.method) else {
+            return
+        }
+
+        switch type {
+        case .playerOnPlay, .playerOnPause, .playerOnStop, .playerOnSeek, .playerOnSpeedChanged:
+            await updateNowPlaying()
+
+        case .applicationOnVolumeChanged:
+            await updateVolume()
+
+        case .playerOnPropertyChanged:
+            await updateNowPlaying()
+
+        default:
+            break
+        }
+    }
+
+    private func startPollingFallback() {
         pollingTask = Task {
             while !Task.isCancelled {
                 await updateNowPlaying()
@@ -88,8 +149,15 @@ final class RemoteViewModel {
 
     func stopPolling() {
         pollingTask?.cancel()
+        notificationTask?.cancel()
         pollingTask = nil
+        notificationTask = nil
         isPolling = false
+        usePollingFallback = false
+
+        Task {
+            await client.disconnectWebSocket()
+        }
     }
 
     private func updateNowPlaying() async {

@@ -9,8 +9,7 @@ actor KodiClient {
     private var host: KodiHost?
     private var session: URLSession
     private var requestId: Int = 0
-    private var webSocketTask: URLSessionWebSocketTask?
-    private var notificationContinuation: AsyncStream<JSONRPCNotification>.Continuation?
+    private var webSocketManager: WebSocketManager?
 
     init() {
         let config = URLSessionConfiguration.default
@@ -28,6 +27,26 @@ actor KodiClient {
     func testConnection() async throws -> Bool {
         let _: String = try await send(method: "JSONRPC.Ping")
         return true
+    }
+
+    // MARK: - WebSocket
+
+    func connectWebSocket() async -> AsyncStream<JSONRPCNotification>? {
+        guard let host = host else { return nil }
+
+        webSocketManager = WebSocketManager()
+        return await webSocketManager?.connect(to: host)
+    }
+
+    func disconnectWebSocket() async {
+        await webSocketManager?.disconnect()
+        webSocketManager = nil
+    }
+
+    var isWebSocketConnected: Bool {
+        get async {
+            await webSocketManager?.isConnected ?? false
+        }
     }
 
     // MARK: - JSON-RPC

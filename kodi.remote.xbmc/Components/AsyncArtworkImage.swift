@@ -44,44 +44,12 @@ struct AsyncArtworkImage: View {
         isLoading = true
         loadFailed = false
 
-        var request = URLRequest(url: url)
-        request.cachePolicy = .returnCacheDataElseLoad
-
-        // Add basic auth if credentials exist
-        if let username = host.username, !username.isEmpty {
-            let password = KeychainHelper.getPassword(for: host.id) ?? ""
-            let credentials = "\(username):\(password)"
-            if let data = credentials.data(using: .utf8) {
-                let base64 = data.base64EncodedString()
-                request.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")
+        if let image = await ImageCacheService.shared.image(for: url, host: host) {
+            await MainActor.run {
+                loadedImage = image
+                isLoading = false
             }
-        }
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            if let httpResponse = response as? HTTPURLResponse {
-                guard httpResponse.statusCode == 200 else {
-                    await MainActor.run {
-                        isLoading = false
-                        loadFailed = true
-                    }
-                    return
-                }
-            }
-
-            if let uiImage = UIImage(data: data) {
-                await MainActor.run {
-                    loadedImage = uiImage
-                    isLoading = false
-                }
-            } else {
-                await MainActor.run {
-                    isLoading = false
-                    loadFailed = true
-                }
-            }
-        } catch {
+        } else {
             await MainActor.run {
                 isLoading = false
                 loadFailed = true

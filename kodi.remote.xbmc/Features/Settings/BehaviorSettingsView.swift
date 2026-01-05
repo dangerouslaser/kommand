@@ -20,6 +20,8 @@ struct BehaviorSettingsView: View {
     @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
 
     @State private var showProPaywall = false
+    @State private var imageCacheSize: String = "Calculating..."
+    @State private var showClearCacheConfirm = false
 
     var body: some View {
         Form {
@@ -87,12 +89,53 @@ struct BehaviorSettingsView: View {
             } footer: {
                 Text("Choose which options appear in the power menu on the Remote tab. The power menu is only visible when connected to a CoreELEC device.")
             }
+
+            Section {
+                HStack {
+                    Text("Image Cache")
+                    Spacer()
+                    Text(imageCacheSize)
+                        .foregroundStyle(.secondary)
+                }
+
+                Button(role: .destructive) {
+                    showClearCacheConfirm = true
+                } label: {
+                    Text("Clear Image Cache")
+                }
+            } header: {
+                Text("Storage")
+            } footer: {
+                Text("Cached artwork images are stored for 7 days to improve browsing speed.")
+            }
         }
         .navigationTitle("Behavior")
+        .task {
+            await updateCacheSize()
+        }
+        .confirmationDialog("Clear Image Cache?", isPresented: $showClearCacheConfirm, titleVisibility: .visible) {
+            Button("Clear Cache", role: .destructive) {
+                Task {
+                    await ImageCacheService.shared.clearCache()
+                    await updateCacheSize()
+                    HapticService.notification(.success)
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This will remove all cached artwork. Images will be re-downloaded as needed.")
+        }
         .navigationBarTitleDisplayMode(.inline)
         .themedScrollBackground()
         .sheet(isPresented: $showProPaywall) {
             ProPaywallView()
         }
+    }
+
+    private func updateCacheSize() async {
+        let bytes = await ImageCacheService.shared.diskCacheSize
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        imageCacheSize = formatter.string(fromByteCount: Int64(bytes))
     }
 }
