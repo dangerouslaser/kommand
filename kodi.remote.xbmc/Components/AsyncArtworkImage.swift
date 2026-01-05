@@ -23,7 +23,7 @@ struct AsyncArtworkImage: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                placeholderImage
+                Color.clear
             }
         }
         .task(id: path) {
@@ -56,14 +56,6 @@ struct AsyncArtworkImage: View {
         }
     }
 
-    private var placeholderImage: some View {
-        ZStack {
-            Color.secondary.opacity(0.1)
-            Image(systemName: "photo")
-                .font(.title)
-                .foregroundStyle(.secondary)
-        }
-    }
 }
 
 #Preview {
