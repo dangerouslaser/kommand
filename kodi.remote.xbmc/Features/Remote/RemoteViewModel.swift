@@ -473,6 +473,23 @@ final class RemoteViewModel {
         }
     }
 
+    func seekToPercentage(_ percentage: Double) {
+        HapticService.impact(.light)
+
+        Task {
+            guard let playerId = appState?.activePlayerId else { return }
+            do {
+                // Clamp percentage to valid range
+                let clamped = min(100, max(0, percentage * 100))
+                try await client.seek(playerId: playerId, percentage: clamped)
+                // Refresh now playing to update UI
+                await updateNowPlaying()
+            } catch {
+                // Error handled silently
+            }
+        }
+    }
+
     func setSubtitle(_ index: Int) {
         HapticService.impact(.light)
 

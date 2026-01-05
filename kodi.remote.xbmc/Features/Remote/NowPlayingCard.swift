@@ -9,10 +9,13 @@ struct NowPlayingCard: View {
     let item: NowPlayingItem
     var onAudioStreamChange: ((Int) -> Void)?
     var onSubtitleChange: ((Int) -> Void)?
+    var onSeek: ((Double) -> Void)?
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.themeColors) private var themeColors
     @State private var isExpanded = false
+    @State private var isSeeking = false
+    @State private var seekProgress: Double = 0
     @AppStorage("showDolbyVisionProfile") private var showDolbyVisionProfile = false
 
     private let cardHeight: CGFloat = 180
@@ -113,31 +116,66 @@ struct NowPlayingCard: View {
                     }
                     .padding(.horizontal, contentPadding)
 
-                    // Progress bar
+                    // Interactive progress/seek bar
                     VStack(spacing: 4) {
                         GeometryReader { geometry in
+                            let displayProgress = isSeeking ? seekProgress : item.progress
+
                             ZStack(alignment: .leading) {
                                 // Track
-                                RoundedRectangle(cornerRadius: 1.5)
+                                RoundedRectangle(cornerRadius: isSeeking ? 2.5 : 1.5)
                                     .fill(.white.opacity(0.3))
-                                    .frame(height: 3)
+                                    .frame(height: isSeeking ? 5 : 3)
 
                                 // Progress
-                                RoundedRectangle(cornerRadius: 1.5)
+                                RoundedRectangle(cornerRadius: isSeeking ? 2.5 : 1.5)
                                     .fill(.white)
-                                    .frame(width: geometry.size.width * item.progress, height: 3)
+                                    .frame(width: geometry.size.width * displayProgress, height: isSeeking ? 5 : 3)
+
+                                // Seek handle (visible when seeking)
+                                if isSeeking && onSeek != nil {
+                                    Circle()
+                                        .fill(.white)
+                                        .frame(width: 12, height: 12)
+                                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                        .position(x: geometry.size.width * displayProgress, y: 2.5)
+                                }
                             }
+                            .frame(height: isSeeking ? 5 : 3)
+                            .contentShape(Rectangle().size(width: geometry.size.width, height: 30))
+                            .gesture(
+                                onSeek != nil ? DragGesture(minimumDistance: 0)
+                                    .onChanged { value in
+                                        if !isSeeking {
+                                            isSeeking = true
+                                            seekProgress = item.progress
+                                            HapticService.impact(.light)
+                                        }
+                                        let newProgress = max(0, min(1, value.location.x / geometry.size.width))
+                                        seekProgress = newProgress
+                                    }
+                                    .onEnded { value in
+                                        let finalProgress = max(0, min(1, value.location.x / geometry.size.width))
+                                        onSeek?(finalProgress)
+                                        HapticService.impact(.medium)
+                                        // Brief delay before hiding seek UI to show final position
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            isSeeking = false
+                                        }
+                                    } : nil
+                            )
                         }
-                        .frame(height: 3)
+                        .frame(height: isSeeking ? 5 : 3)
+                        .animation(.easeInOut(duration: 0.15), value: isSeeking)
 
                         HStack {
-                            Text(item.position.formattedDuration)
+                            Text(seekTimeDisplay.formattedDuration)
                                 .font(.system(size: 10))
                                 .foregroundStyle(.white.opacity(0.6))
 
                             Spacer()
 
-                            Text("-\(item.remainingTime.formattedDuration)")
+                            Text("-\(seekRemainingDisplay.formattedDuration)")
                                 .font(.system(size: 10))
                                 .foregroundStyle(.white.opacity(0.6))
                         }
@@ -197,6 +235,22 @@ struct NowPlayingCard: View {
         description += ". \(item.position.formattedDuration) of \(item.duration.formattedDuration)"
         description += item.isPlaying ? ". Playing" : ". Paused"
         return description
+    }
+
+    // MARK: - Seek Time Display
+
+    private var seekTimeDisplay: TimeInterval {
+        if isSeeking {
+            return seekProgress * Double(item.duration)
+        }
+        return TimeInterval(item.position)
+    }
+
+    private var seekRemainingDisplay: TimeInterval {
+        if isSeeking {
+            return max(0, Double(item.duration) - seekProgress * Double(item.duration))
+        }
+        return TimeInterval(item.remainingTime)
     }
 
     // MARK: - Background View

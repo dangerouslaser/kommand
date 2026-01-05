@@ -36,7 +36,8 @@ struct RemoteTab: View {
                         NowPlayingCard(
                             item: nowPlaying,
                             onAudioStreamChange: viewModel.setAudioStream,
-                            onSubtitleChange: viewModel.setSubtitle
+                            onSubtitleChange: viewModel.setSubtitle,
+                            onSeek: viewModel.seekToPercentage
                         )
                         .padding(.horizontal)
                     } else {

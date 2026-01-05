@@ -311,6 +311,7 @@ private struct Badge: View {
 private struct ProgressBarView: View {
     let elapsed: TimeInterval
     let total: TimeInterval
+    var isInteractive: Bool = true
 
     private var progress: Double {
         guard total > 0 else { return 0 }
@@ -324,17 +325,33 @@ private struct ProgressBarView: View {
                 .font(.system(size: 9, weight: .medium).monospacedDigit())
                 .foregroundStyle(.white.opacity(0.7))
 
-            // Progress track
+            // Progress track with tap zones
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
+                    // Background track
                     Capsule()
                         .fill(.white.opacity(0.25))
+
+                    // Progress fill
                     Capsule()
                         .fill(.white)
                         .frame(width: geometry.size.width * progress)
+
+                    // Interactive tap zones (5 zones for seeking)
+                    if isInteractive {
+                        HStack(spacing: 0) {
+                            ForEach(0..<5) { index in
+                                let percentage = Double(index) * 20.0 + 10.0 // 10%, 30%, 50%, 70%, 90%
+                                Button(intent: SeekToPositionIntent(percentage: percentage)) {
+                                    Color.clear
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
                 }
             }
-            .frame(height: 3)
+            .frame(height: isInteractive ? 16 : 3) // Larger tap target when interactive
 
             // Remaining time
             Text("-\(formatTime(max(0, total - elapsed)))")
