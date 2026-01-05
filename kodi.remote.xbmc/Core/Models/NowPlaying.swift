@@ -48,6 +48,7 @@ struct NowPlayingItem: Equatable {
     let filePath: String?
     var dolbyVisionProfile: String? // e.g., "P7 FEL", "P8.1 MEL"
     var hasAtmos: Bool
+    var lastUpdated: Date = Date() // Timestamp when position was captured
 
     var isPlaying: Bool {
         speed != 0
@@ -60,6 +61,24 @@ struct NowPlayingItem: Equatable {
 
     var remainingTime: TimeInterval {
         max(0, duration - position)
+    }
+
+    /// Estimated current position based on elapsed time since last update
+    func estimatedPosition(at date: Date = Date()) -> TimeInterval {
+        guard isPlaying else { return position }
+        let elapsed = date.timeIntervalSince(lastUpdated)
+        return min(duration, max(0, position + elapsed))
+    }
+
+    /// Estimated progress based on elapsed time since last update
+    func estimatedProgress(at date: Date = Date()) -> Double {
+        guard duration > 0 else { return 0 }
+        return estimatedPosition(at: date) / duration
+    }
+
+    /// Estimated remaining time based on elapsed time since last update
+    func estimatedRemainingTime(at date: Date = Date()) -> TimeInterval {
+        max(0, duration - estimatedPosition(at: date))
     }
 
     static let empty = NowPlayingItem(

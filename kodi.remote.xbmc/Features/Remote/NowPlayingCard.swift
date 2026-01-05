@@ -168,16 +168,19 @@ struct NowPlayingCard: View {
                         .frame(height: isSeeking ? 5 : 3)
                         .animation(.easeInOut(duration: 0.15), value: isSeeking)
 
-                        HStack {
-                            Text(seekTimeDisplay.formattedDuration)
-                                .font(.system(size: 10))
-                                .foregroundStyle(.white.opacity(0.6))
+                        // Time labels with real-time updates when playing
+                        TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                            HStack {
+                                Text(seekTimeDisplay(at: context.date).formattedDuration)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.white.opacity(0.6))
 
-                            Spacer()
+                                Spacer()
 
-                            Text("-\(seekRemainingDisplay.formattedDuration)")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.white.opacity(0.6))
+                                Text("-\(seekRemainingDisplay(at: context.date).formattedDuration)")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.white.opacity(0.6))
+                            }
                         }
                     }
                     .padding(.horizontal, contentPadding)
@@ -227,18 +230,18 @@ struct NowPlayingCard: View {
 
     // MARK: - Seek Time Display
 
-    private var seekTimeDisplay: TimeInterval {
+    private func seekTimeDisplay(at date: Date) -> TimeInterval {
         if isSeeking {
             return seekProgress * Double(item.duration)
         }
-        return TimeInterval(item.position)
+        return item.estimatedPosition(at: date)
     }
 
-    private var seekRemainingDisplay: TimeInterval {
+    private func seekRemainingDisplay(at date: Date) -> TimeInterval {
         if isSeeking {
             return max(0, Double(item.duration) - seekProgress * Double(item.duration))
         }
-        return TimeInterval(item.remainingTime)
+        return item.estimatedRemainingTime(at: date)
     }
 
     // MARK: - Background View

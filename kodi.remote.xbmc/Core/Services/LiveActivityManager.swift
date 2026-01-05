@@ -108,7 +108,15 @@ final class LiveActivityManager {
             // Cache artwork if it changed
             await cacheArtwork(for: item, host: host)
 
-            let state = contentState(from: item)
+            var state = contentState(from: item)
+
+            // If we're within cooldown after an intent action, preserve the current isPlaying state
+            // This prevents polling from overwriting the correct state set by the intent
+            if AppGroupConstants.isWithinIntentCooldown {
+                state.isPlaying = activity.content.state.isPlaying
+                state.lastUpdated = activity.content.state.lastUpdated
+            }
+
             await activity.update(
                 ActivityContent(state: state, staleDate: nil)
             )
@@ -211,6 +219,7 @@ final class LiveActivityManager {
             elapsedTime: item.position,
             totalDuration: item.duration,
             isPlaying: item.isPlaying,
+            lastUpdated: Date(),
             hdrType: item.hdrType,
             resolution: resolution,
             audioCodec: audioCodec,

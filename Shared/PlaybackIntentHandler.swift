@@ -17,11 +17,15 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func playPause() async {
-        let success = await sendCommand("Player.PlayPause")
-        if success {
-            // Optimistic update: toggle isPlaying immediately
+        // Record that an intent action is happening (prevents polling from overwriting)
+        AppGroupConstants.recordIntentAction()
+
+        // Player.PlayPause returns the new speed (0 = paused, 1 = playing)
+        if let speed = await sendPlayPauseCommand() {
+            let isPlaying = speed != 0
             await updateActivityState { state in
-                state.isPlaying = !state.isPlaying
+                state.isPlaying = isPlaying
+                state.lastUpdated = Date() // Reset timer reference
             }
         }
     }
@@ -30,9 +34,9 @@ enum PlaybackIntentHandler {
     static func stop() async {
         let success = await sendCommand("Player.Stop")
         if success {
-            // Optimistic update: set isPlaying to false
             await updateActivityState { state in
                 state.isPlaying = false
+                state.lastUpdated = Date()
             }
         }
     }
@@ -51,22 +55,38 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func seekForward() async {
+        // Record intent action to prevent polling from overwriting
+        AppGroupConstants.recordIntentAction()
+
         let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": 30]])
         if success {
-            // Optimistic update: advance elapsed time
+            let now = Date()
             await updateActivityState { state in
-                state.elapsedTime = min(state.elapsedTime + 30, state.totalDuration)
+                // Calculate estimated current position before seeking
+                let estimatedElapsed = state.isPlaying
+                    ? state.elapsedTime + now.timeIntervalSince(state.lastUpdated)
+                    : state.elapsedTime
+                state.elapsedTime = min(estimatedElapsed + 30, state.totalDuration)
+                state.lastUpdated = now
             }
         }
     }
 
     @MainActor
     static func seekBackward() async {
-        let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": -10]])
+        // Record intent action to prevent polling from overwriting
+        AppGroupConstants.recordIntentAction()
+
+        let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": -30]])
         if success {
-            // Optimistic update: rewind elapsed time
+            let now = Date()
             await updateActivityState { state in
-                state.elapsedTime = max(state.elapsedTime - 10, 0)
+                // Calculate estimated current position before seeking
+                let estimatedElapsed = state.isPlaying
+                    ? state.elapsedTime + now.timeIntervalSince(state.lastUpdated)
+                    : state.elapsedTime
+                state.elapsedTime = max(estimatedElapsed - 30, 0)
+                state.lastUpdated = now
             }
         }
     }
@@ -90,6 +110,81 @@ enum PlaybackIntentHandler {
     }
 
     // MARK: - Command Sending
+
+    /// Send PlayPause and return the resulting speed (0 = paused, non-zero = playing)
+    @MainActor
+    private static func sendPlayPauseCommand() async -> Int? {
+        guard let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
+            return nil
+        }
+
+        defaults.synchronize()
+
+        guard let address = defaults.string(forKey: AppGroupConstants.hostAddressKey),
+              !address.isEmpty else {
+            return nil
+        }
+
+        guard defaults.object(forKey: AppGroupConstants.activePlayerIdKey) != nil else {
+            return nil
+        }
+        let playerId = defaults.integer(forKey: AppGroupConstants.activePlayerIdKey)
+
+        var port = defaults.integer(forKey: AppGroupConstants.hostPortKey)
+        if port == 0 { port = 8080 }
+
+        guard let url = URL(string: "http://\(address):\(port)/jsonrpc") else {
+            return nil
+        }
+
+        let body: [String: Any] = [
+            "jsonrpc": "2.0",
+            "method": "Player.PlayPause",
+            "params": ["playerid": playerId],
+            "id": 1
+        ]
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {
+            return nil
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = jsonData
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 5
+
+        // Add basic auth if credentials are set
+        if let username = defaults.string(forKey: AppGroupConstants.hostUsernameKey),
+           !username.isEmpty {
+            let password = defaults.string(forKey: AppGroupConstants.hostPasswordKey) ?? ""
+            let credentials = "\(username):\(password)"
+            if let credentialsData = credentials.data(using: .utf8) {
+                let base64 = credentialsData.base64EncodedString()
+                request.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")
+            }
+        }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                return nil
+            }
+
+            // Parse response: {"id":1,"jsonrpc":"2.0","result":{"speed":1}}
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let result = json["result"] as? [String: Any],
+               let speed = result["speed"] as? Int {
+                return speed
+            }
+
+            return nil
+        } catch {
+            return nil
+        }
+    }
 
     @discardableResult
     @MainActor

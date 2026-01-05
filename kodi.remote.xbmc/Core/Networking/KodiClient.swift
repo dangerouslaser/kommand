@@ -156,10 +156,9 @@ actor KodiClient {
     }
 
     func seekRelative(playerId: Int, seconds: Int) async throws {
-        let direction = seconds >= 0 ? "bigforward" : "bigbackward"
         let _: PlayerPropertiesResponse = try await send(method: "Player.Seek", params: [
             "playerid": playerId,
-            "value": direction
+            "value": ["seconds": seconds]
         ])
     }
 

@@ -454,6 +454,16 @@ final class RemoteViewModel {
             guard let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.seekRelative(playerId: playerId, seconds: -30)
+                // Optimistic update based on estimated position
+                await MainActor.run {
+                    if var nowPlaying = appState?.nowPlaying {
+                        let now = Date()
+                        let estimatedPosition = nowPlaying.estimatedPosition(at: now)
+                        nowPlaying.position = max(0, estimatedPosition - 30)
+                        nowPlaying.lastUpdated = now
+                        appState?.nowPlaying = nowPlaying
+                    }
+                }
             } catch {
                 // Error handled silently
             }
@@ -467,6 +477,16 @@ final class RemoteViewModel {
             guard let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.seekRelative(playerId: playerId, seconds: 30)
+                // Optimistic update based on estimated position
+                await MainActor.run {
+                    if var nowPlaying = appState?.nowPlaying {
+                        let now = Date()
+                        let estimatedPosition = nowPlaying.estimatedPosition(at: now)
+                        nowPlaying.position = min(nowPlaying.duration, estimatedPosition + 30)
+                        nowPlaying.lastUpdated = now
+                        appState?.nowPlaying = nowPlaying
+                    }
+                }
             } catch {
                 // Error handled silently
             }

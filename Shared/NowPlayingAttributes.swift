@@ -20,6 +20,10 @@ struct NowPlayingAttributes: ActivityAttributes {
         var totalDuration: TimeInterval
         var isPlaying: Bool
 
+        // Timestamp when elapsedTime was captured - used for live progress estimation
+        // When playing, progress = elapsedTime + (now - lastUpdated)
+        var lastUpdated: Date
+
         // Codec/quality info for badges
         var hdrType: String?        // "dolbyvision", "hdr10", etc.
         var resolution: String?     // "4K", "1080p", etc.
@@ -43,6 +47,25 @@ enum AppGroupConstants {
     static let hostUsernameKey = "currentHostUsername"
     static let hostPasswordKey = "currentHostPassword"
     static let activePlayerIdKey = "activePlayerId"
+    static let lastIntentActionKey = "lastIntentActionTime"
+
+    /// Cooldown period after an intent action during which polling won't update isPlaying
+    static let intentCooldownSeconds: TimeInterval = 3.0
+
+    /// Record that an intent action was just performed
+    static func recordIntentAction() {
+        UserDefaults(suiteName: suiteName)?.set(Date().timeIntervalSince1970, forKey: lastIntentActionKey)
+    }
+
+    /// Check if we're within the cooldown period after an intent action
+    static var isWithinIntentCooldown: Bool {
+        guard let defaults = UserDefaults(suiteName: suiteName),
+              let lastAction = defaults.object(forKey: lastIntentActionKey) as? TimeInterval else {
+            return false
+        }
+        let elapsed = Date().timeIntervalSince1970 - lastAction
+        return elapsed < intentCooldownSeconds
+    }
 
     // Fixed filenames for Live Activity images
     // Using fixed names simplifies everything - no need to pass paths in ContentState
