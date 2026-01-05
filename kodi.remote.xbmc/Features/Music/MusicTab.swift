@@ -130,7 +130,11 @@ struct MusicTab: View {
     private var artistsView: some View {
         Group {
             if viewModel.isLoading && viewModel.artists.isEmpty {
-                ProgressView("Loading Artists...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading Artists...")
+                        .foregroundStyle(.secondary)
+                }
             } else if filteredArtists.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -142,9 +146,12 @@ struct MusicTab: View {
                     ContentUnavailableView.search(text: searchText)
                 }
             } else {
-                List(filteredArtists) { artist in
-                    NavigationLink(value: artist) {
-                        ArtistRow(artist: artist, host: appState.currentHost)
+                List {
+                    ForEach(filteredArtists) { artist in
+                        NavigationLink(value: artist) {
+                            ArtistRow(artist: artist, host: appState.currentHost)
+                        }
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.plain)
@@ -170,7 +177,11 @@ struct MusicTab: View {
     private var albumsView: some View {
         Group {
             if viewModel.isLoading && viewModel.albums.isEmpty {
-                ProgressView("Loading Albums...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading Albums...")
+                        .foregroundStyle(.secondary)
+                }
             } else if filteredAlbums.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {

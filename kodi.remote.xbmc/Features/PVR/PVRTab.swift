@@ -22,7 +22,11 @@ struct PVRTab: View {
         NavigationStack {
             Group {
                 if viewModel.isCheckingAvailability {
-                    ProgressView("Checking PVR...")
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Checking PVR...")
+                            .foregroundStyle(.secondary)
+                    }
                 } else if !viewModel.isPVRAvailable {
                     ContentUnavailableView {
                         Label("PVR Not Available", systemImage: "tv.slash")
@@ -114,7 +118,11 @@ struct PVRTab: View {
     private var tvChannelsView: some View {
         Group {
             if viewModel.isLoadingChannels && viewModel.tvChannels.isEmpty {
-                ProgressView("Loading Channels...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading Channels...")
+                        .foregroundStyle(.secondary)
+                }
             } else if filteredTVChannels.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -126,11 +134,14 @@ struct PVRTab: View {
                     ContentUnavailableView.search(text: searchText)
                 }
             } else {
-                List(filteredTVChannels) { channel in
-                    ChannelRow(channel: channel, host: appState.currentHost) {
-                        Task { await viewModel.playChannel(channel) }
-                    } onRecord: {
-                        Task { await viewModel.recordChannel(channel) }
+                List {
+                    ForEach(filteredTVChannels) { channel in
+                        ChannelRow(channel: channel, host: appState.currentHost) {
+                            Task { await viewModel.playChannel(channel) }
+                        } onRecord: {
+                            Task { await viewModel.recordChannel(channel) }
+                        }
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.plain)
@@ -153,7 +164,11 @@ struct PVRTab: View {
     private var radioChannelsView: some View {
         Group {
             if viewModel.isLoadingChannels && viewModel.radioChannels.isEmpty {
-                ProgressView("Loading Stations...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading Stations...")
+                        .foregroundStyle(.secondary)
+                }
             } else if filteredRadioChannels.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -165,11 +180,14 @@ struct PVRTab: View {
                     ContentUnavailableView.search(text: searchText)
                 }
             } else {
-                List(filteredRadioChannels) { channel in
-                    ChannelRow(channel: channel, host: appState.currentHost) {
-                        Task { await viewModel.playChannel(channel) }
-                    } onRecord: {
-                        Task { await viewModel.recordChannel(channel) }
+                List {
+                    ForEach(filteredRadioChannels) { channel in
+                        ChannelRow(channel: channel, host: appState.currentHost) {
+                            Task { await viewModel.playChannel(channel) }
+                        } onRecord: {
+                            Task { await viewModel.recordChannel(channel) }
+                        }
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.plain)
@@ -192,7 +210,11 @@ struct PVRTab: View {
     private var recordingsView: some View {
         Group {
             if viewModel.isLoadingRecordings && viewModel.recordings.isEmpty {
-                ProgressView("Loading Recordings...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading Recordings...")
+                        .foregroundStyle(.secondary)
+                }
             } else if filteredRecordings.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -218,6 +240,7 @@ struct PVRTab: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.plain)
@@ -241,7 +264,11 @@ struct PVRTab: View {
     private var timersView: some View {
         Group {
             if viewModel.isLoadingTimers && viewModel.timers.isEmpty {
-                ProgressView("Loading Timers...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading Timers...")
+                        .foregroundStyle(.secondary)
+                }
             } else if filteredTimers.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -265,6 +292,7 @@ struct PVRTab: View {
                                     }
                                 }
                             }
+                            .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.plain)

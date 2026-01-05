@@ -20,7 +20,12 @@ struct TVShowsTab: View {
         NavigationStack {
             Group {
                 if libraryState.isLoadingTVShows && libraryState.tvShows.isEmpty {
-                    ProgressView("Loading TV Shows...")
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading TV Shows...")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = libraryState.tvShowsError {
                     ContentUnavailableView {
                         Label("Error", systemImage: "exclamationmark.triangle")
@@ -109,9 +114,12 @@ struct TVShowsTab: View {
     }
 
     private var showsList: some View {
-        List(filteredShows) { show in
-            NavigationLink(value: show) {
-                TVShowListRow(show: show, host: appState.currentHost)
+        List {
+            ForEach(filteredShows) { show in
+                NavigationLink(value: show) {
+                    TVShowListRow(show: show, host: appState.currentHost)
+                }
+                .listRowBackground(Color.clear)
             }
         }
         .listStyle(.plain)

@@ -132,7 +132,11 @@ struct KodiSettingsView: View {
             if viewModel.isLoadingSections {
                 HStack {
                     Spacer()
-                    ProgressView("Loading settings...")
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading settings...")
+                            .foregroundStyle(.secondary)
+                    }
                     Spacer()
                 }
                 .listRowBackground(Color.clear)

@@ -17,7 +17,12 @@ struct DashboardTab: View {
                     // Search Results
                     searchResultsView
                 } else if viewModel.isInitialLoad && viewModel.isLoadingInProgress && viewModel.isLoadingRecent {
-                    ProgressView("Loading...")
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading...")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if !viewModel.hasContinueWatching && !viewModel.hasRecentlyAdded {
                     ContentUnavailableView {
                         Label("Nothing Here Yet", systemImage: "play.square.stack")
@@ -89,8 +94,12 @@ struct DashboardTab: View {
     private var searchResultsView: some View {
         Group {
             if viewModel.isSearching {
-                ProgressView("Searching...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Searching...")
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !viewModel.hasSearchResults {
                 ContentUnavailableView.search(text: searchText)
             } else {
@@ -105,6 +114,7 @@ struct DashboardTab: View {
                                     SearchChannelRow(channel: channel, host: appState.currentHost)
                                 }
                                 .buttonStyle(.plain)
+                                .listRowBackground(Color.clear)
                             }
                         }
                     }
@@ -116,6 +126,7 @@ struct DashboardTab: View {
                                 NavigationLink(value: movie) {
                                     SearchMovieRow(movie: movie, host: appState.currentHost)
                                 }
+                                .listRowBackground(Color.clear)
                             }
                         }
                     }
@@ -127,6 +138,7 @@ struct DashboardTab: View {
                                 NavigationLink(value: show) {
                                     SearchTVShowRow(show: show, host: appState.currentHost)
                                 }
+                                .listRowBackground(Color.clear)
                             }
                         }
                     }
@@ -449,7 +461,11 @@ struct DashboardShowDetailWrapper: View {
     var body: some View {
         Group {
             if isLoading {
-                ProgressView("Loading show...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading show...")
+                        .foregroundStyle(.secondary)
+                }
             } else if let tvShow = tvShow {
                 TVShowDetailView(show: tvShow, viewModel: viewModel)
             } else if let error = error {

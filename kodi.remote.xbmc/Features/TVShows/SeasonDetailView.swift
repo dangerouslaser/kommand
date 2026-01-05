@@ -37,10 +37,12 @@ struct SeasonDetailView: View {
                         onQueue: { await viewModel.queueEpisode(episode) },
                         onToggleWatched: { await viewModel.toggleWatched(episode) }
                     )
+                    .listRowBackground(Color.clear)
                 }
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .navigationTitle(season.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .task {

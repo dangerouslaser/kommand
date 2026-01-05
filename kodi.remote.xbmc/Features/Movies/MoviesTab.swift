@@ -21,7 +21,12 @@ struct MoviesTab: View {
         NavigationStack {
             Group {
                 if libraryState.isLoadingMovies && libraryState.movies.isEmpty {
-                    ProgressView("Loading Movies...")
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading Movies...")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = libraryState.moviesError {
                     ContentUnavailableView {
                         Label("Error", systemImage: "exclamationmark.triangle")
@@ -110,9 +115,12 @@ struct MoviesTab: View {
     }
 
     private var movieList: some View {
-        List(filteredMovies) { movie in
-            NavigationLink(value: movie) {
-                MovieListRow(movie: movie, host: appState.currentHost)
+        List {
+            ForEach(filteredMovies) { movie in
+                NavigationLink(value: movie) {
+                    MovieListRow(movie: movie, host: appState.currentHost)
+                }
+                .listRowBackground(Color.clear)
             }
         }
         .listStyle(.plain)
