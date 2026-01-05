@@ -22,7 +22,6 @@ struct AsyncArtworkImage: View {
             } else if isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.secondary.opacity(0.1))
             } else {
                 placeholderImage
             }
