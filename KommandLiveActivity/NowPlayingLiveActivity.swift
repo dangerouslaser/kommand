@@ -27,8 +27,8 @@ struct NowPlayingLiveActivity: Widget {
                 // Expanded: Trailing - Playback controls
                 DynamicIslandExpandedRegion(.trailing) {
                     HStack(spacing: 8) {
-                        Button(intent: SkipBackwardIntent()) {
-                            Image(systemName: "backward.fill")
+                        Button(intent: SeekBackwardIntent()) {
+                            Image(systemName: "gobackward.30")
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(width: 32, height: 32)
                                 .contentShape(Rectangle())
@@ -43,8 +43,8 @@ struct NowPlayingLiveActivity: Widget {
                         }
                         .buttonStyle(.plain)
 
-                        Button(intent: SkipForwardIntent()) {
-                            Image(systemName: "forward.fill")
+                        Button(intent: SeekForwardIntent()) {
+                            Image(systemName: "goforward.30")
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(width: 32, height: 32)
                                 .contentShape(Rectangle())
@@ -186,8 +186,8 @@ private struct LockScreenView: View {
 
             // Playback Controls
             HStack(spacing: 12) {
-                Button(intent: SkipBackwardIntent()) {
-                    Image(systemName: "backward.fill")
+                Button(intent: SeekBackwardIntent()) {
+                    Image(systemName: "gobackward.30")
                         .font(.system(size: 18, weight: .semibold))
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -202,8 +202,8 @@ private struct LockScreenView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button(intent: SkipForwardIntent()) {
-                    Image(systemName: "forward.fill")
+                Button(intent: SeekForwardIntent()) {
+                    Image(systemName: "goforward.30")
                         .font(.system(size: 18, weight: .semibold))
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -364,9 +364,9 @@ private struct PlaybackControlsView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Previous
-            Button(intent: SkipBackwardIntent()) {
-                Image(systemName: "backward.fill")
+            // Seek backward 30s
+            Button(intent: SeekBackwardIntent()) {
+                Image(systemName: "gobackward.30")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
             }
@@ -386,9 +386,9 @@ private struct PlaybackControlsView: View {
             }
             .buttonStyle(.plain)
 
-            // Next
-            Button(intent: SkipForwardIntent()) {
-                Image(systemName: "forward.fill")
+            // Seek forward 30s
+            Button(intent: SeekForwardIntent()) {
+                Image(systemName: "goforward.30")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
             }
