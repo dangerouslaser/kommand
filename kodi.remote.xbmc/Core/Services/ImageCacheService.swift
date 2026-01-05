@@ -120,10 +120,11 @@ actor ImageCacheService {
         url.absoluteString
     }
 
-    private func diskFilename(for url: URL) -> String {
+    private func diskFilename(for url: URL, hasAlpha: Bool = false) -> String {
         let data = Data(url.absoluteString.utf8)
         let hash = SHA256.hash(data: data)
-        return hash.compactMap { String(format: "%02x", $0) }.joined() + ".jpg"
+        let ext = hasAlpha ? ".png" : ".jpg"
+        return hash.compactMap { String(format: "%02x", $0) }.joined() + ext
     }
 
     private func createDiskCacheDirectoryIfNeeded() {
@@ -137,12 +138,23 @@ actor ImageCacheService {
     private func loadFromDisk(for url: URL) -> UIImage? {
         guard let cacheURL = diskCacheURL else { return nil }
 
-        let filename = diskFilename(for: url)
-        let fileURL = cacheURL.appendingPathComponent(filename)
+        // Try PNG first (for images with transparency), then JPG
+        let pngFilename = diskFilename(for: url, hasAlpha: true)
+        let jpgFilename = diskFilename(for: url, hasAlpha: false)
 
-        // Check if file exists and is not expired
-        guard fileManager.fileExists(atPath: fileURL.path) else { return nil }
+        let pngURL = cacheURL.appendingPathComponent(pngFilename)
+        let jpgURL = cacheURL.appendingPathComponent(jpgFilename)
 
+        let fileURL: URL
+        if fileManager.fileExists(atPath: pngURL.path) {
+            fileURL = pngURL
+        } else if fileManager.fileExists(atPath: jpgURL.path) {
+            fileURL = jpgURL
+        } else {
+            return nil
+        }
+
+        // Check if file is expired
         if let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
            let modDate = attributes[.modificationDate] as? Date {
             let expirationDate = Date().addingTimeInterval(-cacheExpiration)
@@ -163,13 +175,31 @@ actor ImageCacheService {
     private func saveToDisk(_ image: UIImage, for url: URL) {
         guard let cacheURL = diskCacheURL else { return }
 
-        let filename = diskFilename(for: url)
+        // Check if image has alpha channel (transparency)
+        let hasAlpha = imageHasAlpha(image)
+        let filename = diskFilename(for: url, hasAlpha: hasAlpha)
         let fileURL = cacheURL.appendingPathComponent(filename)
 
-        // Save as JPEG for smaller file size
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        // Save as PNG if has transparency, otherwise JPEG for smaller size
+        let data: Data?
+        if hasAlpha {
+            data = image.pngData()
+        } else {
+            data = image.jpegData(compressionQuality: 0.8)
+        }
 
-        try? data.write(to: fileURL)
+        guard let imageData = data else { return }
+        try? imageData.write(to: fileURL)
+    }
+
+    private func imageHasAlpha(_ image: UIImage) -> Bool {
+        guard let cgImage = image.cgImage else { return false }
+
+        let alphaInfo = cgImage.alphaInfo
+        return alphaInfo == .first ||
+               alphaInfo == .last ||
+               alphaInfo == .premultipliedFirst ||
+               alphaInfo == .premultipliedLast
     }
 
     private func fetchImage(from url: URL, host: KodiHost) async -> UIImage? {
