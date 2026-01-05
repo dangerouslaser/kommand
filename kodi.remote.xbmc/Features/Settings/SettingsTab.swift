@@ -295,6 +295,7 @@ struct ThemeSwatch: View {
 struct ProPaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("isProUnlocked") private var isProUnlocked = false
+    @AppStorage("liveActivityEnabled") private var liveActivityEnabled = false
 
     var body: some View {
         NavigationStack {
@@ -306,16 +307,25 @@ struct ProPaywallView: View {
                     .foregroundStyle(.orange)
 
                 VStack(spacing: 12) {
-                    Text("Unlock Premium Themes")
+                    Text("Unlock Kommand Pro")
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Get access to 8 beautiful premium themes designed for the best viewing experience.")
+                    Text("Get premium themes and Lock Screen controls with Live Activity support.")
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
+
+                // Feature list
+                VStack(alignment: .leading, spacing: 16) {
+                    ProFeatureRow(icon: "paintbrush.fill", title: "Premium Themes", description: "8 beautiful themes including OLED black")
+                    ProFeatureRow(icon: "lock.circle.fill", title: "Live Activity", description: "Control playback from Lock Screen & Dynamic Island")
+                    ProFeatureRow(icon: "tv.fill", title: "Dolby Vision Info", description: "Detailed DV profile information")
+                }
+                .padding(.horizontal, 32)
+                .padding(.vertical, 8)
 
                 // Theme previews
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -348,6 +358,7 @@ struct ProPaywallView: View {
                     Button {
                         // TODO: Implement StoreKit purchase
                         isProUnlocked = true
+                        liveActivityEnabled = true // Auto-enable Live Activity on purchase
                         dismiss()
                     } label: {
                         Text("Unlock Pro — $2.99")
@@ -361,6 +372,7 @@ struct ProPaywallView: View {
                     Button("Restore Purchases") {
                         // TODO: Implement restore
                         isProUnlocked = true
+                        liveActivityEnabled = true
                         dismiss()
                     }
                     .font(.subheadline)
@@ -380,17 +392,47 @@ struct ProPaywallView: View {
     }
 }
 
+// MARK: - Pro Feature Row
+
+private struct ProFeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(.orange)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
 struct BehaviorSettingsView: View {
     @AppStorage("hapticFeedback") private var hapticFeedback = true
     @AppStorage("seekInterval") private var seekInterval = 30
     @AppStorage("keepScreenOn") private var keepScreenOn = true
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
+    @AppStorage("liveActivityEnabled") private var liveActivityEnabled = false
+    @AppStorage("isProUnlocked") private var isProUnlocked = false
 
     // Power Menu Settings
     @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
     @AppStorage("powerMenuSuspend") private var powerMenuSuspend = false
     @AppStorage("powerMenuReboot") private var powerMenuReboot = false
     @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
+
+    @State private var showProPaywall = false
 
     var body: some View {
         Form {
@@ -415,6 +457,40 @@ struct BehaviorSettingsView: View {
             }
 
             Section {
+                HStack {
+                    Toggle("Live Activity", isOn: Binding(
+                        get: { liveActivityEnabled },
+                        set: { newValue in
+                            if newValue && !isProUnlocked {
+                                showProPaywall = true
+                            } else {
+                                liveActivityEnabled = newValue
+                                if !newValue {
+                                    // End any active Live Activity when disabled
+                                    Task {
+                                        await LiveActivityManager.shared.endAllActivities()
+                                    }
+                                }
+                            }
+                        }
+                    ))
+
+                    if !isProUnlocked {
+                        Text("PRO")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(.orange, in: RoundedRectangle(cornerRadius: 4))
+                    }
+                }
+            } header: {
+                Text("Lock Screen")
+            } footer: {
+                Text("Show playback controls on the Lock Screen and Dynamic Island while media is playing.")
+            }
+
+            Section {
                 Toggle("Restart Kodi", isOn: $powerMenuRestartKodi)
                 Toggle("Suspend Device", isOn: $powerMenuSuspend)
                 Toggle("Reboot Device", isOn: $powerMenuReboot)
@@ -428,6 +504,9 @@ struct BehaviorSettingsView: View {
         .navigationTitle("Behavior")
         .navigationBarTitleDisplayMode(.inline)
         .themedScrollBackground()
+        .sheet(isPresented: $showProPaywall) {
+            ProPaywallView()
+        }
     }
 }
 

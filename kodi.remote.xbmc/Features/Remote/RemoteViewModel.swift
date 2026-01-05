@@ -35,6 +35,8 @@ final class RemoteViewModel {
         // Ensure client is configured
         if let host = appState?.currentHost {
             await client.configure(with: host)
+            // Also configure the shared connection manager for Live Activity intents
+            await KodiConnectionManager.shared.configure(with: host)
         }
 
         await MainActor.run {
@@ -93,11 +95,17 @@ final class RemoteViewModel {
 
             await MainActor.run {
                 appState?.activePlayerId = playerId
+                // Update connection manager for Live Activity intents
+                KodiConnectionManager.shared.setActivePlayer(id: playerId)
             }
 
             guard let playerId = playerId else {
                 await MainActor.run {
-                    appState?.nowPlaying = nil
+                    if appState?.nowPlaying != nil {
+                        appState?.nowPlaying = nil
+                        // End Live Activity when playback stops
+                        LiveActivityManager.shared.endActivity()
+                    }
                 }
                 return
             }
@@ -181,8 +189,24 @@ final class RemoteViewModel {
             )
 
             await MainActor.run {
+                let previousNowPlaying = appState?.nowPlaying
                 appState?.nowPlaying = nowPlaying
                 appState?.connectionState = .connected
+
+                // Update Live Activity
+                if let host = appState?.currentHost {
+                    if previousNowPlaying == nil {
+                        // New playback started - create Live Activity
+                        LiveActivityManager.shared.startActivity(
+                            for: nowPlaying,
+                            host: host,
+                            playerId: playerId
+                        )
+                    } else {
+                        // Update existing Live Activity
+                        LiveActivityManager.shared.updateActivity(for: nowPlaying, host: host, playerId: playerId)
+                    }
+                }
             }
         } catch {
             await MainActor.run {
@@ -241,7 +265,11 @@ final class RemoteViewModel {
             do {
                 let response = try await client.playPause(playerId: playerId)
                 await MainActor.run {
-                    appState?.nowPlaying?.speed = response.speed
+                    // Replace the struct to trigger @Observable update
+                    if var nowPlaying = appState?.nowPlaying {
+                        nowPlaying.speed = response.speed
+                        appState?.nowPlaying = nowPlaying
+                    }
                 }
             } catch {
                 print("Play/pause error: \(error)")
@@ -259,6 +287,8 @@ final class RemoteViewModel {
                 await MainActor.run {
                     appState?.nowPlaying = nil
                     appState?.activePlayerId = nil
+                    // End Live Activity when stopping playback
+                    LiveActivityManager.shared.endActivity()
                 }
             } catch {
                 print("Stop error: \(error)")

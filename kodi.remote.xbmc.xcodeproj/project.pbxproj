@@ -6,14 +6,70 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B7LA00012F0347870025C1DE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B7LA00002F0347870025C1DE /* WidgetKit.framework */; };
+		B7LA00022F0347870025C1DE /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B7LA00032F0347870025C1DE /* SwiftUI.framework */; };
+		B7LA00152F0347870025C1DE /* KommandLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B7LA00102F0347870025C1DE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7A4EA662F0347870025C1DE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7LA00042F0347870025C1DE;
+			remoteInfo = KommandLiveActivityExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B7LA00142F0347870025C1DE /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B7LA00152F0347870025C1DE /* KommandLiveActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		B7A4EA6E2F0347870025C1DE /* kodi.remote.xbmc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kodi.remote.xbmc.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7LA00002F0347870025C1DE /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		B7LA00032F0347870025C1DE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KommandLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B7112D342F0BDB2B00DEE1BE /* Exceptions for "kodi.remote.xbmc" folder in "KommandLiveActivityExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+			);
+			target = B7LA00042F0347870025C1DE /* KommandLiveActivityExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B7A4EA702F0347870025C1DE /* kodi.remote.xbmc */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B7112D342F0BDB2B00DEE1BE /* Exceptions for "kodi.remote.xbmc" folder in "KommandLiveActivityExtension" target */,
+			);
 			path = kodi.remote.xbmc;
+			sourceTree = "<group>";
+		};
+		B7LA00062F0347870025C1DE /* KommandLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = KommandLiveActivity;
+			sourceTree = "<group>";
+		};
+		B7LA00072F0347870025C1DE /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,6 +82,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7LA00082F0347870025C1DE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B7LA00012F0347870025C1DE /* WidgetKit.framework in Frameworks */,
+				B7LA00022F0347870025C1DE /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -33,6 +98,9 @@
 			isa = PBXGroup;
 			children = (
 				B7A4EA702F0347870025C1DE /* kodi.remote.xbmc */,
+				B7LA00062F0347870025C1DE /* KommandLiveActivity */,
+				B7LA00072F0347870025C1DE /* Shared */,
+				B7LA00162F0347870025C1DE /* Frameworks */,
 				B7A4EA6F2F0347870025C1DE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +109,18 @@
 			isa = PBXGroup;
 			children = (
 				B7A4EA6E2F0347870025C1DE /* kodi.remote.xbmc.app */,
+				B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B7LA00162F0347870025C1DE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B7LA00002F0347870025C1DE /* WidgetKit.framework */,
+				B7LA00032F0347870025C1DE /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,13 +133,16 @@
 				B7A4EA6A2F0347870025C1DE /* Sources */,
 				B7A4EA6B2F0347870025C1DE /* Frameworks */,
 				B7A4EA6C2F0347870025C1DE /* Resources */,
+				B7LA00142F0347870025C1DE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B7LA00112F0347870025C1DE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				B7A4EA702F0347870025C1DE /* kodi.remote.xbmc */,
+				B7LA00072F0347870025C1DE /* Shared */,
 			);
 			name = kodi.remote.xbmc;
 			packageProductDependencies = (
@@ -69,6 +150,29 @@
 			productName = kodi.remote.xbmc;
 			productReference = B7A4EA6E2F0347870025C1DE /* kodi.remote.xbmc.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B7LA00042F0347870025C1DE /* KommandLiveActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7LA00122F0347870025C1DE /* Build configuration list for PBXNativeTarget "KommandLiveActivityExtension" */;
+			buildPhases = (
+				B7LA00092F0347870025C1DE /* Sources */,
+				B7LA00082F0347870025C1DE /* Frameworks */,
+				B7LA000A2F0347870025C1DE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B7LA00062F0347870025C1DE /* KommandLiveActivity */,
+				B7LA00072F0347870025C1DE /* Shared */,
+			);
+			name = KommandLiveActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = KommandLiveActivityExtension;
+			productReference = B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +185,9 @@
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					B7A4EA6D2F0347870025C1DE = {
+						CreatedOnToolsVersion = 26.1;
+					};
+					B7LA00042F0347870025C1DE = {
 						CreatedOnToolsVersion = 26.1;
 					};
 				};
@@ -100,12 +207,20 @@
 			projectRoot = "";
 			targets = (
 				B7A4EA6D2F0347870025C1DE /* kodi.remote.xbmc */,
+				B7LA00042F0347870025C1DE /* KommandLiveActivityExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B7A4EA6C2F0347870025C1DE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7LA000A2F0347870025C1DE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +237,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7LA00092F0347870025C1DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B7LA00112F0347870025C1DE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7LA00042F0347870025C1DE /* KommandLiveActivityExtension */;
+			targetProxy = B7LA00102F0347870025C1DE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B7A4EA772F0347880025C1DE /* Debug */ = {
@@ -249,10 +379,12 @@
 		B7A4EA7A2F0347880025C1DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = kodi.remote.xbmc/kodi.remote.xbmc.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = NVLAD3PLS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -285,10 +417,12 @@
 		B7A4EA7B2F0347880025C1DE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = kodi.remote.xbmc/kodi.remote.xbmc.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = NVLAD3PLS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -318,6 +452,68 @@
 			};
 			name = Release;
 		};
+		B7LA000B2F0347880025C1DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = KommandLiveActivity/KommandLiveActivityExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = NVLAD3PLS3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "KommandLiveActivity-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = KommandLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = decent.mid.range.kommand.KommandLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B7LA000C2F0347880025C1DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = KommandLiveActivity/KommandLiveActivityExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = NVLAD3PLS3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "KommandLiveActivity-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = KommandLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = decent.mid.range.kommand.KommandLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -335,6 +531,15 @@
 			buildConfigurations = (
 				B7A4EA7A2F0347880025C1DE /* Debug */,
 				B7A4EA7B2F0347880025C1DE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7LA00122F0347870025C1DE /* Build configuration list for PBXNativeTarget "KommandLiveActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7LA000B2F0347880025C1DE /* Debug */,
+				B7LA000C2F0347880025C1DE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
