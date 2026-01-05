@@ -42,6 +42,8 @@ Unlock additional features with Kommand Pro:
 - **Premium Themes** - 8 beautiful themes including Pure Black for OLED displays
 - **Dolby Vision Info** - Detailed DV profile information (P5, P7, P8.1, etc.)
 
+> **TestFlight Beta:** All Pro features are unlocked for free during the beta period!
+
 ## Requirements
 
 - iOS 17.0+
