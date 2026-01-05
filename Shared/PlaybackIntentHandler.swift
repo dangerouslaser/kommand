@@ -71,19 +71,6 @@ enum PlaybackIntentHandler {
         }
     }
 
-    @MainActor
-    static func seekToPercentage(_ percentage: Double) async {
-        // Clamp percentage to valid range (0-100)
-        let clamped = min(100, max(0, percentage))
-        let success = await sendCommand("Player.Seek", extraParams: ["value": ["percentage": clamped]])
-        if success {
-            // Optimistic update: set elapsed time based on percentage
-            await updateActivityState { state in
-                state.elapsedTime = state.totalDuration * (clamped / 100.0)
-            }
-        }
-    }
-
     // MARK: - Optimistic UI Updates
 
     /// Update the Live Activity state immediately for instant feedback
