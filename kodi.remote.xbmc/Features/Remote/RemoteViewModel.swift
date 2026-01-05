@@ -79,6 +79,7 @@ final class RemoteViewModel {
         await updateNowPlaying()
         await updateVolume()
 
+        // Start WebSocket notification listener
         notificationTask = Task {
             for await notification in stream {
                 if Task.isCancelled { break }
@@ -91,6 +92,25 @@ final class RemoteViewModel {
                     usePollingFallback = true
                 }
                 startPollingFallback()
+            }
+        }
+
+        // Start a slower background poll for progress updates
+        // WebSocket only sends state changes, not continuous progress
+        startProgressPolling()
+    }
+
+    private func startProgressPolling() {
+        pollingTask = Task {
+            while !Task.isCancelled {
+                // Wait 5 seconds between progress updates
+                try? await Task.sleep(for: .seconds(5))
+                if Task.isCancelled { break }
+
+                // Only update if we're still using WebSocket (not fallback polling)
+                if !usePollingFallback {
+                    await updateNowPlaying()
+                }
             }
         }
     }
@@ -320,6 +340,17 @@ final class RemoteViewModel {
             }
         } catch {
             // Ignore volume errors
+        }
+    }
+
+    // MARK: - State Refresh
+
+    /// Forces an immediate refresh of the now playing state
+    /// Call this when returning from background or after Live Activity actions
+    func refreshNowPlaying() {
+        Task {
+            await updateNowPlaying()
+            await updateVolume()
         }
     }
 

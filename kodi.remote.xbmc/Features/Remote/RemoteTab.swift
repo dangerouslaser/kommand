@@ -7,6 +7,7 @@ import SwiftUI
 
 struct RemoteTab: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = RemoteViewModel()
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
     @AppStorage("useVolumeButtons") private var useVolumeButtons = true
@@ -198,6 +199,12 @@ struct RemoteTab: View {
                 setupVolumeButtonHandler()
             } else {
                 volumeButtonHandler.stop()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                // Refresh state when returning from background (e.g., after Live Activity action)
+                viewModel.refreshNowPlaying()
             }
         }
     }
