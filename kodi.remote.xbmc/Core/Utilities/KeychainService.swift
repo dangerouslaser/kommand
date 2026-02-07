@@ -10,7 +10,7 @@
 import Foundation
 import Security
 
-enum KeychainService {
+nonisolated enum KeychainService {
     private static let serviceName = "kommand-kodi-host"
     private static let accessGroup = "group.decent.mid.range.kommand"
 

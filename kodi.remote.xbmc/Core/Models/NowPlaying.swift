@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum MediaType: String, Codable {
+nonisolated enum MediaType: String, Codable {
     case movie
     case episode
     case song
@@ -23,7 +23,7 @@ enum MediaType: String, Codable {
     }
 }
 
-struct NowPlayingItem: Equatable, Sendable {
+nonisolated struct NowPlayingItem: Equatable, Sendable {
     let type: MediaType
     let title: String
     let subtitle: String?
@@ -109,7 +109,7 @@ struct NowPlayingItem: Equatable, Sendable {
     )
 }
 
-struct AudioStream: Identifiable, Equatable, Sendable {
+nonisolated struct AudioStream: Identifiable, Equatable, Sendable {
     let id: Int
     let name: String
     let language: String?
@@ -131,7 +131,7 @@ struct AudioStream: Identifiable, Equatable, Sendable {
     }
 }
 
-struct Subtitle: Identifiable, Equatable, Sendable {
+nonisolated struct Subtitle: Identifiable, Equatable, Sendable {
     let id: Int
     let name: String
     let language: String?
@@ -149,7 +149,7 @@ struct Subtitle: Identifiable, Equatable, Sendable {
 
 // MARK: - Time Formatting
 
-extension TimeInterval {
+nonisolated extension TimeInterval {
     var formattedDuration: String {
         let totalSeconds = Int(self)
         let hours = totalSeconds / 3600

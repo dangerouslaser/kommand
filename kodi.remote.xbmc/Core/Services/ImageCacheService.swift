@@ -20,10 +20,13 @@ actor ImageCacheService {
         memoryCache.totalCostLimit = 100_000_000 // ~100MB
 
         // Setup disk cache directory
-        diskCacheURL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)
+        let cacheURL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)
             .first?.appendingPathComponent("KodiArtwork", isDirectory: true)
+        diskCacheURL = cacheURL
 
-        createDiskCacheDirectoryIfNeeded()
+        if let cacheURL, !fileManager.fileExists(atPath: cacheURL.path) {
+            try? fileManager.createDirectory(at: cacheURL, withIntermediateDirectories: true)
+        }
     }
 
     // MARK: - Public API

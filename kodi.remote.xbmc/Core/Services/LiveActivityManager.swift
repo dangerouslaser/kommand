@@ -140,9 +140,9 @@ final class LiveActivityManager {
         var updatedState = activity.content.state
         updatedState.isPlaying = !updatedState.isPlaying
 
-        await activity.update(
-            ActivityContent(state: updatedState, staleDate: nil)
-        )
+        let content = ActivityContent(state: updatedState, staleDate: nil)
+        nonisolated(unsafe) let activityRef = activity
+        await activityRef.update(content)
     }
 
     /// End all Live Activities for this app (clears shared data - use when playback stops)

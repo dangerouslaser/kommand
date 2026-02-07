@@ -8,7 +8,7 @@ import SwiftUI
 // MARK: - Theme Color Set
 
 /// Colors for a specific appearance mode (light or dark)
-struct ThemeColorSet {
+nonisolated struct ThemeColorSet {
     let background: Color
     let cardBackground: Color
     let accent: Color
@@ -26,10 +26,9 @@ struct ThemeColorSet {
 // MARK: - App Theme
 
 /// Represents a complete theme with light and dark variants
-struct AppTheme: Identifiable, Equatable {
+nonisolated struct AppTheme: Identifiable, Equatable {
     let id: String
     let name: String
-    let isPro: Bool
     let light: ThemeColorSet
     let dark: ThemeColorSet
 
@@ -52,7 +51,6 @@ extension AppTheme {
     static let `default` = AppTheme(
         id: "default",
         name: "Default",
-        isPro: false,
         light: ThemeColorSet(
             background: Color(hex: "F2F2F7"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),
@@ -76,7 +74,6 @@ extension AppTheme {
     static let pureBlack = AppTheme(
         id: "pureBlack",
         name: "Pure Black",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "FFFFFF"),
             cardBackground: Color(hex: "F0F0F5", opacity: 0.9),
@@ -101,7 +98,6 @@ extension AppTheme {
     static let cinema = AppTheme(
         id: "cinema",
         name: "Cinema",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "FDF6F6"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),
@@ -125,7 +121,6 @@ extension AppTheme {
     static let ember = AppTheme(
         id: "ember",
         name: "Ember",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "FFFBF5"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),
@@ -149,7 +144,6 @@ extension AppTheme {
     static let midnight = AppTheme(
         id: "midnight",
         name: "Midnight",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "F0F9FF"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),
@@ -173,7 +167,6 @@ extension AppTheme {
     static let noir = AppTheme(
         id: "noir",
         name: "Noir",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "FAFAFA"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.95),
@@ -199,7 +192,6 @@ extension AppTheme {
     static let forest = AppTheme(
         id: "forest",
         name: "Forest",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "F0FDF4"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),
@@ -223,7 +215,6 @@ extension AppTheme {
     static let ultraviolet = AppTheme(
         id: "ultraviolet",
         name: "Ultraviolet",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "FAF5FF"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),
@@ -247,7 +238,6 @@ extension AppTheme {
     static let roseGold = AppTheme(
         id: "roseGold",
         name: "Rose Gold",
-        isPro: true,
         light: ThemeColorSet(
             background: Color(hex: "FFF5F7"),
             cardBackground: Color(hex: "FFFFFF", opacity: 0.9),

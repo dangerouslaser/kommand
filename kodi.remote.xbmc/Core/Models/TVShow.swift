@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct TVShow: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct TVShow: Identifiable, Codable, Hashable, Sendable {
     let tvshowid: Int
     let title: String
     let year: Int?
@@ -61,7 +61,7 @@ struct TVShow: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct Season: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct Season: Identifiable, Codable, Hashable, Sendable {
     let seasonid: Int
     let season: Int
     let showtitle: String?
@@ -97,7 +97,7 @@ struct Season: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct Episode: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct Episode: Identifiable, Codable, Hashable, Sendable {
     let episodeid: Int
     let title: String
     let episode: Int
@@ -147,25 +147,25 @@ struct Episode: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - API Responses
 
-struct TVShowsResponse: Decodable {
+nonisolated struct TVShowsResponse: Decodable, Sendable {
     let tvshows: [TVShow]?
     let limits: LimitsResult?
 }
 
-struct TVShowDetailsResponse: Decodable {
+nonisolated struct TVShowDetailsResponse: Decodable, Sendable {
     let tvshowdetails: TVShow
 }
 
-struct SeasonsResponse: Decodable {
+nonisolated struct SeasonsResponse: Decodable, Sendable {
     let seasons: [Season]?
     let limits: LimitsResult?
 }
 
-struct EpisodesResponse: Decodable {
+nonisolated struct EpisodesResponse: Decodable, Sendable {
     let episodes: [Episode]?
     let limits: LimitsResult?
 }
 
-struct EpisodeDetailsResponse: Decodable {
+nonisolated struct EpisodeDetailsResponse: Decodable, Sendable {
     let episodedetails: Episode
 }

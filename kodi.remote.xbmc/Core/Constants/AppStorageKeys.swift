@@ -7,14 +7,13 @@
 
 import Foundation
 
-enum AppStorageKeys {
+nonisolated enum AppStorageKeys {
     // MARK: - Appearance
     static let colorScheme = "colorScheme"              // 0=System, 1=Light, 2=Dark
     static let selectedTheme = "selectedTheme"          // Theme ID string
     static let nowPlayingBackground = "nowPlayingBackground"  // 0=Blur, 1=Solid
 
-    // MARK: - Pro Features
-    static let isProUnlocked = "isProUnlocked"
+    // MARK: - Features
     static let liveActivityEnabled = "liveActivityEnabled"
     static let showDolbyVisionProfile = "showDolbyVisionProfile"
 

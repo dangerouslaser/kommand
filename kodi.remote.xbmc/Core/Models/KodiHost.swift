@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct KodiHost: Codable, Identifiable, Hashable {
+nonisolated struct KodiHost: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     var name: String
     var address: String

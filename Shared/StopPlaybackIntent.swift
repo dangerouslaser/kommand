@@ -7,8 +7,8 @@ import AppIntents
 import ActivityKit
 
 struct StopPlaybackIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Stop"
-    static var description = IntentDescription("Stop playback on Kodi")
+    static let title: LocalizedStringResource = "Stop"
+    static let description = IntentDescription("Stop playback on Kodi")
 
     @MainActor
     func perform() async throws -> some IntentResult {

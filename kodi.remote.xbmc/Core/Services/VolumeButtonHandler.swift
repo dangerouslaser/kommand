@@ -18,8 +18,8 @@ final class VolumeButtonHandler {
     private(set) var isActive = false
 
     // Callbacks for volume button presses
-    var onVolumeUp: (() -> Void)?
-    var onVolumeDown: (() -> Void)?
+    var onVolumeUp: (@MainActor () -> Void)?
+    var onVolumeDown: (@MainActor () -> Void)?
 
     func start() {
         guard !isActive else { return }
@@ -38,17 +38,20 @@ final class VolumeButtonHandler {
         // Get current volume and set as baseline
         lastVolume = audioSession?.outputVolume ?? 0.5
 
+        // Capture callbacks before entering the observe closure
+        let volumeUp = onVolumeUp
+        let volumeDown = onVolumeDown
+
         // Observe volume changes
-        volumeObserver = audioSession?.observe(\.outputVolume, options: [.new, .old]) { [weak self] session, change in
-            guard let self = self,
-                  let newVolume = change.newValue,
+        volumeObserver = audioSession?.observe(\.outputVolume, options: [.new, .old]) { session, change in
+            guard let newVolume = change.newValue,
                   let oldVolume = change.oldValue else { return }
 
-            // Detect direction of change
+            // Detect direction of change and dispatch to MainActor
             if newVolume > oldVolume {
-                self.onVolumeUp?()
+                Task { @MainActor in volumeUp?() }
             } else if newVolume < oldVolume {
-                self.onVolumeDown?()
+                Task { @MainActor in volumeDown?() }
             }
         }
     }
@@ -61,9 +64,6 @@ final class VolumeButtonHandler {
         volumeObserver = nil
     }
 
-    deinit {
-        stop()
-    }
 }
 
 // MARK: - Hidden Volume View (hides system HUD and allows volume reset)
@@ -72,7 +72,7 @@ struct HiddenVolumeView: UIViewRepresentable {
     func makeUIView(context: Context) -> MPVolumeView {
         let volumeView = MPVolumeView(frame: .zero)
         volumeView.alpha = 0.0001 // Nearly invisible but still functional
-        volumeView.showsRouteButton = false
+        // Route button is effectively hidden since the entire view is invisible
         return volumeView
     }
 

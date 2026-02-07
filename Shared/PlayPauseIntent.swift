@@ -11,8 +11,8 @@ import AppIntents
 import ActivityKit
 
 struct PlayPauseIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Play/Pause"
-    static var description = IntentDescription("Toggle playback on Kodi")
+    static let title: LocalizedStringResource = "Play/Pause"
+    static let description = IntentDescription("Toggle playback on Kodi")
 
     @MainActor
     func perform() async throws -> some IntentResult {

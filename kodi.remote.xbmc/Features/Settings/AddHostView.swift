@@ -141,7 +141,7 @@ struct AddHostView: View {
 
         Task {
             let client = KodiClient()
-            await client.configure(with: host)
+            await client.configure(with: host, password: password.isEmpty ? nil : password)
 
             do {
                 let success = try await client.testConnection()

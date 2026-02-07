@@ -99,7 +99,7 @@ final class KodiSettingsViewModel {
         }
     }
 
-    func updateSetting(_ setting: KodiSetting, value: Any) async {
+    func updateSetting(_ setting: KodiSetting, value: sending Any) async {
         do {
             try await client.setSettingValue(setting: setting.id, value: value)
             // Refresh the settings for this category

@@ -7,6 +7,7 @@ import Foundation
 
 actor KodiClient {
     private var host: KodiHost?
+    private var passwordOverride: String?
     private var session: URLSession
     private var requestId: Int = 0
     private var webSocketManager: WebSocketManager?
@@ -20,8 +21,9 @@ actor KodiClient {
 
     // MARK: - Connection
 
-    func configure(with host: KodiHost) {
+    func configure(with host: KodiHost, password: String? = nil) {
         self.host = host
+        self.passwordOverride = password
     }
 
     func testConnection() async throws -> Bool {
@@ -56,7 +58,7 @@ actor KodiClient {
         return requestId
     }
 
-    func send<T: Decodable>(method: String, params: [String: Any] = [:]) async throws -> T {
+    func send<T: Decodable & Sendable>(method: String, params: [String: Any] = [:]) async throws -> T {
         guard let host = host, let url = host.jsonRPCURL else {
             throw KodiError.notConnected
         }
@@ -67,8 +69,7 @@ actor KodiClient {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let username = host.username, !username.isEmpty {
-            // Get password from keychain (simplified - just using empty for now)
-            let password = KeychainHelper.getPassword(for: host.id) ?? ""
+            let password = passwordOverride ?? KeychainHelper.getPassword(for: host.id) ?? ""
             let credentials = "\(username):\(password)"
             if let data = credentials.data(using: .utf8) {
                 let base64 = data.base64EncodedString()
@@ -804,7 +805,7 @@ actor KodiClient {
 
 // MARK: - Supporting Types
 
-enum InputAction: String {
+nonisolated enum InputAction: String {
     case up = "Up"
     case down = "Down"
     case left = "Left"
@@ -817,23 +818,23 @@ enum InputAction: String {
     case osd = "ShowOSD"
 }
 
-struct EmptyResponse: Decodable {}
+nonisolated struct EmptyResponse: Decodable, Sendable {}
 
-struct PlayerSpeedResponse: Decodable {
+nonisolated struct PlayerSpeedResponse: Decodable, Sendable {
     let speed: Int
 }
 
-struct AddonDetailsResponse: Decodable {
+nonisolated struct AddonDetailsResponse: Decodable, Sendable {
     let addon: AddonInfo
 
-    struct AddonInfo: Decodable {
+    struct AddonInfo: Decodable, Sendable {
         let addonid: String
         let name: String?
         let enabled: Bool?
     }
 }
 
-struct SystemInfoResponse: Decodable {
+nonisolated struct SystemInfoResponse: Decodable, Sendable {
     // Using dynamic keys for info labels
     private let values: [String: String]
 
@@ -856,7 +857,7 @@ struct SystemInfoResponse: Decodable {
     var totalUptime: String? { values["System.TotalUptime"] }
 }
 
-struct DolbyVisionInfoResponse: Decodable {
+nonisolated struct DolbyVisionInfoResponse: Decodable, Sendable {
     private let values: [String: String]
 
     init(from decoder: Decoder) throws {
@@ -922,7 +923,7 @@ struct DolbyVisionInfoResponse: Decodable {
     }
 }
 
-struct PlayerAudioInfoResponse: Decodable {
+nonisolated struct PlayerAudioInfoResponse: Decodable, Sendable {
     private let values: [String: String]
 
     init(from decoder: Decoder) throws {
@@ -949,17 +950,17 @@ struct PlayerAudioInfoResponse: Decodable {
     }
 }
 
-struct SettingValueResponse: Decodable {
+nonisolated struct SettingValueResponse: Decodable, Sendable {
     let value: AnyCodableValue
 }
 
 // MARK: - Kodi Settings Models
 
-struct SettingSectionsResponse: Decodable {
+nonisolated struct SettingSectionsResponse: Decodable, Sendable {
     let sections: [SettingSection]?
 }
 
-struct SettingSection: Decodable, Identifiable, Hashable {
+nonisolated struct SettingSection: Decodable, Identifiable, Hashable, Sendable {
     let id: String
     let label: String
     let help: String?
@@ -973,11 +974,11 @@ struct SettingSection: Decodable, Identifiable, Hashable {
     }
 }
 
-struct SettingCategoriesResponse: Decodable {
+nonisolated struct SettingCategoriesResponse: Decodable, Sendable {
     let categories: [SettingCategory]?
 }
 
-struct SettingCategory: Decodable, Identifiable, Hashable {
+nonisolated struct SettingCategory: Decodable, Identifiable, Hashable, Sendable {
     let id: String
     let label: String
     let help: String?
@@ -991,11 +992,11 @@ struct SettingCategory: Decodable, Identifiable, Hashable {
     }
 }
 
-struct SettingsListResponse: Decodable {
+nonisolated struct SettingsListResponse: Decodable, Sendable {
     let settings: [KodiSetting]?
 }
 
-struct KodiSetting: Decodable, Identifiable {
+nonisolated struct KodiSetting: Decodable, Identifiable, Sendable {
     let id: String
     let label: String
     let help: String?
@@ -1015,12 +1016,12 @@ struct KodiSetting: Decodable, Identifiable {
     }
 }
 
-struct SettingControl: Decodable {
+nonisolated struct SettingControl: Decodable, Sendable {
     let type: String
     let format: String?
 }
 
-struct SettingOption: Decodable, Identifiable {
+nonisolated struct SettingOption: Decodable, Identifiable, Sendable {
     let label: String
     let value: AnyCodableValue
 
@@ -1034,7 +1035,7 @@ struct SettingOption: Decodable, Identifiable {
     }
 }
 
-enum SettingType: String {
+nonisolated enum SettingType: String, Sendable {
     case boolean = "boolean"
     case integer = "integer"
     case number = "number"
@@ -1059,7 +1060,7 @@ enum SettingType: String {
 }
 
 // Helper for decoding any JSON value
-enum AnyCodableValue: Decodable {
+nonisolated enum AnyCodableValue: Decodable, Sendable {
     case string(String)
     case int(Int)
     case double(Double)
@@ -1099,7 +1100,7 @@ enum AnyCodableValue: Decodable {
 
 // MARK: - Errors
 
-enum KodiError: LocalizedError {
+nonisolated enum KodiError: LocalizedError, Sendable {
     case notConnected
     case invalidResponse
     case httpError(Int)

@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - JSON-RPC Request/Response
 
-struct JSONRPCRequest: Encodable {
+nonisolated struct JSONRPCRequest: Encodable, @unchecked Sendable {
     let jsonrpc: String = "2.0"
     let method: String
     let params: [String: AnyCodable]
@@ -20,25 +20,25 @@ struct JSONRPCRequest: Encodable {
     }
 }
 
-struct JSONRPCResponse<T: Decodable>: Decodable {
+nonisolated struct JSONRPCResponse<T: Decodable & Sendable>: Decodable, Sendable {
     let jsonrpc: String
     let id: Int?
     let result: T?
     let error: JSONRPCError?
 }
 
-struct JSONRPCError: Decodable, Error {
+nonisolated struct JSONRPCError: Decodable, Error, @unchecked Sendable {
     let code: Int
     let message: String
     let data: AnyCodable?
 }
 
-struct JSONRPCNotification: Decodable {
+nonisolated struct JSONRPCNotification: Decodable, @unchecked Sendable {
     let jsonrpc: String
     let method: String
     let params: NotificationParams?
 
-    struct NotificationParams: Decodable {
+    nonisolated struct NotificationParams: Decodable, @unchecked Sendable {
         let sender: String?
         let data: AnyCodable?
     }
@@ -46,7 +46,7 @@ struct JSONRPCNotification: Decodable {
 
 // MARK: - AnyCodable for flexible JSON handling
 
-struct AnyCodable: Codable {
+nonisolated struct AnyCodable: Codable, @unchecked Sendable {
     let value: Any
 
     init(_ value: Any) {
@@ -101,7 +101,7 @@ struct AnyCodable: Codable {
 
 // MARK: - Kodi Notifications
 
-enum KodiNotification: String, CaseIterable {
+nonisolated enum KodiNotification: String, CaseIterable {
     case playerOnPlay = "Player.OnPlay"
     case playerOnPause = "Player.OnPause"
     case playerOnStop = "Player.OnStop"
@@ -118,22 +118,22 @@ enum KodiNotification: String, CaseIterable {
 
 // MARK: - API Response Types
 
-struct PingResponse: Decodable {
+nonisolated struct PingResponse: Decodable, Sendable {
     // Ping returns just "pong" string
 }
 
-struct ActivePlayersResponse: Decodable {
+nonisolated struct ActivePlayersResponse: Decodable, Sendable {
     let playerid: Int
     let playertype: String
     let type: String
 }
 
-struct VolumeResponse: Decodable {
+nonisolated struct VolumeResponse: Decodable, Sendable {
     let volume: Int
     let muted: Bool
 }
 
-struct PlayerPropertiesResponse: Decodable {
+nonisolated struct PlayerPropertiesResponse: Decodable, Sendable {
     let time: TimeInfo?
     let totaltime: TimeInfo?
     let percentage: Double?
@@ -149,7 +149,7 @@ struct PlayerPropertiesResponse: Decodable {
     let subtitles: [SubtitleInfo]?
     let currentvideostream: VideoStreamInfo?
 
-    struct TimeInfo: Decodable {
+    struct TimeInfo: Decodable, Sendable {
         let hours: Int
         let minutes: Int
         let seconds: Int
@@ -160,7 +160,7 @@ struct PlayerPropertiesResponse: Decodable {
         }
     }
 
-    struct AudioStreamInfo: Decodable {
+    struct AudioStreamInfo: Decodable, Sendable {
         let index: Int?
         let name: String?
         let language: String?
@@ -168,13 +168,13 @@ struct PlayerPropertiesResponse: Decodable {
         let channels: Int?
     }
 
-    struct SubtitleInfo: Decodable {
+    struct SubtitleInfo: Decodable, Sendable {
         let index: Int?
         let name: String?
         let language: String?
     }
 
-    struct VideoStreamInfo: Decodable {
+    struct VideoStreamInfo: Decodable, Sendable {
         let codec: String?
         let width: Int?
         let height: Int?
@@ -182,10 +182,10 @@ struct PlayerPropertiesResponse: Decodable {
     }
 }
 
-struct PlayerItemResponse: Decodable {
+nonisolated struct PlayerItemResponse: Decodable, Sendable {
     let item: MediaItem
 
-    struct MediaItem: Decodable {
+    struct MediaItem: Decodable, Sendable {
         let id: Int?
         let type: String
         let label: String?
@@ -209,13 +209,13 @@ struct PlayerItemResponse: Decodable {
         }
     }
 
-    struct StreamDetails: Decodable {
+    struct StreamDetails: Decodable, Sendable {
         let video: [VideoStreamDetail]?
         let audio: [AudioStreamDetail]?
         let subtitle: [SubtitleStreamDetail]?
     }
 
-    struct VideoStreamDetail: Decodable {
+    struct VideoStreamDetail: Decodable, Sendable {
         let codec: String?
         let width: Int?
         let height: Int?
@@ -225,17 +225,17 @@ struct PlayerItemResponse: Decodable {
         let stereomode: String?
     }
 
-    struct AudioStreamDetail: Decodable {
+    struct AudioStreamDetail: Decodable, Sendable {
         let codec: String?
         let channels: Int?
         let language: String?
     }
 
-    struct SubtitleStreamDetail: Decodable {
+    struct SubtitleStreamDetail: Decodable, Sendable {
         let language: String?
     }
 
-    struct MediaArt: Decodable {
+    struct MediaArt: Decodable, Sendable {
         let poster: String?
         let thumb: String?
         let fanart: String?
@@ -262,13 +262,13 @@ struct PlayerItemResponse: Decodable {
     }
 }
 
-struct ApplicationPropertiesResponse: Decodable {
+nonisolated struct ApplicationPropertiesResponse: Decodable, Sendable {
     let volume: Int?
     let muted: Bool?
     let name: String?
     let version: VersionInfo?
 
-    struct VersionInfo: Decodable {
+    struct VersionInfo: Decodable, Sendable {
         let major: Int
         let minor: Int
         let revision: String?

@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Movie: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct Movie: Identifiable, Codable, Hashable, Sendable {
     let movieid: Int
     let title: String
     let year: Int?
@@ -81,7 +81,7 @@ struct Movie: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct CastMember: Codable, Hashable, Identifiable, Sendable {
+nonisolated struct CastMember: Codable, Hashable, Identifiable, Sendable {
     let name: String
     let role: String?
     let thumbnail: String?
@@ -90,7 +90,7 @@ struct CastMember: Codable, Hashable, Identifiable, Sendable {
     var id: String { name }
 }
 
-struct ResumePoint: Codable, Hashable, Sendable {
+nonisolated struct ResumePoint: Codable, Hashable, Sendable {
     let position: Double // in seconds
     let total: Double
 
@@ -106,22 +106,22 @@ struct ResumePoint: Codable, Hashable, Sendable {
 
 // MARK: - API Response
 
-struct MoviesResponse: Decodable {
+nonisolated struct MoviesResponse: Decodable, Sendable {
     let movies: [Movie]?
     let limits: LimitsResult?
 }
 
-struct MovieDetailsResponse: Decodable {
+nonisolated struct MovieDetailsResponse: Decodable, Sendable {
     let moviedetails: Movie
 }
 
-struct LimitsResult: Decodable {
+nonisolated struct LimitsResult: Decodable, Sendable {
     let start: Int
     let end: Int
     let total: Int
 }
 
-struct MediaArt: Codable, Hashable, Sendable {
+nonisolated struct MediaArt: Codable, Hashable, Sendable {
     let poster: String?
     let fanart: String?
     let thumb: String?
@@ -133,7 +133,7 @@ struct MediaArt: Codable, Hashable, Sendable {
 
 // MARK: - Stream Details
 
-struct StreamDetails: Codable, Hashable, Sendable {
+nonisolated struct StreamDetails: Codable, Hashable, Sendable {
     let video: [VideoStream]?
     let audio: [AudioStreamDetail]?
     let subtitle: [SubtitleStream]?
@@ -149,7 +149,7 @@ struct StreamDetails: Codable, Hashable, Sendable {
     }
 }
 
-struct VideoStream: Codable, Hashable, Sendable {
+nonisolated struct VideoStream: Codable, Hashable, Sendable {
     let codec: String?
     let aspect: Double?
     let width: Int?
@@ -207,7 +207,7 @@ struct VideoStream: Codable, Hashable, Sendable {
     }
 }
 
-struct AudioStreamDetail: Codable, Hashable, Sendable {
+nonisolated struct AudioStreamDetail: Codable, Hashable, Sendable {
     let codec: String?
     let channels: Int?
     let language: String?
@@ -249,6 +249,6 @@ struct AudioStreamDetail: Codable, Hashable, Sendable {
     }
 }
 
-struct SubtitleStream: Codable, Hashable, Sendable {
+nonisolated struct SubtitleStream: Codable, Hashable, Sendable {
     let language: String?
 }

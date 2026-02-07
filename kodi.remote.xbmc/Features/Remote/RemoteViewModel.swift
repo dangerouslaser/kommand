@@ -21,11 +21,6 @@ final class RemoteViewModel {
     private var cachedHasAtmos: Bool = false
     private var lastMediaFile: String?
 
-    deinit {
-        pollingTask?.cancel()
-        notificationTask?.cancel()
-    }
-
     func configure(appState: AppState) {
         self.appState = appState
         self.client = appState.client

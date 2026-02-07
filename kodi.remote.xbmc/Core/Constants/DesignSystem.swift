@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum DesignSystem {
+nonisolated enum DesignSystem {
     // MARK: - Corner Radius
     enum Radius {
         static let card: CGFloat = 20

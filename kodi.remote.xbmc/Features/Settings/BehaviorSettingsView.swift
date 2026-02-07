@@ -11,7 +11,6 @@ struct BehaviorSettingsView: View {
     @AppStorage("keepScreenOn") private var keepScreenOn = true
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
     @AppStorage("liveActivityEnabled") private var liveActivityEnabled = false
-    @AppStorage("isProUnlocked") private var isProUnlocked = false
 
     // Power Menu Settings
     @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
@@ -19,7 +18,6 @@ struct BehaviorSettingsView: View {
     @AppStorage("powerMenuReboot") private var powerMenuReboot = false
     @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
 
-    @State private var showProPaywall = false
     @State private var imageCacheSize: String = "Calculating..."
     @State private var showClearCacheConfirm = false
 
@@ -46,33 +44,17 @@ struct BehaviorSettingsView: View {
             }
 
             Section {
-                HStack {
-                    Toggle("Live Activity", isOn: Binding(
-                        get: { liveActivityEnabled },
-                        set: { newValue in
-                            if newValue && !isProUnlocked {
-                                showProPaywall = true
-                            } else {
-                                liveActivityEnabled = newValue
-                                if !newValue {
-                                    // End any active Live Activity when disabled
-                                    Task {
-                                        await LiveActivityManager.shared.endAllActivities()
-                                    }
-                                }
+                Toggle("Live Activity", isOn: Binding(
+                    get: { liveActivityEnabled },
+                    set: { newValue in
+                        liveActivityEnabled = newValue
+                        if !newValue {
+                            Task {
+                                await LiveActivityManager.shared.endAllActivities()
                             }
                         }
-                    ))
-
-                    if !isProUnlocked {
-                        Text("PRO")
-                            .font(.caption2.weight(.bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(.orange, in: RoundedRectangle(cornerRadius: 4))
                     }
-                }
+                ))
             } header: {
                 Text("Lock Screen")
             } footer: {
@@ -127,9 +109,6 @@ struct BehaviorSettingsView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .themedScrollBackground()
-        .sheet(isPresented: $showProPaywall) {
-            ProPaywallView()
-        }
     }
 
     private func updateCacheSize() async {

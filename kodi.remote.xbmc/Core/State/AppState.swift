@@ -6,7 +6,7 @@
 import Foundation
 import SwiftUI
 
-enum ConnectionState: Equatable {
+nonisolated enum ConnectionState: Equatable {
     case disconnected
     case connecting
     case connected
@@ -139,7 +139,7 @@ final class AppState {
 
 // MARK: - Server Capabilities
 
-struct ServerCapabilities {
+nonisolated struct ServerCapabilities {
     var isCoreELEC: Bool = false
     var supportsSuspend: Bool = false
     var supportsDolbyVision: Bool = false

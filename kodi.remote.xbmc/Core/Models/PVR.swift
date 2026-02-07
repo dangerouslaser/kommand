@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - Channel
 
-struct PVRChannel: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct PVRChannel: Identifiable, Codable, Hashable, Sendable {
     let channelid: Int
     let label: String
     let channeltype: String // "tv" or "radio"
@@ -36,7 +36,7 @@ struct PVRChannel: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - Channel Group
 
-struct PVRChannelGroup: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct PVRChannelGroup: Identifiable, Codable, Hashable, Sendable {
     let channelgroupid: Int
     let label: String
     let channeltype: String // "tv" or "radio"
@@ -50,7 +50,7 @@ struct PVRChannelGroup: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - EPG Event (Program)
 
-struct EPGEvent: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct EPGEvent: Identifiable, Codable, Hashable, Sendable {
     let broadcastid: Int
     let title: String
     let starttime: String?
@@ -109,7 +109,7 @@ struct EPGEvent: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - Recording
 
-struct PVRRecording: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct PVRRecording: Identifiable, Codable, Hashable, Sendable {
     let recordingid: Int
     let title: String
     let channel: String?
@@ -180,7 +180,7 @@ struct PVRRecording: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - Timer
 
-struct PVRTimer: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct PVRTimer: Identifiable, Codable, Hashable, Sendable {
     let timerid: Int
     let title: String
     let summary: String?
@@ -251,33 +251,33 @@ struct PVRTimer: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - API Responses
 
-struct PVRChannelGroupsResponse: Decodable {
+nonisolated struct PVRChannelGroupsResponse: Decodable, Sendable {
     let channelgroups: [PVRChannelGroup]?
 }
 
-struct PVRChannelsResponse: Decodable {
+nonisolated struct PVRChannelsResponse: Decodable, Sendable {
     let channels: [PVRChannel]?
     let limits: LimitsResult?
 }
 
-struct PVRRecordingsResponse: Decodable {
+nonisolated struct PVRRecordingsResponse: Decodable, Sendable {
     let recordings: [PVRRecording]?
     let limits: LimitsResult?
 }
 
-struct PVRTimersResponse: Decodable {
+nonisolated struct PVRTimersResponse: Decodable, Sendable {
     let timers: [PVRTimer]?
     let limits: LimitsResult?
 }
 
-struct PVRBroadcastsResponse: Decodable {
+nonisolated struct PVRBroadcastsResponse: Decodable, Sendable {
     let broadcasts: [EPGEvent]?
     let limits: LimitsResult?
 }
 
 // MARK: - PVR Properties Response
 
-struct PVRPropertiesResponse: Decodable {
+nonisolated struct PVRPropertiesResponse: Decodable, Sendable {
     let available: Bool?
     let recording: Bool?
     let scanning: Bool?

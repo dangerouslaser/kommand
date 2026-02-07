@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Artist: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct Artist: Identifiable, Codable, Hashable, Sendable {
     let artistid: Int
     let artist: String
     let label: String?
@@ -26,7 +26,7 @@ struct Artist: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct Album: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct Album: Identifiable, Codable, Hashable, Sendable {
     let albumid: Int
     let title: String
     let label: String?
@@ -57,7 +57,7 @@ struct Album: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
-struct Song: Identifiable, Codable, Hashable, Sendable {
+nonisolated struct Song: Identifiable, Codable, Hashable, Sendable {
     let songid: Int
     let title: String
     let label: String?
@@ -108,39 +108,39 @@ struct Song: Identifiable, Codable, Hashable, Sendable {
 
 // MARK: - API Responses
 
-struct ArtistsResponse: Decodable {
+nonisolated struct ArtistsResponse: Decodable, Sendable {
     let artists: [Artist]?
     let limits: LimitsResult?
 }
 
-struct ArtistDetailsResponse: Decodable {
+nonisolated struct ArtistDetailsResponse: Decodable, Sendable {
     let artistdetails: Artist
 }
 
-struct AlbumsResponse: Decodable {
+nonisolated struct AlbumsResponse: Decodable, Sendable {
     let albums: [Album]?
     let limits: LimitsResult?
 }
 
-struct AlbumDetailsResponse: Decodable {
+nonisolated struct AlbumDetailsResponse: Decodable, Sendable {
     let albumdetails: Album
 }
 
-struct SongsResponse: Decodable {
+nonisolated struct SongsResponse: Decodable, Sendable {
     let songs: [Song]?
     let limits: LimitsResult?
 }
 
-struct SongDetailsResponse: Decodable {
+nonisolated struct SongDetailsResponse: Decodable, Sendable {
     let songdetails: Song
 }
 
 // MARK: - Recently Added
 
-struct RecentlyAddedAlbumsResponse: Decodable {
+nonisolated struct RecentlyAddedAlbumsResponse: Decodable, Sendable {
     let albums: [Album]?
 }
 
-struct RecentlyAddedSongsResponse: Decodable {
+nonisolated struct RecentlyAddedSongsResponse: Decodable, Sendable {
     let songs: [Song]?
 }
