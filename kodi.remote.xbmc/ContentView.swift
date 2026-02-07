@@ -206,7 +206,7 @@ struct ContentView: View {
             appState.connectionState = .connecting
         }
 
-        let client = KodiClient()
+        let client = appState.client
         await client.configure(with: host)
 
         // Test connection

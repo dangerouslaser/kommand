@@ -171,6 +171,9 @@ actor WebSocketManager {
         webSocketTask?.cancel(with: .abnormalClosure, reason: nil)
         webSocketTask = nil
 
+        // Cancel any existing reconnect task before starting a new one
+        reconnectTask?.cancel()
+
         reconnectTask = Task {
             var attempt = 1
 

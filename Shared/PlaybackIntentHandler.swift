@@ -11,6 +11,7 @@
 
 import Foundation
 import ActivityKit
+import Security
 
 /// Handles playback commands from Live Activity intents
 enum PlaybackIntentHandler {
@@ -109,16 +110,42 @@ enum PlaybackIntentHandler {
         }
     }
 
-    // MARK: - Command Sending
+    // MARK: - Keychain Access
 
-    /// Send PlayPause and return the resulting speed (0 = paused, non-zero = playing)
-    @MainActor
-    private static func sendPlayPauseCommand() async -> Int? {
-        guard let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
+    /// Read password from shared Keychain (App Group access group)
+    private static func getPasswordFromKeychain(for hostId: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "kommand-kodi-host",
+            kSecAttrAccount as String: hostId,
+            kSecAttrAccessGroup as String: AppGroupConstants.suiteName,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess, let data = result as? Data else {
             return nil
         }
 
-        defaults.synchronize()
+        return String(data: data, encoding: .utf8)
+    }
+
+    // MARK: - Connection Info
+
+    private struct ConnectionInfo {
+        let url: URL
+        let playerId: Int
+        let username: String?
+        let password: String?
+    }
+
+    private static func getConnectionInfo() -> ConnectionInfo? {
+        guard let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
+            return nil
+        }
 
         guard let address = defaults.string(forKey: AppGroupConstants.hostAddressKey),
               !address.isEmpty else {
@@ -137,10 +164,47 @@ enum PlaybackIntentHandler {
             return nil
         }
 
+        let username = defaults.string(forKey: AppGroupConstants.hostUsernameKey)
+        var password: String?
+        if let hostId = defaults.string(forKey: "currentHostId") {
+            password = getPasswordFromKeychain(for: hostId)
+        }
+        // Fallback to legacy UserDefaults password if Keychain has nothing
+        if password == nil {
+            password = defaults.string(forKey: AppGroupConstants.hostPasswordKey)
+        }
+
+        return ConnectionInfo(url: url, playerId: playerId, username: username, password: password)
+    }
+
+    private static func makeAuthenticatedRequest(url: URL, username: String?, password: String?) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 5
+
+        if let username = username, !username.isEmpty {
+            let pw = password ?? ""
+            let credentials = "\(username):\(pw)"
+            if let credentialsData = credentials.data(using: .utf8) {
+                let base64 = credentialsData.base64EncodedString()
+                request.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")
+            }
+        }
+
+        return request
+    }
+
+    // MARK: - Command Sending
+
+    /// Send PlayPause and return the resulting speed (0 = paused, non-zero = playing)
+    private static func sendPlayPauseCommand() async -> Int? {
+        guard let info = getConnectionInfo() else { return nil }
+
         let body: [String: Any] = [
             "jsonrpc": "2.0",
             "method": "Player.PlayPause",
-            "params": ["playerid": playerId],
+            "params": ["playerid": info.playerId],
             "id": 1
         ]
 
@@ -148,22 +212,8 @@ enum PlaybackIntentHandler {
             return nil
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        var request = makeAuthenticatedRequest(url: info.url, username: info.username, password: info.password)
         request.httpBody = jsonData
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 5
-
-        // Add basic auth if credentials are set
-        if let username = defaults.string(forKey: AppGroupConstants.hostUsernameKey),
-           !username.isEmpty {
-            let password = defaults.string(forKey: AppGroupConstants.hostPasswordKey) ?? ""
-            let credentials = "\(username):\(password)"
-            if let credentialsData = credentials.data(using: .utf8) {
-                let base64 = credentialsData.base64EncodedString()
-                request.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")
-            }
-        }
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -173,7 +223,6 @@ enum PlaybackIntentHandler {
                 return nil
             }
 
-            // Parse response: {"id":1,"jsonrpc":"2.0","result":{"speed":1}}
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let result = json["result"] as? [String: Any],
                let speed = result["speed"] as? Int {
@@ -187,32 +236,10 @@ enum PlaybackIntentHandler {
     }
 
     @discardableResult
-    @MainActor
     private static func sendCommand(_ method: String, extraParams: [String: Any] = [:]) async -> Bool {
-        guard let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
-            return false
-        }
+        guard let info = getConnectionInfo() else { return false }
 
-        defaults.synchronize()
-
-        guard let address = defaults.string(forKey: AppGroupConstants.hostAddressKey),
-              !address.isEmpty else {
-            return false
-        }
-
-        guard defaults.object(forKey: AppGroupConstants.activePlayerIdKey) != nil else {
-            return false
-        }
-        let playerId = defaults.integer(forKey: AppGroupConstants.activePlayerIdKey)
-
-        var port = defaults.integer(forKey: AppGroupConstants.hostPortKey)
-        if port == 0 { port = 8080 }
-
-        guard let url = URL(string: "http://\(address):\(port)/jsonrpc") else {
-            return false
-        }
-
-        var params: [String: Any] = ["playerid": playerId]
+        var params: [String: Any] = ["playerid": info.playerId]
         for (key, value) in extraParams {
             params[key] = value
         }
@@ -228,22 +255,8 @@ enum PlaybackIntentHandler {
             return false
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        var request = makeAuthenticatedRequest(url: info.url, username: info.username, password: info.password)
         request.httpBody = jsonData
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 5 // Shorter timeout for responsiveness
-
-        // Add basic auth if credentials are set
-        if let username = defaults.string(forKey: AppGroupConstants.hostUsernameKey),
-           !username.isEmpty {
-            let password = defaults.string(forKey: AppGroupConstants.hostPasswordKey) ?? ""
-            let credentials = "\(username):\(password)"
-            if let credentialsData = credentials.data(using: .utf8) {
-                let base64 = credentialsData.base64EncodedString()
-                request.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")
-            }
-        }
 
         do {
             let (_, response) = try await URLSession.shared.data(for: request)

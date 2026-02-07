@@ -141,6 +141,7 @@ struct RemoteTab: View {
                         } label: {
                             Image(systemName: "power")
                         }
+                        .accessibilityLabel("Power menu")
                     }
                 }
             }

@@ -9,6 +9,7 @@ struct DashboardTab: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel = DashboardViewModel()
     @State private var searchText = ""
+    @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
         NavigationStack {
@@ -54,8 +55,10 @@ struct DashboardTab: View {
             .navigationTitle("Home")
             .searchable(text: $searchText, prompt: "Search movies & shows")
             .onChange(of: searchText) { _, newValue in
-                Task {
-                    try? await Task.sleep(for: .milliseconds(300)) // Debounce
+                searchTask?.cancel()
+                searchTask = Task {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    guard !Task.isCancelled else { return }
                     await viewModel.search(query: newValue)
                 }
             }
@@ -456,8 +459,6 @@ struct DashboardShowDetailWrapper: View {
     @State private var isLoading = true
     @State private var error: String?
 
-    private let client = KodiClient()
-
     var body: some View {
         Group {
             if isLoading {
@@ -483,7 +484,7 @@ struct DashboardShowDetailWrapper: View {
     }
 
     private func loadTVShow() async {
-        guard let host = appState.currentHost else {
+        guard appState.currentHost != nil else {
             await MainActor.run {
                 error = "No host configured"
                 isLoading = false
@@ -491,7 +492,7 @@ struct DashboardShowDetailWrapper: View {
             return
         }
 
-        await client.configure(with: host)
+        let client = appState.client
 
         do {
             let response = try await client.getTVShowDetails(tvShowId: showInfo.tvshowid)

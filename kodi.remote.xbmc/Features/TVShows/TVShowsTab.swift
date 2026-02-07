@@ -68,6 +68,7 @@ struct TVShowsTab: View {
                     } label: {
                         Image(systemName: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
                     }
+                    .accessibilityLabel(viewMode == .grid ? "Switch to list view" : "Switch to grid view")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -77,6 +78,7 @@ struct TVShowsTab: View {
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                     }
+                    .accessibilityLabel("Sort and filter")
                 }
             }
             .themedBackground()
@@ -204,6 +206,7 @@ struct TVShowPosterCard: View {
                         .foregroundStyle(.white)
                         .background(Circle().fill(.green))
                         .padding(8)
+                        .accessibilityLabel("Fully watched")
                 } else if show.unwatchedCount > 0 {
                     Text("\(show.unwatchedCount)")
                         .font(.caption)
@@ -213,6 +216,7 @@ struct TVShowPosterCard: View {
                         .padding(.vertical, 4)
                         .background(.blue, in: Capsule())
                         .padding(8)
+                        .accessibilityLabel("\(show.unwatchedCount) unwatched episodes")
                 }
             }
 
@@ -289,6 +293,7 @@ struct TVShowListRow: View {
             if show.isFullyWatched {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
+                    .accessibilityLabel("Fully watched")
             } else if show.unwatchedCount > 0 {
                 Text("\(show.unwatchedCount)")
                     .font(.caption)
@@ -297,6 +302,7 @@ struct TVShowListRow: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(.blue, in: Capsule())
+                    .accessibilityLabel("\(show.unwatchedCount) unwatched episodes")
             }
         }
         .padding(.vertical, 4)

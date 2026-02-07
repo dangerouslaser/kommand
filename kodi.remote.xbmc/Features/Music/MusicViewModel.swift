@@ -5,11 +5,12 @@
 
 import Foundation
 import SwiftUI
+import os
 
 @Observable
 final class MusicViewModel {
     private var appState: AppState?
-    private var client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
 
     var artists: [Artist] = []
     var albums: [Album] = []
@@ -24,6 +25,7 @@ final class MusicViewModel {
 
     func configure(appState: AppState) {
         self.appState = appState
+        self.client = appState.client
         if let host = appState.currentHost {
             Task {
                 await client.configure(with: host)
@@ -135,6 +137,7 @@ final class MusicViewModel {
             )
             return result.albums ?? []
         } catch {
+            Logger.networking.error("Failed to load albums for artist: \(error.localizedDescription)")
             return []
         }
     }
@@ -170,6 +173,7 @@ final class MusicViewModel {
             try await client.playAlbum(albumId: album.albumid, shuffle: shuffle)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play album: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -179,6 +183,7 @@ final class MusicViewModel {
             try await client.queueAlbum(albumId: album.albumid)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to queue album: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -188,6 +193,7 @@ final class MusicViewModel {
             try await client.playSong(songId: song.songid)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play song: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -197,6 +203,7 @@ final class MusicViewModel {
             try await client.queueSong(songId: song.songid)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to queue song: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -206,6 +213,7 @@ final class MusicViewModel {
             try await client.playArtist(artistId: artist.artistid, shuffle: shuffle)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play artist: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }

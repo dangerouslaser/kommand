@@ -23,7 +23,7 @@ enum MediaType: String, Codable {
     }
 }
 
-struct NowPlayingItem: Equatable {
+struct NowPlayingItem: Equatable, Sendable {
     let type: MediaType
     let title: String
     let subtitle: String?
@@ -109,7 +109,7 @@ struct NowPlayingItem: Equatable {
     )
 }
 
-struct AudioStream: Identifiable, Equatable {
+struct AudioStream: Identifiable, Equatable, Sendable {
     let id: Int
     let name: String
     let language: String?
@@ -131,7 +131,7 @@ struct AudioStream: Identifiable, Equatable {
     }
 }
 
-struct Subtitle: Identifiable, Equatable {
+struct Subtitle: Identifiable, Equatable, Sendable {
     let id: Int
     let name: String
     let language: String?

@@ -44,7 +44,6 @@ final class KodiConnectionManager {
             } else {
                 defaults.removeObject(forKey: AppGroupConstants.activePlayerIdKey)
             }
-            defaults.synchronize()
         }
     }
 
@@ -103,12 +102,11 @@ final class KodiConnectionManager {
         defaults.set(host.address, forKey: AppGroupConstants.hostAddressKey)
         defaults.set(host.httpPort, forKey: AppGroupConstants.hostPortKey)
         defaults.set(host.username, forKey: AppGroupConstants.hostUsernameKey)
+        defaults.set(host.id.uuidString, forKey: "currentHostId")
 
-        if let password = KeychainHelper.getPassword(for: host.id) {
-            defaults.set(password, forKey: AppGroupConstants.hostPasswordKey)
-        }
-
-        defaults.synchronize()
+        // Password is now shared via Keychain access group — no need to copy to UserDefaults.
+        // Clean up any legacy password stored in UserDefaults.
+        defaults.removeObject(forKey: AppGroupConstants.hostPasswordKey)
     }
 
     // MARK: - Errors

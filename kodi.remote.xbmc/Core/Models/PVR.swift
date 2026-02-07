@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - Channel
 
-struct PVRChannel: Identifiable, Codable, Hashable {
+struct PVRChannel: Identifiable, Codable, Hashable, Sendable {
     let channelid: Int
     let label: String
     let channeltype: String // "tv" or "radio"
@@ -36,7 +36,7 @@ struct PVRChannel: Identifiable, Codable, Hashable {
 
 // MARK: - Channel Group
 
-struct PVRChannelGroup: Identifiable, Codable, Hashable {
+struct PVRChannelGroup: Identifiable, Codable, Hashable, Sendable {
     let channelgroupid: Int
     let label: String
     let channeltype: String // "tv" or "radio"
@@ -50,7 +50,7 @@ struct PVRChannelGroup: Identifiable, Codable, Hashable {
 
 // MARK: - EPG Event (Program)
 
-struct EPGEvent: Identifiable, Codable, Hashable {
+struct EPGEvent: Identifiable, Codable, Hashable, Sendable {
     let broadcastid: Int
     let title: String
     let starttime: String?
@@ -109,7 +109,7 @@ struct EPGEvent: Identifiable, Codable, Hashable {
 
 // MARK: - Recording
 
-struct PVRRecording: Identifiable, Codable, Hashable {
+struct PVRRecording: Identifiable, Codable, Hashable, Sendable {
     let recordingid: Int
     let title: String
     let channel: String?
@@ -180,7 +180,7 @@ struct PVRRecording: Identifiable, Codable, Hashable {
 
 // MARK: - Timer
 
-struct PVRTimer: Identifiable, Codable, Hashable {
+struct PVRTimer: Identifiable, Codable, Hashable, Sendable {
     let timerid: Int
     let title: String
     let summary: String?

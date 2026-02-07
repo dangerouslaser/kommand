@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Movie: Identifiable, Codable, Hashable {
+struct Movie: Identifiable, Codable, Hashable, Sendable {
     let movieid: Int
     let title: String
     let year: Int?
@@ -81,7 +81,7 @@ struct Movie: Identifiable, Codable, Hashable {
     }
 }
 
-struct CastMember: Codable, Hashable, Identifiable {
+struct CastMember: Codable, Hashable, Identifiable, Sendable {
     let name: String
     let role: String?
     let thumbnail: String?
@@ -90,7 +90,7 @@ struct CastMember: Codable, Hashable, Identifiable {
     var id: String { name }
 }
 
-struct ResumePoint: Codable, Hashable {
+struct ResumePoint: Codable, Hashable, Sendable {
     let position: Double // in seconds
     let total: Double
 
@@ -121,7 +121,7 @@ struct LimitsResult: Decodable {
     let total: Int
 }
 
-struct MediaArt: Codable, Hashable {
+struct MediaArt: Codable, Hashable, Sendable {
     let poster: String?
     let fanart: String?
     let thumb: String?
@@ -133,7 +133,7 @@ struct MediaArt: Codable, Hashable {
 
 // MARK: - Stream Details
 
-struct StreamDetails: Codable, Hashable {
+struct StreamDetails: Codable, Hashable, Sendable {
     let video: [VideoStream]?
     let audio: [AudioStreamDetail]?
     let subtitle: [SubtitleStream]?
@@ -149,7 +149,7 @@ struct StreamDetails: Codable, Hashable {
     }
 }
 
-struct VideoStream: Codable, Hashable {
+struct VideoStream: Codable, Hashable, Sendable {
     let codec: String?
     let aspect: Double?
     let width: Int?
@@ -207,7 +207,7 @@ struct VideoStream: Codable, Hashable {
     }
 }
 
-struct AudioStreamDetail: Codable, Hashable {
+struct AudioStreamDetail: Codable, Hashable, Sendable {
     let codec: String?
     let channels: Int?
     let language: String?
@@ -249,6 +249,6 @@ struct AudioStreamDetail: Codable, Hashable {
     }
 }
 
-struct SubtitleStream: Codable, Hashable {
+struct SubtitleStream: Codable, Hashable, Sendable {
     let language: String?
 }

@@ -75,6 +75,7 @@ struct PVRTab: View {
                         Image(systemName: "record.circle")
                             .foregroundStyle(.red)
                             .symbolEffect(.pulse)
+                            .accessibilityLabel("Recording in progress")
                     }
                 }
             }
@@ -349,6 +350,8 @@ struct ChannelRow: View {
                         if let progress = now.progresspercentage {
                             ProgressView(value: progress / 100)
                                 .tint(.blue)
+                                .accessibilityLabel("Program progress")
+                                .accessibilityValue("\(Int(progress)) percent")
                         }
                     }
                 }
@@ -359,6 +362,7 @@ struct ChannelRow: View {
                 if channel.isrecording ?? false {
                     Image(systemName: "record.circle")
                         .foregroundStyle(.red)
+                        .accessibilityLabel("Recording")
                 }
             }
             .padding(.vertical, 4)
@@ -420,6 +424,8 @@ struct RecordingRow: View {
                     if recording.hasResume {
                         ProgressView(value: recording.resume?.progress ?? 0)
                             .tint(.blue)
+                            .accessibilityLabel("Watched progress")
+                            .accessibilityValue("\(Int((recording.resume?.progress ?? 0) * 100)) percent")
                     }
                 }
 
@@ -428,6 +434,7 @@ struct RecordingRow: View {
                 if recording.isWatched {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
+                        .accessibilityLabel("Watched")
                 }
             }
             .padding(.vertical, 4)
@@ -492,6 +499,7 @@ struct TimerRow: View {
                 Image(systemName: "record.circle")
                     .foregroundStyle(.red)
                     .symbolEffect(.pulse)
+                    .accessibilityLabel("Recording active")
             }
         }
         .padding(.vertical, 4)

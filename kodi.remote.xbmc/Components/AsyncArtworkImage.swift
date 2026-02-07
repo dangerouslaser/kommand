@@ -5,13 +5,17 @@
 
 import SwiftUI
 
-struct AsyncArtworkImage: View {
+struct AsyncArtworkImage: View, Equatable {
     let path: String?
     let host: KodiHost?
 
     @State private var loadedImage: UIImage?
     @State private var isLoading = false
     @State private var loadFailed = false
+
+    static func == (lhs: AsyncArtworkImage, rhs: AsyncArtworkImage) -> Bool {
+        lhs.path == rhs.path && lhs.host?.id == rhs.host?.id
+    }
 
     var body: some View {
         Group {
@@ -21,6 +25,10 @@ struct AsyncArtworkImage: View {
                     .scaledToFill()
             } else if isLoading {
                 ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if loadFailed {
+                Image(systemName: "photo")
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Color.clear

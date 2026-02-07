@@ -70,7 +70,7 @@ struct NowPlayingCard: View {
 
                             if let subtitle = item.subtitle {
                                 Text(subtitle)
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundStyle(.white.opacity(0.7))
                                     .lineLimit(1)
                             }
@@ -143,6 +143,9 @@ struct NowPlayingCard: View {
                             }
                             .frame(height: isSeeking ? 5 : 3)
                             .contentShape(Rectangle().size(width: geometry.size.width, height: 30))
+                            .accessibilityLabel("Playback progress")
+                            .accessibilityValue("\(Int(displayProgress * 100)) percent")
+                            .accessibilityHint("Drag to seek")
                             .gesture(
                                 onSeek != nil ? DragGesture(minimumDistance: 0)
                                     .onChanged { value in
@@ -168,17 +171,31 @@ struct NowPlayingCard: View {
                         .frame(height: isSeeking ? 5 : 3)
                         .animation(.easeInOut(duration: 0.15), value: isSeeking)
 
-                        // Time labels with real-time updates when playing
-                        TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                        // Time labels — use TimelineView only when playing to save battery
+                        if item.isPlaying && !isSeeking {
+                            TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                                HStack {
+                                    Text(seekTimeDisplay(at: context.date).formattedDuration)
+                                        .font(.caption2)
+                                        .foregroundStyle(.white.opacity(0.6))
+
+                                    Spacer()
+
+                                    Text("-\(seekRemainingDisplay(at: context.date).formattedDuration)")
+                                        .font(.caption2)
+                                        .foregroundStyle(.white.opacity(0.6))
+                                }
+                            }
+                        } else {
                             HStack {
-                                Text(seekTimeDisplay(at: context.date).formattedDuration)
-                                    .font(.system(size: 10))
+                                Text(seekTimeDisplay(at: Date()).formattedDuration)
+                                    .font(.caption2)
                                     .foregroundStyle(.white.opacity(0.6))
 
                                 Spacer()
 
-                                Text("-\(seekRemainingDisplay(at: context.date).formattedDuration)")
-                                    .font(.system(size: 10))
+                                Text("-\(seekRemainingDisplay(at: Date()).formattedDuration)")
+                                    .font(.caption2)
                                     .foregroundStyle(.white.opacity(0.6))
                             }
                         }
@@ -515,7 +532,7 @@ struct HeroBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 9, weight: .semibold))
+            .font(.caption2.weight(.semibold))
             .padding(.horizontal, 5)
             .padding(.vertical, 2)
             .background(color.opacity(0.25), in: RoundedRectangle(cornerRadius: 3))

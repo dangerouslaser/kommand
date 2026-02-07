@@ -5,12 +5,13 @@
 
 import Foundation
 import SwiftUI
+import os
 
 @Observable
 final class TVShowsViewModel {
     private var appState: AppState?
     private var libraryState: LibraryState?
-    private var client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
 
     // Cached data for detail views
     var seasons: [Season] = []
@@ -21,6 +22,7 @@ final class TVShowsViewModel {
     func configure(appState: AppState, libraryState: LibraryState) {
         self.appState = appState
         self.libraryState = libraryState
+        self.client = appState.client
         if let host = appState.currentHost {
             Task {
                 await client.configure(with: host)
@@ -81,6 +83,7 @@ final class TVShowsViewModel {
                 isLoadingSeasons = false
             }
         } catch {
+            Logger.networking.error("Failed to load seasons: \(error.localizedDescription)")
             await MainActor.run {
                 isLoadingSeasons = false
             }
@@ -107,6 +110,7 @@ final class TVShowsViewModel {
                 isLoadingEpisodes = false
             }
         } catch {
+            Logger.networking.error("Failed to load episodes: \(error.localizedDescription)")
             await MainActor.run {
                 isLoadingEpisodes = false
             }
@@ -120,6 +124,7 @@ final class TVShowsViewModel {
             try await client.playEpisode(episodeId: episode.episodeid, resume: resume)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play episode: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -129,6 +134,7 @@ final class TVShowsViewModel {
             try await client.queueEpisode(episodeId: episode.episodeid)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to queue episode: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -163,6 +169,7 @@ final class TVShowsViewModel {
             }
             HapticService.notification(.success)
         } catch {
+            Logger.networking.error("Failed to toggle watched status: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }

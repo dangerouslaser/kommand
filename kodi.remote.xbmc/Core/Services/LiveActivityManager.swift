@@ -346,16 +346,12 @@ final class LiveActivityManager {
         defaults.set(host.address, forKey: AppGroupConstants.hostAddressKey)
         defaults.set(host.httpPort, forKey: AppGroupConstants.hostPortKey)
         defaults.set(host.username, forKey: AppGroupConstants.hostUsernameKey)
+        defaults.set(host.id.uuidString, forKey: "currentHostId")
 
-        // Get password from keychain if available
-        if let password = KeychainHelper.getPassword(for: host.id) {
-            defaults.set(password, forKey: AppGroupConstants.hostPasswordKey)
-        }
+        // Password is now shared via Keychain access group — no UserDefaults copy needed.
+        defaults.removeObject(forKey: AppGroupConstants.hostPasswordKey)
 
         defaults.set(playerId, forKey: AppGroupConstants.activePlayerIdKey)
-
-        // Force synchronize for cross-process access
-        defaults.synchronize()
     }
 
     private func clearSharedData() {
@@ -366,7 +362,6 @@ final class LiveActivityManager {
         defaults.removeObject(forKey: AppGroupConstants.hostUsernameKey)
         defaults.removeObject(forKey: AppGroupConstants.hostPasswordKey)
         defaults.removeObject(forKey: AppGroupConstants.activePlayerIdKey)
-        defaults.synchronize()
 
         // Clear tracked paths
         currentPosterPath = nil

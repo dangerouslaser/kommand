@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct TVShow: Identifiable, Codable, Hashable {
+struct TVShow: Identifiable, Codable, Hashable, Sendable {
     let tvshowid: Int
     let title: String
     let year: Int?
@@ -61,7 +61,7 @@ struct TVShow: Identifiable, Codable, Hashable {
     }
 }
 
-struct Season: Identifiable, Codable, Hashable {
+struct Season: Identifiable, Codable, Hashable, Sendable {
     let seasonid: Int
     let season: Int
     let showtitle: String?
@@ -97,7 +97,7 @@ struct Season: Identifiable, Codable, Hashable {
     }
 }
 
-struct Episode: Identifiable, Codable, Hashable {
+struct Episode: Identifiable, Codable, Hashable, Sendable {
     let episodeid: Int
     let title: String
     let episode: Int

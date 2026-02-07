@@ -10,7 +10,7 @@ import UIKit
 
 @Observable
 final class KodiSettingsViewModel {
-    private let client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
     private var host: KodiHost?
 
     var sections: [SettingSection] = []
@@ -22,8 +22,9 @@ final class KodiSettingsViewModel {
     var isLoadingSettings = false
     var error: String?
 
-    func configure(host: KodiHost?) {
+    func configure(host: KodiHost?, client: KodiClient) {
         self.host = host
+        self.client = client
         if let host = host {
             Task {
                 await client.configure(with: host)
@@ -173,7 +174,7 @@ struct KodiSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .themedScrollBackground()
         .task {
-            viewModel.configure(host: appState.currentHost)
+            viewModel.configure(host: appState.currentHost, client: appState.client)
             await viewModel.loadSections()
         }
     }

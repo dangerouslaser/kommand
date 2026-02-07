@@ -98,8 +98,8 @@ actor KodiClient {
 
         guard let result = rpcResponse.result else {
             // Some methods return empty result
-            if T.self == EmptyResponse.self {
-                return EmptyResponse() as! T
+            if T.self == EmptyResponse.self, let empty = EmptyResponse() as? T {
+                return empty
             }
             throw KodiError.noResult
         }
@@ -1125,19 +1125,6 @@ enum KodiError: LocalizedError {
     }
 }
 
-// MARK: - Keychain Helper (simplified)
+// MARK: - Keychain Helper (alias for backward compatibility)
 
-enum KeychainHelper {
-    static func getPassword(for hostId: UUID) -> String? {
-        // Simplified - in production use Security framework
-        UserDefaults.standard.string(forKey: "password_\(hostId.uuidString)")
-    }
-
-    static func setPassword(_ password: String, for hostId: UUID) {
-        UserDefaults.standard.set(password, forKey: "password_\(hostId.uuidString)")
-    }
-
-    static func deletePassword(for hostId: UUID) {
-        UserDefaults.standard.removeObject(forKey: "password_\(hostId.uuidString)")
-    }
-}
+typealias KeychainHelper = KeychainService

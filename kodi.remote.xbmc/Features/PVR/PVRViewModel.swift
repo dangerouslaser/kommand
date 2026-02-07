@@ -5,11 +5,12 @@
 
 import Foundation
 import UIKit
+import os
 
 @Observable
 final class PVRViewModel {
     private var appState: AppState?
-    private let client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
 
     // PVR availability
     var isPVRAvailable = false
@@ -44,6 +45,7 @@ final class PVRViewModel {
 
     func configure(appState: AppState) {
         self.appState = appState
+        self.client = appState.client
         if let host = appState.currentHost {
             Task {
                 await client.configure(with: host)
@@ -199,6 +201,7 @@ final class PVRViewModel {
             try await client.playChannel(channelId: channel.id)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play channel: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -208,6 +211,7 @@ final class PVRViewModel {
             try await client.playRecording(recordingId: recording.id, resume: resume)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play recording: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -220,6 +224,7 @@ final class PVRViewModel {
             await loadRecordings()
             HapticService.notification(.success)
         } catch {
+            Logger.networking.error("Failed to delete recording: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -230,6 +235,7 @@ final class PVRViewModel {
             await checkPVRAvailability()
             HapticService.notification(.success)
         } catch {
+            Logger.networking.error("Failed to record channel: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -242,6 +248,7 @@ final class PVRViewModel {
             await loadTimers()
             HapticService.notification(.success)
         } catch {
+            Logger.networking.error("Failed to delete timer: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -252,6 +259,7 @@ final class PVRViewModel {
             await loadTimers()
             HapticService.notification(.success)
         } catch {
+            Logger.networking.error("Failed to schedule recording: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }

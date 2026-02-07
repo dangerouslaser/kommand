@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Artist: Identifiable, Codable, Hashable {
+struct Artist: Identifiable, Codable, Hashable, Sendable {
     let artistid: Int
     let artist: String
     let label: String?
@@ -26,7 +26,7 @@ struct Artist: Identifiable, Codable, Hashable {
     }
 }
 
-struct Album: Identifiable, Codable, Hashable {
+struct Album: Identifiable, Codable, Hashable, Sendable {
     let albumid: Int
     let title: String
     let label: String?
@@ -57,7 +57,7 @@ struct Album: Identifiable, Codable, Hashable {
     }
 }
 
-struct Song: Identifiable, Codable, Hashable {
+struct Song: Identifiable, Codable, Hashable, Sendable {
     let songid: Int
     let title: String
     let label: String?

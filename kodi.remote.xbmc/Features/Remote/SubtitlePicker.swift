@@ -60,7 +60,7 @@ struct SubtitlePicker: View {
                 Spacer(minLength: 8)
 
                 Text(currentSubtitleLabel)
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)

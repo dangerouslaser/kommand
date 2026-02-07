@@ -5,16 +5,18 @@
 
 import Foundation
 import SwiftUI
+import os
 
 @Observable
 final class MoviesViewModel {
     private var appState: AppState?
     private var libraryState: LibraryState?
-    private var client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
 
     func configure(appState: AppState, libraryState: LibraryState) {
         self.appState = appState
         self.libraryState = libraryState
+        self.client = appState.client
         if let host = appState.currentHost {
             Task {
                 await client.configure(with: host)
@@ -78,6 +80,7 @@ final class MoviesViewModel {
                 isLoadingActorMovies = false
             }
         } catch {
+            Logger.networking.error("Failed to load movies by actor: \(error.localizedDescription)")
             await MainActor.run {
                 isLoadingActorMovies = false
             }
@@ -91,6 +94,7 @@ final class MoviesViewModel {
             try await client.playMovie(movieId: movie.movieid, resume: resume)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play movie: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -100,6 +104,7 @@ final class MoviesViewModel {
             try await client.queueMovie(movieId: movie.movieid)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to queue movie: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -111,6 +116,7 @@ final class MoviesViewModel {
             await loadMovies(forceRefresh: true)
             HapticService.notification(.success)
         } catch {
+            Logger.networking.error("Failed to toggle watched status: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }

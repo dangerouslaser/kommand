@@ -42,6 +42,9 @@ final class AppState {
     var activePlayerId: Int?
     var isCoreELEC: Bool = false
 
+    // Shared networking client — all ViewModels should use this instead of creating their own
+    let client = KodiClient()
+
     // Server capabilities
     var serverCapabilities: ServerCapabilities = ServerCapabilities()
 
@@ -49,6 +52,8 @@ final class AppState {
 
     init() {
         loadHosts()
+        // Migrate passwords from UserDefaults to Keychain (one-time)
+        KeychainService.migrateFromUserDefaults(hostIds: hosts.map(\.id))
     }
 
     var hasActivePlayer: Bool {

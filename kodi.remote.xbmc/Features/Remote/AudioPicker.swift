@@ -43,7 +43,7 @@ struct AudioPicker: View {
                 Spacer(minLength: 8)
 
                 Text(currentAudioLabel)
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)

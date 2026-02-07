@@ -66,7 +66,7 @@ struct BehaviorSettingsView: View {
 
                     if !isProUnlocked {
                         Text("PRO")
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.caption2.weight(.bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)

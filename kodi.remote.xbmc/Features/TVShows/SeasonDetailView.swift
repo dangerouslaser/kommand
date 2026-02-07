@@ -221,7 +221,7 @@ struct CompactTagBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 9, weight: .medium))
+            .font(.caption2.weight(.medium))
             .padding(.horizontal, 5)
             .padding(.vertical, 2)
             .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 4))

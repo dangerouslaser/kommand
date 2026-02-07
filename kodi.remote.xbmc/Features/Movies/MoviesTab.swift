@@ -69,6 +69,7 @@ struct MoviesTab: View {
                     } label: {
                         Image(systemName: viewMode == .grid ? "list.bullet" : "square.grid.2x2")
                     }
+                    .accessibilityLabel(viewMode == .grid ? "Switch to list view" : "Switch to grid view")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -78,6 +79,7 @@ struct MoviesTab: View {
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                     }
+                    .accessibilityLabel("Sort and filter")
                 }
             }
             .themedBackground()
@@ -206,6 +208,7 @@ struct MoviePosterCard: View {
                         .foregroundStyle(.white)
                         .background(Circle().fill(.green))
                         .padding(8)
+                        .accessibilityLabel("Watched")
                 }
 
                 if movie.hasResume {
@@ -214,6 +217,8 @@ struct MoviePosterCard: View {
                         ProgressView(value: movie.resume?.progress ?? 0)
                             .tint(.white)
                             .background(.black.opacity(0.5))
+                            .accessibilityLabel("Watched progress")
+                            .accessibilityValue("\(Int((movie.resume?.progress ?? 0) * 100)) percent")
                     }
                 }
             }
@@ -293,9 +298,12 @@ struct MovieListRow: View {
             if movie.isWatched {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
+                    .accessibilityLabel("Watched")
             } else if movie.hasResume {
                 CircularProgressView(progress: movie.resume?.progress ?? 0)
                     .frame(width: 24, height: 24)
+                    .accessibilityLabel("Watched progress")
+                    .accessibilityValue("\(Int((movie.resume?.progress ?? 0) * 100)) percent")
             }
         }
         .padding(.vertical, 4)

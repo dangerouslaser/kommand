@@ -175,7 +175,7 @@ struct ThemeSwatch: View {
                 .frame(width: 60, height: 60)
 
                 Text(theme.name)
-                    .font(.system(size: 10))
+                    .font(.caption2)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
             }

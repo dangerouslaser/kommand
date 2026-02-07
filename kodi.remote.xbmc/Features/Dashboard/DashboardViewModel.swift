@@ -5,6 +5,7 @@
 
 import Foundation
 import UIKit
+import os
 
 // Represents a TV show with recently added episodes
 struct RecentShowInfo: Identifiable, Hashable {
@@ -21,7 +22,7 @@ struct RecentShowInfo: Identifiable, Hashable {
 @Observable
 final class DashboardViewModel {
     private var appState: AppState?
-    private var client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
 
     // Continue Watching
     var inProgressMovies: [Movie] = []
@@ -77,6 +78,7 @@ final class DashboardViewModel {
 
     func configure(appState: AppState) {
         self.appState = appState
+        self.client = appState.client
         if let host = appState.currentHost {
             Task {
                 await client.configure(with: host)
@@ -161,6 +163,7 @@ final class DashboardViewModel {
             try await client.playMovie(movieId: movie.id, resume: resume)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play movie: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -170,6 +173,7 @@ final class DashboardViewModel {
             try await client.playEpisode(episodeId: episode.id, resume: resume)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play episode: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }
@@ -218,6 +222,7 @@ final class DashboardViewModel {
                 isSearching = false
             }
         } catch {
+            Logger.networking.error("Search failed: \(error.localizedDescription)")
             await MainActor.run {
                 searchMovies = []
                 searchTVShows = []
@@ -245,6 +250,7 @@ final class DashboardViewModel {
             try await client.playChannel(channelId: channel.channelid)
             HapticService.notification(.success)
         } catch {
+            Logger.playback.error("Failed to play channel: \(error.localizedDescription)")
             HapticService.notification(.error)
         }
     }

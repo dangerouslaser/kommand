@@ -5,11 +5,12 @@
 
 import Foundation
 import SwiftUI
+import os
 
 @Observable
 final class RemoteViewModel {
     private var appState: AppState?
-    private var client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
     private var pollingTask: Task<Void, Never>?
     private var notificationTask: Task<Void, Never>?
     private var isPolling = false
@@ -27,6 +28,7 @@ final class RemoteViewModel {
 
     func configure(appState: AppState) {
         self.appState = appState
+        self.client = appState.client
 
         if let host = appState.currentHost {
             Task {
@@ -103,9 +105,8 @@ final class RemoteViewModel {
     private func startProgressPolling() {
         pollingTask = Task {
             while !Task.isCancelled {
-                // Wait 5 seconds between progress updates
                 try? await Task.sleep(for: .seconds(5))
-                if Task.isCancelled { break }
+                guard !Task.isCancelled else { break }
 
                 // Only update if we're still using WebSocket (not fallback polling)
                 if !usePollingFallback {
@@ -141,6 +142,7 @@ final class RemoteViewModel {
                 await updateNowPlaying()
                 await updateVolume()
                 try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { break }
             }
         }
     }
@@ -363,7 +365,7 @@ final class RemoteViewModel {
             do {
                 try await client.sendInput(action)
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to send input: \(error.localizedDescription)")
             }
         }
     }
@@ -375,7 +377,7 @@ final class RemoteViewModel {
             do {
                 try await client.sendText(text, done: done)
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to send text input: \(error.localizedDescription)")
             }
         }
     }
@@ -397,7 +399,7 @@ final class RemoteViewModel {
                     }
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to toggle play/pause: \(error.localizedDescription)")
             }
         }
     }
@@ -416,7 +418,7 @@ final class RemoteViewModel {
                     LiveActivityManager.shared.endActivity()
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to stop playback: \(error.localizedDescription)")
             }
         }
     }
@@ -429,7 +431,7 @@ final class RemoteViewModel {
             do {
                 try await client.skipPrevious(playerId: playerId)
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to skip to previous: \(error.localizedDescription)")
             }
         }
     }
@@ -442,7 +444,7 @@ final class RemoteViewModel {
             do {
                 try await client.skipNext(playerId: playerId)
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to skip to next: \(error.localizedDescription)")
             }
         }
     }
@@ -465,7 +467,7 @@ final class RemoteViewModel {
                     }
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to seek backward: \(error.localizedDescription)")
             }
         }
     }
@@ -488,7 +490,7 @@ final class RemoteViewModel {
                     }
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to seek forward: \(error.localizedDescription)")
             }
         }
     }
@@ -505,7 +507,7 @@ final class RemoteViewModel {
                 // Refresh now playing to update UI
                 await updateNowPlaying()
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to seek to percentage: \(error.localizedDescription)")
             }
         }
     }
@@ -530,7 +532,7 @@ final class RemoteViewModel {
                     }
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to set subtitle: \(error.localizedDescription)")
             }
         }
     }
@@ -546,7 +548,7 @@ final class RemoteViewModel {
                     appState?.nowPlaying?.currentAudioStreamIndex = index
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to set audio stream: \(error.localizedDescription)")
             }
         }
     }
@@ -558,7 +560,7 @@ final class RemoteViewModel {
             do {
                 _ = try await client.setVolume(volume)
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to set volume: \(error.localizedDescription)")
             }
         }
     }
@@ -573,7 +575,7 @@ final class RemoteViewModel {
                     appState?.isMuted = muted
                 }
             } catch {
-                // Error handled silently
+                Logger.playback.error("Failed to toggle mute: \(error.localizedDescription)")
             }
         }
     }
@@ -587,7 +589,7 @@ final class RemoteViewModel {
             do {
                 try await client.cecVolumeUp()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to send CEC volume up: \(error.localizedDescription)")
             }
         }
     }
@@ -599,7 +601,7 @@ final class RemoteViewModel {
             do {
                 try await client.cecVolumeDown()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to send CEC volume down: \(error.localizedDescription)")
             }
         }
     }
@@ -611,7 +613,7 @@ final class RemoteViewModel {
             do {
                 try await client.cecMute()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to send CEC mute: \(error.localizedDescription)")
             }
         }
     }
@@ -625,7 +627,7 @@ final class RemoteViewModel {
             do {
                 try await client.quit()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to restart Kodi: \(error.localizedDescription)")
             }
         }
     }
@@ -637,7 +639,7 @@ final class RemoteViewModel {
             do {
                 try await client.suspend()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to suspend device: \(error.localizedDescription)")
             }
         }
     }
@@ -649,7 +651,7 @@ final class RemoteViewModel {
             do {
                 try await client.reboot()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to reboot device: \(error.localizedDescription)")
             }
         }
     }
@@ -661,7 +663,7 @@ final class RemoteViewModel {
             do {
                 try await client.shutdown()
             } catch {
-                // Error handled silently
+                Logger.networking.error("Failed to shutdown device: \(error.localizedDescription)")
             }
         }
     }

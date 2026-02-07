@@ -165,7 +165,7 @@ private struct InfoRow: View {
 @Observable
 final class CoreELECViewModel {
     private var appState: AppState?
-    private let client = KodiClient()
+    private var client = KodiClient() // Replaced in configure() with shared instance
 
     var systemInfo: SystemInfoResponse?
     var appInfo: ApplicationPropertiesResponse?
@@ -174,6 +174,7 @@ final class CoreELECViewModel {
 
     func configure(appState: AppState) {
         self.appState = appState
+        self.client = appState.client
         if let host = appState.currentHost {
             Task {
                 await client.configure(with: host)
