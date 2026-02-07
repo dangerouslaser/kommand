@@ -4,7 +4,6 @@
 //
 
 import Foundation
-import UIKit
 import os
 
 // Represents a TV show with recently added episodes

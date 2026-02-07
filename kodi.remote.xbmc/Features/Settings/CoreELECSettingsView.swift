@@ -4,7 +4,6 @@
 //
 
 import SwiftUI
-import UIKit
 
 struct CoreELECSettingsView: View {
     @Environment(AppState.self) private var appState
