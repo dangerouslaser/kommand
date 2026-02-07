@@ -60,11 +60,11 @@ struct AppearanceSettingsView: View {
             }
 
             Section {
-                Toggle("Dolby Vision Profile", isOn: $showDolbyVisionProfile)
+                Toggle("DV Profile", isOn: $showDolbyVisionProfile)
             } header: {
                 Text("Advanced")
             } footer: {
-                Text("Show detailed Dolby Vision profile information (e.g., P7 FEL, P8.1 MEL) on the Now Playing card.")
+                Text("Show detailed DV profile information (e.g., P7 FEL, P8.1 MEL) on the Now Playing card.")
             }
         }
         .navigationTitle("Appearance")

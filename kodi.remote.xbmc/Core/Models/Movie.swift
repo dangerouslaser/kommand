@@ -172,7 +172,7 @@ nonisolated struct VideoStream: Codable, Hashable, Sendable {
     var hdrLabel: String? {
         guard let hdr = hdrtype, !hdr.isEmpty else { return nil }
         switch hdr.lowercased() {
-        case "dolbyvision": return "Dolby Vision"
+        case "dolbyvision": return "DV"
         case "hdr10": return "HDR10"
         case "hdr10plus": return "HDR10+"
         case "hlg": return "HLG"

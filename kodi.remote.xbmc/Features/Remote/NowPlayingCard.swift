@@ -419,9 +419,9 @@ struct NowPlayingCard: View {
         switch type.lowercased() {
         case "dolbyvision":
             if showDolbyVisionProfile, let dvProfile = item.dolbyVisionProfile {
-                return "Dolby Vision \(dvProfile)"
+                return "DV \(dvProfile)"
             }
-            return "Dolby Vision"
+            return "DV"
         case "hdr10": return "HDR10"
         case "hdr10plus": return "HDR10+"
         case "hlg": return "HLG"
