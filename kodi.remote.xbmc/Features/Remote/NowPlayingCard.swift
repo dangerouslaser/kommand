@@ -385,13 +385,13 @@ struct NowPlayingCard: View {
 
     private var formattedResolution: String? {
         guard let width = item.videoWidth, let height = item.videoHeight else { return nil }
-        if height >= 2160 {
+        if width >= 3840 {
             return "4K"
-        } else if height >= 1080 {
+        } else if width >= 1920 {
             return "1080p"
-        } else if height >= 720 {
+        } else if width >= 1280 {
             return "720p"
-        } else if height >= 480 {
+        } else if width >= 720 {
             return "480p"
         }
         return "\(width)x\(height)"

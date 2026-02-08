@@ -160,12 +160,12 @@ nonisolated struct VideoStream: Codable, Hashable, Sendable {
 
     /// Returns a formatted resolution string (e.g., "4K", "1080p", "720p")
     var resolutionLabel: String? {
-        guard let height = height else { return nil }
-        if height >= 2160 { return "4K" }
-        if height >= 1080 { return "1080p" }
-        if height >= 720 { return "720p" }
-        if height >= 480 { return "480p" }
-        return "\(height)p"
+        guard let width = width else { return nil }
+        if width >= 3840 { return "4K" }
+        if width >= 1920 { return "1080p" }
+        if width >= 1280 { return "720p" }
+        if width >= 720 { return "480p" }
+        return "\(width)p"
     }
 
     /// Returns the HDR format label

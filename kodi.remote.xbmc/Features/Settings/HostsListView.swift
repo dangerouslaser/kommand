@@ -84,7 +84,7 @@ struct HostRow: View {
                 Text(host.name)
                     .font(.headline)
 
-                Text("\(host.address):\(host.httpPort)")
+                Text(verbatim: "\(host.address):\(host.httpPort)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

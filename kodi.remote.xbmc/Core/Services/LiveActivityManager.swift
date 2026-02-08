@@ -186,11 +186,11 @@ final class LiveActivityManager {
 
         // Format resolution
         let resolution: String? = {
-            guard let height = item.videoHeight else { return nil }
-            if height >= 2160 { return "4K" }
-            else if height >= 1080 { return "1080p" }
-            else if height >= 720 { return "720p" }
-            else if height >= 480 { return "480p" }
+            guard let width = item.videoWidth else { return nil }
+            if width >= 3840 { return "4K" }
+            else if width >= 1920 { return "1080p" }
+            else if width >= 1280 { return "720p" }
+            else if width >= 720 { return "480p" }
             return nil
         }()
 
