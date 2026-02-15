@@ -8,12 +8,15 @@ import SwiftUI
 struct RemoteTab: View {
     @Environment(AppState.self) private var appState
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var viewModel = RemoteViewModel()
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
     @AppStorage("useVolumeButtons") private var useVolumeButtons = true
     @State private var showingTextInput = false
     @State private var textInput = ""
     @State private var volumeButtonHandler = VolumeButtonHandler()
+
+    private var isIPad: Bool { horizontalSizeClass == .regular }
 
     // Power Menu Settings
     @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
@@ -29,75 +32,7 @@ struct RemoteTab: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Now Playing Card
-                    if let nowPlaying = appState.nowPlaying, !nowPlaying.title.isEmpty {
-                        NowPlayingCard(
-                            item: nowPlaying,
-                            onAudioStreamChange: viewModel.setAudioStream,
-                            onSubtitleChange: viewModel.setSubtitle,
-                            onSeek: viewModel.seekToPercentage
-                        )
-                        .padding(.horizontal)
-                    } else {
-                        NothingPlayingCard()
-                            .padding(.horizontal)
-                    }
-
-                    // Navigation D-Pad
-                    NavigationPad(onInput: viewModel.sendInput)
-                        .padding(.horizontal)
-
-                    // Playback Controls
-                    PlaybackControls(
-                        isPlaying: appState.nowPlaying?.isPlaying ?? false,
-                        onPlayPause: viewModel.togglePlayPause,
-                        onStop: viewModel.stop,
-                        onSkipBack: viewModel.skipPrevious,
-                        onSkipForward: viewModel.skipNext,
-                        onSeekBack: viewModel.seekBackward,
-                        onSeekForward: viewModel.seekForward
-                    )
-                    .padding(.horizontal)
-
-                    // Quick Actions
-                    QuickActionsBar(
-                        onHome: { viewModel.sendInput(.home) },
-                        onBack: { viewModel.sendInput(.back) },
-                        onInfo: { viewModel.sendInput(.info) },
-                        onOSD: { viewModel.sendInput(.osd) },
-                        onKeyboard: { showingTextInput = true }
-                    )
-                    .padding(.horizontal)
-
-                    // CEC Volume Control (for CoreELEC - controls TV/AVR)
-                    if appState.isCoreELEC {
-                        CECVolumeControl(
-                            onVolumeUp: viewModel.cecVolumeUp,
-                            onVolumeDown: viewModel.cecVolumeDown,
-                            onMute: viewModel.cecMute
-                        )
-                        .padding(.horizontal)
-                    }
-
-                    // Kodi Volume Slider (optional)
-                    if showVolumeSlider {
-                        VolumeSlider(
-                            volume: Binding(
-                                get: { appState.volume },
-                                set: { viewModel.setVolume($0) }
-                            ),
-                            isMuted: appState.isMuted,
-                            onMuteToggle: viewModel.toggleMute
-                        )
-                        .padding(.horizontal)
-                    }
-
-                    Spacer(minLength: 20)
-                }
-                .padding(.top)
-            }
+            remoteLayout
             .background {
                 // Hidden volume view to suppress system volume HUD
                 if appState.isCoreELEC && useVolumeButtons {
@@ -207,6 +142,83 @@ struct RemoteTab: View {
             if newPhase == .active {
                 // Refresh state when returning from background (e.g., after Live Activity action)
                 viewModel.refreshNowPlaying()
+            }
+        }
+    }
+
+    // MARK: - Remote Layout
+
+    private var remoteLayout: some View {
+        VStack(spacing: 16) {
+            // Now Playing Card — fills remaining space
+            if let nowPlaying = appState.nowPlaying, !nowPlaying.title.isEmpty {
+                NowPlayingCard(
+                    item: nowPlaying,
+                    onAudioStreamChange: viewModel.setAudioStream,
+                    onSubtitleChange: viewModel.setSubtitle,
+                    onSeek: viewModel.seekToPercentage,
+                    flexibleHeight: true
+                )
+                .padding(.horizontal)
+            } else {
+                NothingPlayingCard()
+                    .frame(maxHeight: .infinity)
+                    .padding(.horizontal)
+            }
+
+            // Controls — natural size at bottom
+            remoteControls
+        }
+        .padding(.top)
+        .padding(.bottom)
+    }
+
+    // MARK: - Shared Controls
+
+    private var remoteControls: some View {
+        VStack(spacing: 16) {
+            NavigationPad(onInput: viewModel.sendInput)
+                .padding(.horizontal)
+
+            PlaybackControls(
+                isPlaying: appState.nowPlaying?.isPlaying ?? false,
+                onPlayPause: viewModel.togglePlayPause,
+                onStop: viewModel.stop,
+                onSkipBack: viewModel.skipPrevious,
+                onSkipForward: viewModel.skipNext,
+                onSeekBack: viewModel.seekBackward,
+                onSeekForward: viewModel.seekForward
+            )
+            .padding(.horizontal)
+
+            QuickActionsBar(
+                onHome: { viewModel.sendInput(.home) },
+                onBack: { viewModel.sendInput(.back) },
+                onInfo: { viewModel.sendInput(.info) },
+                onOSD: { viewModel.sendInput(.osd) },
+                onKeyboard: { showingTextInput = true }
+            )
+            .padding(.horizontal)
+
+            if appState.isCoreELEC {
+                CECVolumeControl(
+                    onVolumeUp: viewModel.cecVolumeUp,
+                    onVolumeDown: viewModel.cecVolumeDown,
+                    onMute: viewModel.cecMute
+                )
+                .padding(.horizontal)
+            }
+
+            if showVolumeSlider {
+                VolumeSlider(
+                    volume: Binding(
+                        get: { appState.volume },
+                        set: { viewModel.setVolume($0) }
+                    ),
+                    isMuted: appState.isMuted,
+                    onMuteToggle: viewModel.toggleMute
+                )
+                .padding(.horizontal)
             }
         }
     }

@@ -24,6 +24,14 @@ nonisolated struct Artist: Identifiable, Codable, Hashable, Sendable {
     var artworkPath: String? {
         art?.thumb ?? art?.fanart ?? thumbnail ?? fanart
     }
+
+    var fanartPath: String? {
+        art?.fanart ?? fanart
+    }
+
+    var clearlogoPath: String? {
+        art?.clearlogo
+    }
 }
 
 nonisolated struct Album: Identifiable, Codable, Hashable, Sendable {

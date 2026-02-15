@@ -17,12 +17,15 @@ struct NowPlayingCard: View {
     @State private var isSeeking = false
     @State private var seekProgress: Double = 0
     @AppStorage("showDolbyVisionProfile") private var showDolbyVisionProfile = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    private let cardHeight: CGFloat = 180
+    private var isIPad: Bool { horizontalSizeClass == .regular }
+    var flexibleHeight: Bool = false
+    private var cardHeight: CGFloat { 180 }
     private let cornerRadius: CGFloat = 20
-    private let contentPadding: CGFloat = 16
-    private let posterWidth: CGFloat = 52
-    private let posterHeight: CGFloat = 78
+    private var contentPadding: CGFloat { isIPad ? 24 : 16 }
+    private var posterWidth: CGFloat { item.type == .song ? (isIPad ? 128 : 64) : (isIPad ? 104 : 52) }
+    private var posterHeight: CGFloat { item.type == .song ? (isIPad ? 128 : 64) : (isIPad ? 156 : 78) }
 
     private var isDarkMode: Bool { colorScheme == .dark }
 
@@ -30,9 +33,13 @@ struct NowPlayingCard: View {
         VStack(spacing: 0) {
             // Main hero card
             ZStack(alignment: .bottom) {
-                // Background: Fanart or fallback
-                backgroundView
-                    .frame(height: cardHeight)
+                // Sizing element — Color.clear defines the ZStack size,
+                // backgroundView is in an overlay so it doesn't inflate it
+                Color.clear
+                    .overlay {
+                        backgroundView
+                    }
+                    .clipped()
 
                 // Gradient overlay (lighter in light mode)
                 LinearGradient(
@@ -48,17 +55,15 @@ struct NowPlayingCard: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: cardHeight)
 
-                // Content overlay
+                // Content overlay — compact, pinned to bottom by ZStack alignment
                 VStack(spacing: 8) {
-                    Spacer()
 
                     HStack(alignment: .bottom, spacing: 12) {
-                        // Small poster thumbnail
+                        // Small poster/album art thumbnail
                         AsyncArtworkImage(path: item.artworkPath, host: appState.currentHost)
                             .frame(width: posterWidth, height: posterHeight)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .clipShape(RoundedRectangle(cornerRadius: item.type == .song ? 8 : 6))
                             .shadow(color: .black.opacity(isDarkMode ? 0.5 : 0.3), radius: isDarkMode ? 8 : 6, x: 0, y: 4)
 
                         // Title and badges
@@ -204,7 +209,7 @@ struct NowPlayingCard: View {
                     .padding(.bottom, contentPadding)
                 }
             }
-            .frame(height: cardHeight)
+            .frame(minHeight: cardHeight, maxHeight: flexibleHeight ? .infinity : cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
                 // Subtle border in light mode or when theme requires it

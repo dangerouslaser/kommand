@@ -81,7 +81,9 @@ enum AppTab: String, CaseIterable {
 struct ContentView: View {
     @State private var appState = AppState()
     @State private var selectedTab: AppTab = .home
+    @State private var sidebarSelection: AppTab? = .home
     @Environment(\.colorScheme) private var systemColorScheme
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @AppStorage("showMoviesTab") private var showMoviesTab = true
     @AppStorage("showTVShowsTab") private var showTVShowsTab = true
@@ -115,7 +117,14 @@ struct ContentView: View {
             if appState.hosts.isEmpty {
                 OnboardingView()
             } else {
-                mainTabView
+                GeometryReader { geo in
+                    let isLandscapeIPad = horizontalSizeClass == .regular && geo.size.width > geo.size.height
+                    if isLandscapeIPad {
+                        sidebarView
+                    } else {
+                        mainTabView
+                    }
+                }
             }
         }
         .environment(appState)
@@ -123,7 +132,65 @@ struct ContentView: View {
         .environment(\.themeColors, themeColors)
         .preferredColorScheme(preferredColorScheme)
         .tint(themeColors.accent)
+        .task {
+            await connectAndDetect()
+        }
     }
+
+    // MARK: - Sidebar (iPad Landscape)
+
+    private var sidebarView: some View {
+        NavigationSplitView {
+            List(selection: $sidebarSelection) {
+                Label("Home", systemImage: "house")
+                    .tag(AppTab.home)
+                Label("Remote", systemImage: "appletvremote.gen4")
+                    .tag(AppTab.remote)
+                if showMoviesTab {
+                    Label("Movies", systemImage: "film")
+                        .tag(AppTab.movies)
+                }
+                if showTVShowsTab {
+                    Label("TV Shows", systemImage: "tv")
+                        .tag(AppTab.tvShows)
+                }
+                if showMusicTab {
+                    Label("Music", systemImage: "music.note")
+                        .tag(AppTab.music)
+                }
+                if showPVRTab {
+                    Label("Live TV", systemImage: "play.tv")
+                        .tag(AppTab.pvr)
+                }
+                Label("Settings", systemImage: "gear")
+                    .tag(AppTab.settings)
+            }
+            .navigationTitle("Kommand")
+        } detail: {
+            detailContent
+        }
+        .onChange(of: sidebarSelection) { _, newValue in
+            if let newValue { selectedTab = newValue }
+        }
+        .onChange(of: selectedTab) { _, newValue in
+            sidebarSelection = newValue
+        }
+    }
+
+    @ViewBuilder
+    private var detailContent: some View {
+        switch selectedTab {
+        case .home: DashboardTab()
+        case .remote: RemoteTab()
+        case .movies: MoviesTab()
+        case .tvShows: TVShowsTab()
+        case .music: MusicTab()
+        case .pvr: PVRTab()
+        case .settings: SettingsTab()
+        }
+    }
+
+    // MARK: - Tab Bar (iPhone / iPad Portrait)
 
     private var mainTabView: some View {
         TabView(selection: $selectedTab) {
@@ -185,9 +252,6 @@ struct ContentView: View {
         }
         .onChange(of: colorSchemeSetting) { _, _ in
             updateTabBarAppearance()
-        }
-        .task {
-            await connectAndDetect()
         }
     }
 

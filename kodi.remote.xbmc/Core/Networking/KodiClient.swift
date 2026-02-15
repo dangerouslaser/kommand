@@ -555,7 +555,7 @@ actor KodiClient {
         limit: Int = 500
     ) async throws -> ArtistsResponse {
         try await send(method: "AudioLibrary.GetArtists", params: [
-            "properties": ["artist", "description", "genre", "thumbnail", "fanart", "art"],
+            "properties": ["description", "genre", "thumbnail", "fanart", "art"],
             "sort": ["method": sort.field, "order": sort.ascending ? "ascending" : "descending"],
             "limits": ["start": start, "end": start + limit]
         ])

@@ -9,40 +9,49 @@ struct ArtistDetailView: View {
     let artist: Artist
     let viewModel: MusicViewModel
     @Environment(AppState.self) private var appState
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.colorScheme) private var colorScheme
     @State private var albums: [Album] = []
     @State private var isLoading = true
+    @State private var isDescriptionExpanded = false
+    @State private var isDescriptionTruncated = false
+
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+
+    private var gradientColor: Color {
+        colorScheme == .dark ? .black : .white
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Hero Image
-                ZStack(alignment: .bottom) {
-                    AsyncArtworkImage(path: artist.artworkPath, host: appState.currentHost)
-                        .aspectRatio(16/9, contentMode: .fill)
-                        .clipped()
+                GeometryReader { geo in
+                    ZStack(alignment: .bottomLeading) {
+                        AsyncArtworkImage(path: artist.fanartPath ?? artist.artworkPath, host: appState.currentHost)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
 
-                    LinearGradient(
-                        colors: [.clear, .black.opacity(0.8)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 120)
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: gradientColor.opacity(0.3), location: 0.4),
+                                .init(color: gradientColor.opacity(0.85), location: 0.75),
+                                .init(color: gradientColor, location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+
+                        heroOverlayContent
+                            .padding(isIPad ? 32 : 16)
+                    }
                 }
-                .frame(height: 220)
+                .frame(height: isIPad ? 550 : 350)
 
                 VStack(alignment: .leading, spacing: 16) {
-                    // Artist name
-                    Text(artist.displayName)
-                        .font(.title)
-                        .fontWeight(.bold)
-
-                    // Genre
-                    if let genres = artist.genre, !genres.isEmpty {
-                        Text(genres.joined(separator: ", "))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-
                     // Action buttons
                     HStack(spacing: 12) {
                         Button {
@@ -64,9 +73,45 @@ struct ArtistDetailView: View {
 
                     // Description
                     if let description = artist.description, !description.isEmpty {
-                        Text(description)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
+                        let formatted = description
+                            .components(separatedBy: "\n")
+                            .map { $0.trimmingCharacters(in: .whitespaces) }
+                            .filter { !$0.isEmpty }
+                            .joined(separator: "\n\n")
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(formatted)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(isDescriptionExpanded ? nil : 4)
+                                .background(
+                                    GeometryReader { visibleGeometry in
+                                        Text(formatted)
+                                            .font(.body)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .background(
+                                                GeometryReader { fullGeometry in
+                                                    Color.clear.onAppear {
+                                                        isDescriptionTruncated = fullGeometry.size.height > visibleGeometry.size.height + 1
+                                                    }
+                                                }
+                                            )
+                                            .hidden()
+                                    }
+                                )
+
+                            if isDescriptionTruncated || isDescriptionExpanded {
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isDescriptionExpanded.toggle()
+                                    }
+                                } label: {
+                                    Text(isDescriptionExpanded ? "Show Less" : "More")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+                            }
+                        }
                     }
 
                     // Albums
@@ -102,6 +147,28 @@ struct ArtistDetailView: View {
             albums = await viewModel.loadAlbumsForArtist(artist)
             isLoading = false
         }
+    }
+
+    // MARK: - Hero Overlay
+
+    private var heroOverlayContent: some View {
+        VStack(alignment: .leading, spacing: isIPad ? 12 : 8) {
+            if let clearlogo = artist.clearlogoPath {
+                AsyncArtworkImage(path: clearlogo, host: appState.currentHost)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: isIPad ? 450 : 280, maxHeight: isIPad ? 140 : 80, alignment: .leading)
+            } else {
+                Text(artist.displayName)
+                    .font(.system(size: isIPad ? 42 : 28, weight: .bold))
+                    .shadow(color: .black.opacity(0.7), radius: 4, x: 0, y: 2)
+            }
+
+            if let genres = artist.genre, !genres.isEmpty {
+                Text(genres.joined(separator: ", "))
+                    .font(isIPad ? .subheadline : .caption)
+            }
+        }
+        .foregroundStyle(colorScheme == .dark ? .white : .black)
     }
 }
 
