@@ -33,16 +33,8 @@ A native iOS remote control app for [Kodi](https://kodi.tv) media center.
 - **Dashboard** - Continue watching and recently added content
 - **CoreELEC Support** - Enhanced features for CoreELEC devices
 - **Themes** - Multiple color themes including OLED-optimized options
-
-## Pro Features
-
-Unlock additional features with Kommand Pro:
-
 - **Live Activity** - Lock Screen and Dynamic Island controls with now playing info
-- **Premium Themes** - 8 beautiful themes including Pure Black for OLED displays
 - **Dolby Vision Info** - Detailed DV profile information (P5, P7, P8.1, etc.)
-
-> **TestFlight Beta:** All Pro features are unlocked for free during the beta period!
 
 ## Requirements
 
