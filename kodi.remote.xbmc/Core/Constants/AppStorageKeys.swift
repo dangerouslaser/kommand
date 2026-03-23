@@ -45,9 +45,8 @@ nonisolated enum AppStorageKeys {
     // MARK: - Hints
     static let hasUsedStopGesture = "hasUsedStopGesture"
 
-    // MARK: - Power Menu Options
-    static let powerMenuRestartKodi = "powerMenuRestartKodi"
-    static let powerMenuSuspend = "powerMenuSuspend"
-    static let powerMenuReboot = "powerMenuReboot"
-    static let powerMenuShutdown = "powerMenuShutdown"
+    // MARK: - Power Button
+    static let powerPrimaryAction = "powerPrimaryAction"
+    static let powerEnabledActions = "powerEnabledActions"
+    static let powerConfirmPrimary = "powerConfirmPrimaryAction"
 }

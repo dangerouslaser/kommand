@@ -57,6 +57,9 @@ struct TVShowsTab: View {
                     }
                 }
             }
+            .redacted(reason: libraryState.isLoadingTVShows && !libraryState.tvShows.isEmpty ? .placeholder : [])
+            .allowsHitTesting(!libraryState.isLoadingTVShows || libraryState.tvShows.isEmpty)
+            .animation(.easeInOut(duration: 0.2), value: libraryState.isLoadingTVShows)
             .navigationTitle("TV Shows")
             .searchable(text: $searchText, prompt: "Search TV shows")
             .refreshable {

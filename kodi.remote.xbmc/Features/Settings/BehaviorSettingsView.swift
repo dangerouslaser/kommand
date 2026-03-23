@@ -12,12 +12,6 @@ struct BehaviorSettingsView: View {
     @AppStorage("showVolumeSlider") private var showVolumeSlider = false
     @AppStorage("liveActivityEnabled") private var liveActivityEnabled = false
 
-    // Power Menu Settings
-    @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
-    @AppStorage("powerMenuSuspend") private var powerMenuSuspend = false
-    @AppStorage("powerMenuReboot") private var powerMenuReboot = false
-    @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
-
     @State private var imageCacheSize: String = "Calculating..."
     @State private var showClearCacheConfirm = false
 
@@ -61,15 +55,12 @@ struct BehaviorSettingsView: View {
                 Text("Show playback controls on the Lock Screen and Dynamic Island while media is playing.")
             }
 
-            Section {
-                Toggle("Restart Kodi", isOn: $powerMenuRestartKodi)
-                Toggle("Suspend Device", isOn: $powerMenuSuspend)
-                Toggle("Reboot Device", isOn: $powerMenuReboot)
-                Toggle("Shutdown Device", isOn: $powerMenuShutdown)
-            } header: {
-                Text("Power Menu")
-            } footer: {
-                Text("Choose which options appear in the power menu on the Remote tab. The power menu is only visible when connected to a CoreELEC device.")
+            Section("Power") {
+                NavigationLink {
+                    PowerSettingsView()
+                } label: {
+                    Label("Power Button", systemImage: "power")
+                }
             }
 
             Section {

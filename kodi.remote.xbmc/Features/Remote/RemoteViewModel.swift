@@ -613,52 +613,21 @@ final class RemoteViewModel {
         }
     }
 
-    // MARK: - System Power Commands
+    // MARK: - Power Actions
 
-    func restartKodi() {
+    func executePowerAction(_ action: PowerAction) {
         HapticService.impact(.heavy)
 
         Task {
             do {
-                try await client.quit()
+                switch action {
+                case .quitKodi: try await client.quit()
+                case .systemShutdown: try await client.shutdown()
+                case .systemSuspend: try await client.suspend()
+                case .systemReboot: try await client.reboot()
+                }
             } catch {
-                Logger.networking.error("Failed to restart Kodi: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    func suspendDevice() {
-        HapticService.impact(.heavy)
-
-        Task {
-            do {
-                try await client.suspend()
-            } catch {
-                Logger.networking.error("Failed to suspend device: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    func rebootDevice() {
-        HapticService.impact(.heavy)
-
-        Task {
-            do {
-                try await client.reboot()
-            } catch {
-                Logger.networking.error("Failed to reboot device: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    func shutdownDevice() {
-        HapticService.impact(.heavy)
-
-        Task {
-            do {
-                try await client.shutdown()
-            } catch {
-                Logger.networking.error("Failed to shutdown device: \(error.localizedDescription)")
+                Logger.networking.error("Power action \(action.rawValue) failed: \(error.localizedDescription)")
             }
         }
     }

@@ -18,17 +18,11 @@ struct RemoteTab: View {
 
     private var isIPad: Bool { horizontalSizeClass == .regular }
 
-    // Power Menu Settings
-    @AppStorage("powerMenuRestartKodi") private var powerMenuRestartKodi = true
-    @AppStorage("powerMenuSuspend") private var powerMenuSuspend = false
-    @AppStorage("powerMenuReboot") private var powerMenuReboot = false
-    @AppStorage("powerMenuShutdown") private var powerMenuShutdown = false
-
-    // Power Menu Confirmation States
-    @State private var showRestartKodiConfirm = false
-    @State private var showSuspendConfirm = false
-    @State private var showRebootConfirm = false
-    @State private var showShutdownConfirm = false
+    // Power Button
+    @AppStorage(AppStorageKeys.powerPrimaryAction) private var primaryActionRaw: String = PowerAction.systemShutdown.rawValue
+    @AppStorage(AppStorageKeys.powerEnabledActions) private var enabledActionsRaw: String = "quitKodi,systemShutdown"
+    @AppStorage(AppStorageKeys.powerConfirmPrimary) private var confirmPrimary = true
+    @State private var confirmingAction: PowerAction?
 
     var body: some View {
         NavigationStack {
@@ -42,42 +36,26 @@ struct RemoteTab: View {
             }
             .themedScrollBackground()
             .toolbar {
-                if appState.isCoreELEC {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            if powerMenuRestartKodi {
-                                Button {
-                                    showRestartKodiConfirm = true
-                                } label: {
-                                    Label("Restart Kodi", systemImage: "arrow.clockwise")
-                                }
-                            }
-                            if powerMenuSuspend {
-                                Button {
-                                    showSuspendConfirm = true
-                                } label: {
-                                    Label("Suspend Device", systemImage: "moon.fill")
-                                }
-                            }
-                            if powerMenuReboot {
-                                Button {
-                                    showRebootConfirm = true
-                                } label: {
-                                    Label("Reboot Device", systemImage: "arrow.triangle.2.circlepath")
-                                }
-                            }
-                            if powerMenuShutdown {
-                                Button(role: .destructive) {
-                                    showShutdownConfirm = true
-                                } label: {
-                                    Label("Shutdown Device", systemImage: "power")
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "power")
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        if confirmPrimary {
+                            confirmingAction = primaryAction
+                        } else {
+                            viewModel.executePowerAction(primaryAction)
                         }
-                        .accessibilityLabel("Power menu")
+                    } label: {
+                        Image(systemName: "power")
                     }
+                    .contextMenu {
+                        ForEach(enabledSecondaryActions) { action in
+                            Button(role: action.isDestructive ? .destructive : nil) {
+                                confirmingAction = action
+                            } label: {
+                                Label(action.displayName, systemImage: action.systemImage)
+                            }
+                        }
+                    }
+                    .accessibilityLabel("Power: \(primaryAction.displayName)")
                 }
             }
             .alert("Send Text", isPresented: $showingTextInput) {
@@ -96,29 +74,25 @@ struct RemoteTab: View {
             } message: {
                 Text("Text will be sent to the active input field")
             }
-            .confirmationDialog("Restart Kodi?", isPresented: $showRestartKodiConfirm, titleVisibility: .visible) {
-                Button("Restart") { viewModel.restartKodi() }
-                Button("Cancel", role: .cancel) { }
+            .confirmationDialog(
+                confirmingAction?.confirmationTitle ?? "",
+                isPresented: Binding(
+                    get: { confirmingAction != nil },
+                    set: { if !$0 { confirmingAction = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let action = confirmingAction {
+                    Button(action.confirmButtonLabel, role: action.isDestructive ? .destructive : nil) {
+                        viewModel.executePowerAction(action)
+                        confirmingAction = nil
+                    }
+                    Button("Cancel", role: .cancel) { confirmingAction = nil }
+                }
             } message: {
-                Text("Kodi will restart. Any playback will be interrupted.")
-            }
-            .confirmationDialog("Suspend Device?", isPresented: $showSuspendConfirm, titleVisibility: .visible) {
-                Button("Suspend") { viewModel.suspendDevice() }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("The device will enter sleep mode. Wake it with CEC or Wake-on-LAN.")
-            }
-            .confirmationDialog("Reboot Device?", isPresented: $showRebootConfirm, titleVisibility: .visible) {
-                Button("Reboot", role: .destructive) { viewModel.rebootDevice() }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("The device will restart. This may take a minute.")
-            }
-            .confirmationDialog("Shutdown Device?", isPresented: $showShutdownConfirm, titleVisibility: .visible) {
-                Button("Shutdown", role: .destructive) { viewModel.shutdownDevice() }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("The device will power off completely.")
+                if let action = confirmingAction {
+                    Text(action.confirmationMessage)
+                }
             }
         }
         .task {
@@ -144,6 +118,18 @@ struct RemoteTab: View {
                 viewModel.refreshNowPlaying()
             }
         }
+    }
+
+    // MARK: - Power Helpers
+
+    private var primaryAction: PowerAction {
+        PowerAction(rawValue: primaryActionRaw) ?? .systemShutdown
+    }
+
+    private var enabledSecondaryActions: [PowerAction] {
+        enabledActionsRaw.split(separator: ",")
+            .compactMap { PowerAction(rawValue: String($0)) }
+            .filter { $0 != primaryAction }
     }
 
     // MARK: - Remote Layout

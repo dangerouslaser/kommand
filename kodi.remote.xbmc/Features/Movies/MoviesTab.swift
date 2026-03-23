@@ -58,6 +58,9 @@ struct MoviesTab: View {
                     }
                 }
             }
+            .redacted(reason: libraryState.isLoadingMovies && !libraryState.movies.isEmpty ? .placeholder : [])
+            .allowsHitTesting(!libraryState.isLoadingMovies || libraryState.movies.isEmpty)
+            .animation(.easeInOut(duration: 0.2), value: libraryState.isLoadingMovies)
             .navigationTitle("Movies")
             .searchable(text: $searchText, prompt: "Search movies")
             .refreshable {
