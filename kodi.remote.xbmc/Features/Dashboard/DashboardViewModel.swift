@@ -137,6 +137,18 @@ final class DashboardViewModel {
     // MARK: - Recently Added
 
     func loadRecentlyAdded() async {
+        guard let hostId = appState?.currentHost?.id else { return }
+
+        // Load from cache first for instant display
+        if recentMovies.isEmpty && recentEpisodes.isEmpty {
+            if let cached = await LibraryCacheService.shared.loadRecentMovies(for: hostId) {
+                await MainActor.run { recentMovies = cached.movies }
+            }
+            if let cached = await LibraryCacheService.shared.loadRecentEpisodes(for: hostId) {
+                await MainActor.run { recentEpisodes = cached.episodes }
+            }
+        }
+
         await MainActor.run {
             isLoadingRecent = true
         }
@@ -147,17 +159,25 @@ final class DashboardViewModel {
 
             let (moviesResponse, episodesResponse) = try await (moviesTask, episodesTask)
 
+            let movies = moviesResponse.movies ?? []
             let episodes = episodesResponse.episodes ?? []
 
             await MainActor.run {
-                recentMovies = moviesResponse.movies ?? []
+                recentMovies = movies
                 recentEpisodes = episodes
                 isLoadingRecent = false
             }
+
+            // Save to cache in background
+            await LibraryCacheService.shared.saveRecentMovies(movies, for: hostId)
+            await LibraryCacheService.shared.saveRecentEpisodes(episodes, for: hostId)
         } catch {
+            // Only show error if we have no cached data
             await MainActor.run {
                 isLoadingRecent = false
-                self.error = error.localizedDescription
+                if recentMovies.isEmpty && recentEpisodes.isEmpty {
+                    self.error = error.localizedDescription
+                }
             }
         }
     }

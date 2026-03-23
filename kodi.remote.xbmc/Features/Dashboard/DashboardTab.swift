@@ -90,6 +90,11 @@ struct DashboardTab: View {
                 await viewModel.refresh()
             }
         }
+        .onChange(of: appState.libraryUpdateSignal) { _, _ in
+            Task {
+                await viewModel.loadRecentlyAdded()
+            }
+        }
     }
 
     // MARK: - Search Results

@@ -10,10 +10,13 @@ struct TVShowsTab: View {
     @State private var libraryState = LibraryState()
     @State private var viewModel = TVShowsViewModel()
     @State private var searchText = ""
+    @State private var showingFilterSheet = false
     @AppStorage(AppStorageKeys.tvShowsViewMode) private var viewMode: ViewMode = .grid
     @AppStorage(AppStorageKeys.tvShowSortField) private var savedSortField: LibraryState.SortField = .title
     @AppStorage(AppStorageKeys.tvShowSortAscending) private var savedSortAscending = true
     @AppStorage(AppStorageKeys.tvShowFilter) private var savedFilter: LibraryState.LibraryFilter = .all
+    @AppStorage(AppStorageKeys.tvShowGenreFilter) private var savedGenreFilter = ""
+    @AppStorage(AppStorageKeys.showLibraryCounts) private var showLibraryCounts = true
 
     private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 16)
@@ -42,15 +45,17 @@ struct TVShowsTab: View {
                 } else if filteredShows.isEmpty {
                     if !searchText.isEmpty {
                         ContentUnavailableView.search(text: searchText)
-                    } else if libraryState.tvShowFilter != .all {
+                    } else if hasActiveFilters {
                         ContentUnavailableView {
                             Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
                         } description: {
-                            Text("No shows match the \"\(libraryState.tvShowFilter.displayName)\" filter")
+                            Text("No shows match the current filters")
                         } actions: {
-                            Button("Show All") {
+                            Button("Clear Filters") {
                                 libraryState.tvShowFilter = .all
+                                libraryState.selectedTVShowGenres = []
                                 savedFilter = .all
+                                savedGenreFilter = ""
                             }
                         }
                     } else {
@@ -71,7 +76,7 @@ struct TVShowsTab: View {
             .redacted(reason: libraryState.isLoadingTVShows && !libraryState.tvShows.isEmpty ? .placeholder : [])
             .allowsHitTesting(!libraryState.isLoadingTVShows || libraryState.tvShows.isEmpty)
             .animation(.easeInOut(duration: 0.2), value: libraryState.isLoadingTVShows)
-            .navigationTitle("TV Shows")
+            .navigationTitle(showLibraryCounts ? "TV Shows (\(filteredShows.count))" : "TV Shows")
             .searchable(text: $searchText, prompt: "Search TV shows")
             .refreshable {
                 await viewModel.loadTVShows(forceRefresh: true)
@@ -88,12 +93,10 @@ struct TVShowsTab: View {
                     .accessibilityLabel(viewMode == .grid ? "Switch to list view" : "Switch to grid view")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        sortMenu
-                        Divider()
-                        filterMenu
+                    Button {
+                        showingFilterSheet = true
                     } label: {
-                        Image(systemName: libraryState.tvShowFilter != .all
+                        Image(systemName: hasActiveFilters
                               ? "line.3.horizontal.decrease.circle.fill"
                               : "line.3.horizontal.decrease.circle")
                     }
@@ -101,11 +104,30 @@ struct TVShowsTab: View {
                 }
             }
             .themedBackground()
+            .sheet(isPresented: $showingFilterSheet) {
+                savedSortField = libraryState.tvShowSortField
+                savedSortAscending = libraryState.tvShowSortAscending
+                savedFilter = libraryState.tvShowFilter
+                savedGenreFilter = libraryState.selectedTVShowGenres.sorted().joined(separator: ",")
+            } content: {
+                LibraryFilterSheet(
+                    sortField: $libraryState.tvShowSortField,
+                    sortAscending: $libraryState.tvShowSortAscending,
+                    watchFilter: $libraryState.tvShowFilter,
+                    selectedGenres: $libraryState.selectedTVShowGenres,
+                    availableGenres: libraryState.availableTVShowGenres,
+                    onShuffle: { libraryState.shuffleTVShows() }
+                )
+                .presentationDetents([.medium, .large])
+            }
         }
         .task {
             libraryState.tvShowSortField = savedSortField
             libraryState.tvShowSortAscending = savedSortAscending
             libraryState.tvShowFilter = savedFilter
+            if !savedGenreFilter.isEmpty {
+                libraryState.selectedTVShowGenres = Set(savedGenreFilter.split(separator: ",").map(String.init))
+            }
             viewModel.configure(appState: appState, libraryState: libraryState)
             await viewModel.loadTVShows()
         }
@@ -158,6 +180,10 @@ struct TVShowsTab: View {
         }
     }
 
+    private var hasActiveFilters: Bool {
+        libraryState.tvShowFilter != .all || !libraryState.selectedTVShowGenres.isEmpty
+    }
+
     private var filteredShows: [TVShow] {
         let shows = libraryState.filteredTVShows
         if searchText.isEmpty {
@@ -169,48 +195,6 @@ struct TVShowsTab: View {
         }
     }
 
-    private var sortMenu: some View {
-        Menu("Sort By") {
-            ForEach(LibraryState.SortField.allCases, id: \.self) { field in
-                Button {
-                    if libraryState.tvShowSortField == field {
-                        libraryState.tvShowSortAscending.toggle()
-                    } else {
-                        libraryState.tvShowSortField = field
-                        libraryState.tvShowSortAscending = true
-                    }
-                    savedSortField = libraryState.tvShowSortField
-                    savedSortAscending = libraryState.tvShowSortAscending
-                    if field == .random { libraryState.shuffleTVShows() }
-                } label: {
-                    HStack {
-                        Text(field.displayName)
-                        if libraryState.tvShowSortField == field {
-                            Image(systemName: libraryState.tvShowSortAscending ? "chevron.up" : "chevron.down")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var filterMenu: some View {
-        Menu("Filter") {
-            ForEach(LibraryState.LibraryFilter.allCases, id: \.self) { filter in
-                Button {
-                    libraryState.tvShowFilter = filter
-                    savedFilter = filter
-                } label: {
-                    HStack {
-                        Text(filter.displayName)
-                        if libraryState.tvShowFilter == filter {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 // MARK: - TV Show Poster Card

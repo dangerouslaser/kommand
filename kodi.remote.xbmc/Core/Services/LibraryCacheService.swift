@@ -55,6 +55,38 @@ actor LibraryCacheService {
         logger.info("Library cache saved: \(shows.count) TV shows for host \(hostId.uuidString.prefix(8))")
     }
 
+    // MARK: - Recently Added Movies
+
+    func loadRecentMovies(for hostId: UUID) -> (movies: [Movie], savedAt: Date)? {
+        guard let envelope: CacheEnvelope<[Movie]> = loadEnvelope(type: "recent-movies", hostId: hostId) else {
+            return nil
+        }
+        logger.info("Cache hit: \(envelope.items.count) recent movies for host \(hostId.uuidString.prefix(8))")
+        return (envelope.items, envelope.savedAt)
+    }
+
+    func saveRecentMovies(_ movies: [Movie], for hostId: UUID) {
+        let envelope = CacheEnvelope(savedAt: Date(), items: movies)
+        saveEnvelope(envelope, type: "recent-movies", hostId: hostId)
+        logger.info("Cache saved: \(movies.count) recent movies for host \(hostId.uuidString.prefix(8))")
+    }
+
+    // MARK: - Recently Added Episodes
+
+    func loadRecentEpisodes(for hostId: UUID) -> (episodes: [Episode], savedAt: Date)? {
+        guard let envelope: CacheEnvelope<[Episode]> = loadEnvelope(type: "recent-episodes", hostId: hostId) else {
+            return nil
+        }
+        logger.info("Cache hit: \(envelope.items.count) recent episodes for host \(hostId.uuidString.prefix(8))")
+        return (envelope.items, envelope.savedAt)
+    }
+
+    func saveRecentEpisodes(_ episodes: [Episode], for hostId: UUID) {
+        let envelope = CacheEnvelope(savedAt: Date(), items: episodes)
+        saveEnvelope(envelope, type: "recent-episodes", hostId: hostId)
+        logger.info("Cache saved: \(episodes.count) recent episodes for host \(hostId.uuidString.prefix(8))")
+    }
+
     // MARK: - Cache Management
 
     func clearCache(for hostId: UUID) {

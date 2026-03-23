@@ -11,6 +11,7 @@ struct AppearanceSettingsView: View {
     @AppStorage("selectedTheme") private var selectedThemeId = "default"
     @AppStorage("nowPlayingBackground") private var nowPlayingBackground = 0 // 0=Blur, 1=Solid
     @AppStorage("showDolbyVisionProfile") private var showDolbyVisionProfile = false
+    @AppStorage(AppStorageKeys.showLibraryCounts) private var showLibraryCounts = true
     private var effectiveColorScheme: ColorScheme {
         switch colorSchemeSetting {
         case 1: return .light
@@ -60,11 +61,12 @@ struct AppearanceSettingsView: View {
             }
 
             Section {
+                Toggle("Library Counts", isOn: $showLibraryCounts)
                 Toggle("DV Profile", isOn: $showDolbyVisionProfile)
             } header: {
                 Text("Advanced")
             } footer: {
-                Text("Show detailed DV profile information (e.g., P7 FEL, P8.1 MEL) on the Now Playing card.")
+                Text("Library Counts shows the number of items in the navigation title for Movies and TV Shows. DV Profile shows detailed Dolby Vision profile information on the Now Playing card.")
             }
         }
         .navigationTitle("Appearance")

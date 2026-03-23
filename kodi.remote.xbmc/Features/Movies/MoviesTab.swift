@@ -10,11 +10,13 @@ struct MoviesTab: View {
     @State private var libraryState = LibraryState()
     @State private var viewModel = MoviesViewModel()
     @State private var searchText = ""
-    @State private var showingSortOptions = false
+    @State private var showingFilterSheet = false
     @AppStorage(AppStorageKeys.moviesViewMode) private var viewMode: ViewMode = .grid
     @AppStorage(AppStorageKeys.movieSortField) private var savedSortField: LibraryState.SortField = .title
     @AppStorage(AppStorageKeys.movieSortAscending) private var savedSortAscending = true
     @AppStorage(AppStorageKeys.movieFilter) private var savedFilter: LibraryState.LibraryFilter = .all
+    @AppStorage(AppStorageKeys.movieGenreFilter) private var savedGenreFilter = ""
+    @AppStorage(AppStorageKeys.showLibraryCounts) private var showLibraryCounts = true
 
     private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 16)
@@ -43,15 +45,17 @@ struct MoviesTab: View {
                 } else if filteredMovies.isEmpty {
                     if !searchText.isEmpty {
                         ContentUnavailableView.search(text: searchText)
-                    } else if libraryState.movieFilter != .all {
+                    } else if hasActiveFilters {
                         ContentUnavailableView {
                             Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
                         } description: {
-                            Text("No movies match the \"\(libraryState.movieFilter.displayName)\" filter")
+                            Text("No movies match the current filters")
                         } actions: {
-                            Button("Show All") {
+                            Button("Clear Filters") {
                                 libraryState.movieFilter = .all
+                                libraryState.selectedMovieGenres = []
                                 savedFilter = .all
+                                savedGenreFilter = ""
                             }
                         }
                     } else {
@@ -72,7 +76,7 @@ struct MoviesTab: View {
             .redacted(reason: libraryState.isLoadingMovies && !libraryState.movies.isEmpty ? .placeholder : [])
             .allowsHitTesting(!libraryState.isLoadingMovies || libraryState.movies.isEmpty)
             .animation(.easeInOut(duration: 0.2), value: libraryState.isLoadingMovies)
-            .navigationTitle("Movies")
+            .navigationTitle(showLibraryCounts ? "Movies (\(filteredMovies.count))" : "Movies")
             .searchable(text: $searchText, prompt: "Search movies")
             .refreshable {
                 await viewModel.loadMovies(forceRefresh: true)
@@ -89,12 +93,10 @@ struct MoviesTab: View {
                     .accessibilityLabel(viewMode == .grid ? "Switch to list view" : "Switch to grid view")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        sortMenu
-                        Divider()
-                        filterMenu
+                    Button {
+                        showingFilterSheet = true
                     } label: {
-                        Image(systemName: libraryState.movieFilter != .all
+                        Image(systemName: hasActiveFilters
                               ? "line.3.horizontal.decrease.circle.fill"
                               : "line.3.horizontal.decrease.circle")
                     }
@@ -102,11 +104,31 @@ struct MoviesTab: View {
                 }
             }
             .themedBackground()
+            .sheet(isPresented: $showingFilterSheet) {
+                // Persist on dismiss
+                savedSortField = libraryState.movieSortField
+                savedSortAscending = libraryState.movieSortAscending
+                savedFilter = libraryState.movieFilter
+                savedGenreFilter = libraryState.selectedMovieGenres.sorted().joined(separator: ",")
+            } content: {
+                LibraryFilterSheet(
+                    sortField: $libraryState.movieSortField,
+                    sortAscending: $libraryState.movieSortAscending,
+                    watchFilter: $libraryState.movieFilter,
+                    selectedGenres: $libraryState.selectedMovieGenres,
+                    availableGenres: libraryState.availableMovieGenres,
+                    onShuffle: { libraryState.shuffleMovies() }
+                )
+                .presentationDetents([.medium, .large])
+            }
         }
         .task {
             libraryState.movieSortField = savedSortField
             libraryState.movieSortAscending = savedSortAscending
             libraryState.movieFilter = savedFilter
+            if !savedGenreFilter.isEmpty {
+                libraryState.selectedMovieGenres = Set(savedGenreFilter.split(separator: ",").map(String.init))
+            }
             viewModel.configure(appState: appState, libraryState: libraryState)
             await viewModel.loadMovies()
         }
@@ -159,6 +181,10 @@ struct MoviesTab: View {
         }
     }
 
+    private var hasActiveFilters: Bool {
+        libraryState.movieFilter != .all || !libraryState.selectedMovieGenres.isEmpty
+    }
+
     private var filteredMovies: [Movie] {
         let movies = libraryState.filteredMovies
         if searchText.isEmpty {
@@ -171,48 +197,6 @@ struct MoviesTab: View {
         }
     }
 
-    private var sortMenu: some View {
-        Menu("Sort By") {
-            ForEach(LibraryState.SortField.allCases, id: \.self) { field in
-                Button {
-                    if libraryState.movieSortField == field {
-                        libraryState.movieSortAscending.toggle()
-                    } else {
-                        libraryState.movieSortField = field
-                        libraryState.movieSortAscending = true
-                    }
-                    savedSortField = libraryState.movieSortField
-                    savedSortAscending = libraryState.movieSortAscending
-                    if field == .random { libraryState.shuffleMovies() }
-                } label: {
-                    HStack {
-                        Text(field.displayName)
-                        if libraryState.movieSortField == field {
-                            Image(systemName: libraryState.movieSortAscending ? "chevron.up" : "chevron.down")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var filterMenu: some View {
-        Menu("Filter") {
-            ForEach(LibraryState.LibraryFilter.allCases, id: \.self) { filter in
-                Button {
-                    libraryState.movieFilter = filter
-                    savedFilter = filter
-                } label: {
-                    HStack {
-                        Text(filter.displayName)
-                        if libraryState.movieFilter == filter {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 // MARK: - Movie Poster Card

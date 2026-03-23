@@ -16,6 +16,7 @@ nonisolated enum AppStorageKeys {
     // MARK: - Features
     static let liveActivityEnabled = "liveActivityEnabled"
     static let showDolbyVisionProfile = "showDolbyVisionProfile"
+    static let showLibraryCounts = "showLibraryCounts"
 
     // MARK: - Behavior
     static let hapticFeedback = "hapticFeedback"
@@ -41,6 +42,8 @@ nonisolated enum AppStorageKeys {
     static let tvShowSortField = "tvShowSortField"
     static let tvShowSortAscending = "tvShowSortAscending"
     static let tvShowFilter = "tvShowFilter"
+    static let movieGenreFilter = "movieGenreFilter"
+    static let tvShowGenreFilter = "tvShowGenreFilter"
 
     // MARK: - Hints
     static let hasUsedStopGesture = "hasUsedStopGesture"

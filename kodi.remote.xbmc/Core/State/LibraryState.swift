@@ -32,6 +32,8 @@ final class LibraryState {
     // Filtering
     var movieFilter: LibraryFilter = .all
     var tvShowFilter: LibraryFilter = .all
+    var selectedMovieGenres: Set<String> = []
+    var selectedTVShowGenres: Set<String> = []
 
     enum SortField: String, CaseIterable {
         case title = "title"
@@ -65,6 +67,16 @@ final class LibraryState {
             case .inProgress: return "In Progress"
             }
         }
+    }
+
+    // MARK: - Available Genres
+
+    var availableMovieGenres: [String] {
+        Array(Set(movies.compactMap { $0.genre }.flatMap { $0 })).sorted()
+    }
+
+    var availableTVShowGenres: [String] {
+        Array(Set(tvShows.compactMap { $0.genre }.flatMap { $0 })).sorted()
     }
 
     // MARK: - Client-Side Sorting
@@ -120,26 +132,38 @@ final class LibraryState {
     // MARK: - Filtering (chains off sorted)
 
     var filteredMovies: [Movie] {
-        let source = sortedMovies
+        var source = sortedMovies
         switch movieFilter {
-        case .all:
-            return source
+        case .all: break
         case .unwatched:
-            return source.filter { !$0.isWatched }
+            source = source.filter { !$0.isWatched }
         case .inProgress:
-            return source.filter { $0.hasResume }
+            source = source.filter { $0.hasResume }
         }
+        if !selectedMovieGenres.isEmpty {
+            source = source.filter { movie in
+                guard let genres = movie.genre else { return false }
+                return !selectedMovieGenres.isDisjoint(with: genres)
+            }
+        }
+        return source
     }
 
     var filteredTVShows: [TVShow] {
-        let source = sortedTVShows
+        var source = sortedTVShows
         switch tvShowFilter {
-        case .all:
-            return source
+        case .all: break
         case .unwatched:
-            return source.filter { !$0.isFullyWatched }
+            source = source.filter { !$0.isFullyWatched }
         case .inProgress:
-            return source.filter { ($0.watchedepisodes ?? 0) > 0 && !$0.isFullyWatched }
+            source = source.filter { ($0.watchedepisodes ?? 0) > 0 && !$0.isFullyWatched }
         }
+        if !selectedTVShowGenres.isEmpty {
+            source = source.filter { show in
+                guard let genres = show.genre else { return false }
+                return !selectedTVShowGenres.isDisjoint(with: genres)
+            }
+        }
+        return source
     }
 }
