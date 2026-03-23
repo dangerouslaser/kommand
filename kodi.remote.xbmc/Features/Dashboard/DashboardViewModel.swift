@@ -53,26 +53,33 @@ final class DashboardViewModel {
         !recentMovies.isEmpty || !recentShows.isEmpty
     }
 
-    // Group recent episodes by TV show
+    // Group recent episodes by TV show, preserving most-recently-added order
     var recentShows: [RecentShowInfo] {
+        var seen = Set<Int>()
+        var results: [RecentShowInfo] = []
+
+        // Episodes are already sorted by dateadded descending from Kodi
         let grouped = Dictionary(grouping: recentEpisodes) { $0.tvshowid ?? 0 }
 
-        return grouped.compactMap { (tvshowid, episodes) -> RecentShowInfo? in
-            guard tvshowid != 0,
-                  let latestEpisode = episodes.first else { return nil }
+        for episode in recentEpisodes {
+            let tvshowid = episode.tvshowid ?? 0
+            guard tvshowid != 0, !seen.contains(tvshowid) else { continue }
+            seen.insert(tvshowid)
 
-            // Find the most recent season among these episodes
-            let mostRecentSeason = episodes.map { $0.season }.max() ?? 1
+            let showEpisodes = grouped[tvshowid] ?? []
+            let mostRecentSeason = showEpisodes.map { $0.season }.max() ?? 1
 
-            return RecentShowInfo(
+            results.append(RecentShowInfo(
                 tvshowid: tvshowid,
-                title: latestEpisode.showtitle ?? "Unknown Show",
-                fanart: latestEpisode.fanart,
-                thumbnail: latestEpisode.thumbnail,
+                title: episode.showtitle ?? "Unknown Show",
+                fanart: episode.fanart,
+                thumbnail: episode.thumbnail,
                 season: mostRecentSeason,
-                newEpisodeCount: episodes.count
-            )
-        }.sorted { $0.title < $1.title }
+                newEpisodeCount: showEpisodes.count
+            ))
+        }
+
+        return results
     }
 
     func configure(appState: AppState) {
@@ -136,7 +143,7 @@ final class DashboardViewModel {
 
         do {
             async let moviesTask = client.getRecentlyAddedMovies(limit: 20)
-            async let episodesTask = client.getRecentlyAddedEpisodes(limit: 20)
+            async let episodesTask = client.getRecentlyAddedEpisodes(limit: 200)
 
             let (moviesResponse, episodesResponse) = try await (moviesTask, episodesTask)
 

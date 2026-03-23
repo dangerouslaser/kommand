@@ -369,16 +369,19 @@ actor KodiClient {
     func getMovies(
         sort: (field: String, ascending: Bool) = ("title", true),
         start: Int = 0,
-        limit: Int = 100
+        limit: Int? = nil
     ) async throws -> MoviesResponse {
-        try await send(method: "VideoLibrary.GetMovies", params: [
+        var params: [String: Any] = [
             "properties": ["title", "year", "runtime", "rating", "plot", "genre", "director",
                           "writer", "studio", "tagline", "cast", "thumbnail", "fanart", "art",
                           "playcount", "resume", "file", "trailer", "mpaa", "imdbnumber",
                           "dateadded", "lastplayed", "streamdetails"],
-            "sort": ["method": sort.field, "order": sort.ascending ? "ascending" : "descending"],
-            "limits": ["start": start, "end": start + limit]
-        ])
+            "sort": ["method": sort.field, "order": sort.ascending ? "ascending" : "descending"]
+        ]
+        if let limit {
+            params["limits"] = ["start": start, "end": start + limit]
+        }
+        return try await send(method: "VideoLibrary.GetMovies", params: params)
     }
 
     func getMoviesByActor(actorName: String) async throws -> MoviesResponse {
@@ -426,15 +429,18 @@ actor KodiClient {
     func getTVShows(
         sort: (field: String, ascending: Bool) = ("title", true),
         start: Int = 0,
-        limit: Int = 100
+        limit: Int? = nil
     ) async throws -> TVShowsResponse {
-        try await send(method: "VideoLibrary.GetTVShows", params: [
+        var params: [String: Any] = [
             "properties": ["title", "year", "rating", "plot", "genre", "studio", "cast",
                           "thumbnail", "fanart", "art", "episode", "watchedepisodes", "season",
                           "playcount", "file", "imdbnumber", "premiered", "dateadded"],
-            "sort": ["method": sort.field, "order": sort.ascending ? "ascending" : "descending"],
-            "limits": ["start": start, "end": start + limit]
-        ])
+            "sort": ["method": sort.field, "order": sort.ascending ? "ascending" : "descending"]
+        ]
+        if let limit {
+            params["limits"] = ["start": start, "end": start + limit]
+        }
+        return try await send(method: "VideoLibrary.GetTVShows", params: params)
     }
 
     func getTVShowDetails(tvShowId: Int) async throws -> TVShowDetailsResponse {
@@ -484,11 +490,12 @@ actor KodiClient {
         ])
     }
 
-    func getRecentlyAddedEpisodes(limit: Int = 25) async throws -> EpisodesResponse {
-        try await send(method: "VideoLibrary.GetRecentlyAddedEpisodes", params: [
+    func getRecentlyAddedEpisodes(limit: Int = 200) async throws -> EpisodesResponse {
+        try await send(method: "VideoLibrary.GetEpisodes", params: [
             "properties": ["title", "episode", "season", "showtitle", "tvshowid", "runtime",
                           "rating", "plot", "director", "writer", "thumbnail", "fanart",
                           "playcount", "resume", "file", "firstaired", "dateadded", "streamdetails"],
+            "sort": ["method": "dateadded", "order": "descending"],
             "limits": ["start": 0, "end": limit]
         ])
     }

@@ -217,13 +217,20 @@ nonisolated struct AudioStreamDetail: Codable, Hashable, Sendable {
         guard let codec = codec, !codec.isEmpty else { return nil }
         switch codec.lowercased() {
         case "truehd": return "TrueHD"
-        case "dtshd_ma": return "DTS-HD MA"
-        case "dtshd_hra": return "DTS-HD HRA"
+        case "truehd atmos": return "TrueHD Atmos"
+        case "dts-hd ma", "dtshd_ma": return "DTS-HD MA"
+        case "dts-hd hra", "dtshd_hra": return "DTS-HD HRA"
         case "dts": return "DTS"
-        case "ac3", "eac3": return codec.lowercased() == "eac3" ? "Dolby Digital+" : "Dolby Digital"
+        case "dts-x", "dtsx": return "DTS:X"
+        case "ac3": return "Dolby Digital"
+        case "eac3": return "Dolby Digital+"
+        case "eac3 atmos": return "Dolby Digital+ Atmos"
         case "aac": return "AAC"
         case "flac": return "FLAC"
         case "pcm", "pcm_s16le", "pcm_s24le": return "PCM"
+        case "opus": return "Opus"
+        case "vorbis": return "Vorbis"
+        case "mp3", "mp2": return codec.uppercased()
         default: return codec.uppercased()
         }
     }

@@ -49,9 +49,7 @@ final class TVShowsViewModel {
             let sortAscending = await MainActor.run { libraryState.tvShowSortAscending }
 
             let result = try await client.getTVShows(
-                sort: (field: sortField.rawValue, ascending: sortAscending),
-                start: 0,
-                limit: 1000
+                sort: (field: sortField.rawValue, ascending: sortAscending)
             )
 
             await MainActor.run {

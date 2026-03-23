@@ -48,9 +48,7 @@ final class MoviesViewModel {
             let sortAscending = await MainActor.run { libraryState.movieSortAscending }
 
             let result = try await client.getMovies(
-                sort: (field: sortField.rawValue, ascending: sortAscending),
-                start: 0,
-                limit: 1000
+                sort: (field: sortField.rawValue, ascending: sortAscending)
             )
 
             await MainActor.run {

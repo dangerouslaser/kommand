@@ -302,23 +302,24 @@ struct ContinueWatchingCardView: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                // Clearlogo centered (vertically and horizontally)
+                // Clearlogo or title centered
                 if let clearlogoPath = clearlogoPath {
                     AsyncArtworkImage(path: clearlogoPath, host: host)
                         .frame(height: 50)
                         .frame(maxWidth: 200)
+                } else {
+                    Text(title)
+                        .font(.system(size: 22, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 2)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, 16)
                 }
 
                 // Subtitle and progress at bottom
                 VStack(alignment: .leading, spacing: 6) {
                     Spacer()
-
-                    if clearlogoPath == nil {
-                        Text(title)
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                    }
 
                     if let subtitle = subtitle {
                         Text(subtitle)
