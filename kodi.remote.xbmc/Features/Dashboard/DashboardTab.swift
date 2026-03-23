@@ -314,6 +314,8 @@ struct ContinueWatchingCardView: View {
                         .shadow(color: .black.opacity(0.8), radius: 4, x: 0, y: 2)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: 248)
                         .padding(.horizontal, 16)
                 }
 

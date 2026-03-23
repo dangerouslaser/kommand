@@ -67,29 +67,79 @@ final class LibraryState {
         }
     }
 
+    // MARK: - Client-Side Sorting
+
+    var sortedMovies: [Movie] {
+        switch movieSortField {
+        case .title:
+            return movieSortAscending
+                ? movies.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+                : movies.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        case .year:
+            return movies.sorted { movieSortAscending ? ($0.year ?? 0) < ($1.year ?? 0) : ($0.year ?? 0) > ($1.year ?? 0) }
+        case .rating:
+            return movies.sorted { movieSortAscending ? ($0.rating ?? 0) < ($1.rating ?? 0) : ($0.rating ?? 0) > ($1.rating ?? 0) }
+        case .dateadded:
+            return movies.sorted { movieSortAscending ? ($0.dateadded ?? "") < ($1.dateadded ?? "") : ($0.dateadded ?? "") > ($1.dateadded ?? "") }
+        case .lastplayed:
+            return movies.sorted { movieSortAscending ? ($0.lastplayed ?? "") < ($1.lastplayed ?? "") : ($0.lastplayed ?? "") > ($1.lastplayed ?? "") }
+        case .random:
+            return movies // Shuffled in-place when user selects random
+        }
+    }
+
+    var sortedTVShows: [TVShow] {
+        switch tvShowSortField {
+        case .title:
+            return tvShowSortAscending
+                ? tvShows.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+                : tvShows.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        case .year:
+            return tvShows.sorted { tvShowSortAscending ? ($0.year ?? 0) < ($1.year ?? 0) : ($0.year ?? 0) > ($1.year ?? 0) }
+        case .rating:
+            return tvShows.sorted { tvShowSortAscending ? ($0.rating ?? 0) < ($1.rating ?? 0) : ($0.rating ?? 0) > ($1.rating ?? 0) }
+        case .dateadded:
+            return tvShows.sorted { tvShowSortAscending ? ($0.dateadded ?? "") < ($1.dateadded ?? "") : ($0.dateadded ?? "") > ($1.dateadded ?? "") }
+        case .lastplayed:
+            return tvShows.sorted { tvShowSortAscending ? ($0.dateadded ?? "") < ($1.dateadded ?? "") : ($0.dateadded ?? "") > ($1.dateadded ?? "") }
+        case .random:
+            return tvShows // Shuffled in-place when user selects random
+        }
+    }
+
+    /// Shuffle movies in-place for random sort
+    func shuffleMovies() {
+        movies.shuffle()
+    }
+
+    /// Shuffle TV shows in-place for random sort
+    func shuffleTVShows() {
+        tvShows.shuffle()
+    }
+
+    // MARK: - Filtering (chains off sorted)
+
     var filteredMovies: [Movie] {
-        let filtered: [Movie]
+        let source = sortedMovies
         switch movieFilter {
         case .all:
-            filtered = movies
+            return source
         case .unwatched:
-            filtered = movies.filter { !$0.isWatched }
+            return source.filter { !$0.isWatched }
         case .inProgress:
-            filtered = movies.filter { $0.hasResume }
+            return source.filter { $0.hasResume }
         }
-        return filtered
     }
 
     var filteredTVShows: [TVShow] {
-        let filtered: [TVShow]
+        let source = sortedTVShows
         switch tvShowFilter {
         case .all:
-            filtered = tvShows
+            return source
         case .unwatched:
-            filtered = tvShows.filter { !$0.isFullyWatched }
+            return source.filter { !$0.isFullyWatched }
         case .inProgress:
-            filtered = tvShows.filter { ($0.watchedepisodes ?? 0) > 0 && !$0.isFullyWatched }
+            return source.filter { ($0.watchedepisodes ?? 0) > 0 && !$0.isFullyWatched }
         }
-        return filtered
     }
 }

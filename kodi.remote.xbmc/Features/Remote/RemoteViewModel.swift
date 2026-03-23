@@ -126,6 +126,11 @@ final class RemoteViewModel {
         case .playerOnPropertyChanged:
             await updateNowPlaying()
 
+        case .videoLibraryOnUpdate, .audioLibraryOnUpdate:
+            await MainActor.run {
+                appState?.libraryUpdateSignal = Date()
+            }
+
         default:
             break
         }

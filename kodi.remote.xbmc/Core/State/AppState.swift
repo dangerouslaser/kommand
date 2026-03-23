@@ -45,6 +45,9 @@ final class AppState {
     // Shared networking client — all ViewModels should use this instead of creating their own
     let client = KodiClient()
 
+    // Library update signal — set by WebSocket when VideoLibrary.OnUpdate fires
+    var libraryUpdateSignal: Date?
+
     // Server capabilities
     var serverCapabilities: ServerCapabilities = ServerCapabilities()
 

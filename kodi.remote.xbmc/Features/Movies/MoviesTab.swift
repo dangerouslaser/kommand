@@ -41,14 +41,25 @@ struct MoviesTab: View {
                         }
                     }
                 } else if filteredMovies.isEmpty {
-                    if searchText.isEmpty {
+                    if !searchText.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                    } else if libraryState.movieFilter != .all {
+                        ContentUnavailableView {
+                            Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
+                        } description: {
+                            Text("No movies match the \"\(libraryState.movieFilter.displayName)\" filter")
+                        } actions: {
+                            Button("Show All") {
+                                libraryState.movieFilter = .all
+                                savedFilter = .all
+                            }
+                        }
+                    } else {
                         ContentUnavailableView {
                             Label("No Movies", systemImage: "film")
                         } description: {
                             Text("Your movie library is empty")
                         }
-                    } else {
-                        ContentUnavailableView.search(text: searchText)
                     }
                 } else {
                     if viewMode == .grid {
@@ -83,7 +94,9 @@ struct MoviesTab: View {
                         Divider()
                         filterMenu
                     } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
+                        Image(systemName: libraryState.movieFilter != .all
+                              ? "line.3.horizontal.decrease.circle.fill"
+                              : "line.3.horizontal.decrease.circle")
                     }
                     .accessibilityLabel("Sort and filter")
                 }
@@ -102,6 +115,11 @@ struct MoviesTab: View {
             libraryState.movies = []
             libraryState.moviesError = nil
             viewModel.configure(appState: appState, libraryState: libraryState)
+            Task {
+                await viewModel.loadMovies(forceRefresh: true)
+            }
+        }
+        .onChange(of: appState.libraryUpdateSignal) { _, _ in
             Task {
                 await viewModel.loadMovies(forceRefresh: true)
             }
@@ -165,7 +183,7 @@ struct MoviesTab: View {
                     }
                     savedSortField = libraryState.movieSortField
                     savedSortAscending = libraryState.movieSortAscending
-                    Task { await viewModel.loadMovies(forceRefresh: true) }
+                    if field == .random { libraryState.shuffleMovies() }
                 } label: {
                     HStack {
                         Text(field.displayName)

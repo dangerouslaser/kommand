@@ -40,14 +40,25 @@ struct TVShowsTab: View {
                         }
                     }
                 } else if filteredShows.isEmpty {
-                    if searchText.isEmpty {
+                    if !searchText.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                    } else if libraryState.tvShowFilter != .all {
+                        ContentUnavailableView {
+                            Label("No Results", systemImage: "line.3.horizontal.decrease.circle")
+                        } description: {
+                            Text("No shows match the \"\(libraryState.tvShowFilter.displayName)\" filter")
+                        } actions: {
+                            Button("Show All") {
+                                libraryState.tvShowFilter = .all
+                                savedFilter = .all
+                            }
+                        }
+                    } else {
                         ContentUnavailableView {
                             Label("No TV Shows", systemImage: "tv")
                         } description: {
                             Text("Your TV library is empty")
                         }
-                    } else {
-                        ContentUnavailableView.search(text: searchText)
                     }
                 } else {
                     if viewMode == .grid {
@@ -82,7 +93,9 @@ struct TVShowsTab: View {
                         Divider()
                         filterMenu
                     } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
+                        Image(systemName: libraryState.tvShowFilter != .all
+                              ? "line.3.horizontal.decrease.circle.fill"
+                              : "line.3.horizontal.decrease.circle")
                     }
                     .accessibilityLabel("Sort and filter")
                 }
@@ -101,6 +114,11 @@ struct TVShowsTab: View {
             libraryState.tvShows = []
             libraryState.tvShowsError = nil
             viewModel.configure(appState: appState, libraryState: libraryState)
+            Task {
+                await viewModel.loadTVShows(forceRefresh: true)
+            }
+        }
+        .onChange(of: appState.libraryUpdateSignal) { _, _ in
             Task {
                 await viewModel.loadTVShows(forceRefresh: true)
             }
@@ -163,7 +181,7 @@ struct TVShowsTab: View {
                     }
                     savedSortField = libraryState.tvShowSortField
                     savedSortAscending = libraryState.tvShowSortAscending
-                    Task { await viewModel.loadTVShows(forceRefresh: true) }
+                    if field == .random { libraryState.shuffleTVShows() }
                 } label: {
                     HStack {
                         Text(field.displayName)

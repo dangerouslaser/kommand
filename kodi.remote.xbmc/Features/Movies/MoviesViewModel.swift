@@ -31,37 +31,73 @@ final class MoviesViewModel {
     // MARK: - Loading
 
     func loadMovies(forceRefresh: Bool = false) async {
-        guard let libraryState = libraryState else { return }
+        guard let libraryState = libraryState,
+              let hostId = appState?.currentHost?.id else { return }
 
-        // Skip if already loaded and not forcing refresh
+        // If we have in-memory data and not forcing refresh, skip
         if !forceRefresh && !libraryState.movies.isEmpty {
             return
         }
 
+        // Try disk cache first when starting from empty
+        if libraryState.movies.isEmpty {
+            if let cached = await LibraryCacheService.shared.loadMovies(for: hostId) {
+                await MainActor.run {
+                    libraryState.movies = cached.movies
+                    libraryState.moviesTotalCount = cached.movies.count
+                    libraryState.lastMoviesSync = cached.savedAt
+                }
+                // Background refresh unless explicitly forced
+                if !forceRefresh {
+                    await backgroundRefreshMovies(hostId: hostId)
+                    return
+                }
+            }
+        }
+
+        // Network fetch — show spinner only if no data to display
+        let showSpinner = libraryState.movies.isEmpty
         await MainActor.run {
-            libraryState.isLoadingMovies = true
+            if showSpinner { libraryState.isLoadingMovies = true }
             libraryState.moviesError = nil
         }
 
         do {
-            let sortField = await MainActor.run { libraryState.movieSortField }
-            let sortAscending = await MainActor.run { libraryState.movieSortAscending }
-
-            let result = try await client.getMovies(
-                sort: (field: sortField.rawValue, ascending: sortAscending)
-            )
+            let result = try await client.getMovies(sort: (field: "title", ascending: true))
+            let movies = result.movies ?? []
 
             await MainActor.run {
-                libraryState.movies = result.movies ?? []
-                libraryState.moviesTotalCount = result.limits?.total ?? 0
+                libraryState.movies = movies
+                libraryState.moviesTotalCount = result.limits?.total ?? movies.count
                 libraryState.lastMoviesSync = Date()
                 libraryState.isLoadingMovies = false
             }
+
+            await LibraryCacheService.shared.saveMovies(movies, for: hostId)
         } catch {
             await MainActor.run {
-                libraryState.moviesError = error.localizedDescription
+                if libraryState.movies.isEmpty {
+                    libraryState.moviesError = error.localizedDescription
+                }
                 libraryState.isLoadingMovies = false
             }
+        }
+    }
+
+    private func backgroundRefreshMovies(hostId: UUID) async {
+        do {
+            let result = try await client.getMovies(sort: (field: "title", ascending: true))
+            let movies = result.movies ?? []
+
+            await MainActor.run {
+                libraryState?.movies = movies
+                libraryState?.moviesTotalCount = result.limits?.total ?? movies.count
+                libraryState?.lastMoviesSync = Date()
+            }
+
+            await LibraryCacheService.shared.saveMovies(movies, for: hostId)
+        } catch {
+            Logger.networking.warning("Background movie refresh failed: \(error.localizedDescription)")
         }
     }
 

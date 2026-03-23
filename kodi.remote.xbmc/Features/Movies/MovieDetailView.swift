@@ -59,7 +59,7 @@ struct MovieDetailView: View {
                             .padding(isIPad ? 32 : 16)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: sidebarVisible ? 20 : 0))
-                    .padding(.top, sidebarVisible ? geo.safeAreaInsets.top + 16 : 0)
+                    .padding(.top, sidebarVisible ? 32 : 0)
                     .padding([.horizontal, .bottom], sidebarVisible ? 16 : 0)
                     .animation(.smooth, value: sidebarVisible)
                 }
