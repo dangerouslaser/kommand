@@ -10,7 +10,10 @@ struct TVShowsTab: View {
     @State private var libraryState = LibraryState()
     @State private var viewModel = TVShowsViewModel()
     @State private var searchText = ""
-    @AppStorage("tvShowsViewMode") private var viewMode: ViewMode = .grid
+    @AppStorage(AppStorageKeys.tvShowsViewMode) private var viewMode: ViewMode = .grid
+    @AppStorage(AppStorageKeys.tvShowSortField) private var savedSortField: LibraryState.SortField = .title
+    @AppStorage(AppStorageKeys.tvShowSortAscending) private var savedSortAscending = true
+    @AppStorage(AppStorageKeys.tvShowFilter) private var savedFilter: LibraryState.LibraryFilter = .all
 
     private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 16)
@@ -84,6 +87,9 @@ struct TVShowsTab: View {
             .themedBackground()
         }
         .task {
+            libraryState.tvShowSortField = savedSortField
+            libraryState.tvShowSortAscending = savedSortAscending
+            libraryState.tvShowFilter = savedFilter
             viewModel.configure(appState: appState, libraryState: libraryState)
             await viewModel.loadTVShows()
         }
@@ -152,6 +158,8 @@ struct TVShowsTab: View {
                         libraryState.tvShowSortField = field
                         libraryState.tvShowSortAscending = true
                     }
+                    savedSortField = libraryState.tvShowSortField
+                    savedSortAscending = libraryState.tvShowSortAscending
                     Task { await viewModel.loadTVShows(forceRefresh: true) }
                 } label: {
                     HStack {
@@ -170,6 +178,7 @@ struct TVShowsTab: View {
             ForEach(LibraryState.LibraryFilter.allCases, id: \.self) { filter in
                 Button {
                     libraryState.tvShowFilter = filter
+                    savedFilter = filter
                 } label: {
                     HStack {
                         Text(filter.displayName)

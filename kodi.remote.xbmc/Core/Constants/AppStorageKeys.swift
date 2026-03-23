@@ -34,6 +34,17 @@ nonisolated enum AppStorageKeys {
     static let moviesViewMode = "moviesViewMode"
     static let tvShowsViewMode = "tvShowsViewMode"
 
+    // MARK: - Library Sort & Filter
+    static let movieSortField = "movieSortField"
+    static let movieSortAscending = "movieSortAscending"
+    static let movieFilter = "movieFilter"
+    static let tvShowSortField = "tvShowSortField"
+    static let tvShowSortAscending = "tvShowSortAscending"
+    static let tvShowFilter = "tvShowFilter"
+
+    // MARK: - Hints
+    static let hasUsedStopGesture = "hasUsedStopGesture"
+
     // MARK: - Power Menu Options
     static let powerMenuRestartKodi = "powerMenuRestartKodi"
     static let powerMenuSuspend = "powerMenuSuspend"

@@ -15,6 +15,7 @@ struct PlaybackControls: View {
     let onSeekForward: () -> Void
 
     @Environment(\.themeColors) private var colors
+    @AppStorage(AppStorageKeys.hasUsedStopGesture) private var hasUsedStop = false
 
     var body: some View {
         HStack(spacing: 20) {
@@ -33,22 +34,32 @@ struct PlaybackControls: View {
             )
 
             // Play/Pause (long-press for Stop)
-            Button {
-                onPlayPause()
-            } label: {
-                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                    .font(.title)
-                    .frame(width: 64, height: 64)
-                    .background(colors.accent, in: Circle())
-                    .foregroundStyle(colors.invertAccentText ? colors.textPrimary : .white)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(isPlaying ? "Pause" : "Play")
-            .contextMenu {
-                Button(role: .destructive) {
-                    onStop()
+            VStack(spacing: 4) {
+                Button {
+                    onPlayPause()
                 } label: {
-                    Label("Stop Playback", systemImage: "stop.fill")
+                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        .font(.title)
+                        .frame(width: 64, height: 64)
+                        .background(colors.accent, in: Circle())
+                        .foregroundStyle(colors.invertAccentText ? colors.textPrimary : .white)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isPlaying ? "Pause" : "Play")
+                .contextMenu {
+                    Button(role: .destructive) {
+                        hasUsedStop = true
+                        onStop()
+                    } label: {
+                        Label("Stop Playback", systemImage: "stop.fill")
+                    }
+                }
+
+                if !hasUsedStop {
+                    Text("Hold to stop")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .transition(.opacity)
                 }
             }
 

@@ -11,7 +11,10 @@ struct MoviesTab: View {
     @State private var viewModel = MoviesViewModel()
     @State private var searchText = ""
     @State private var showingSortOptions = false
-    @AppStorage("moviesViewMode") private var viewMode: ViewMode = .grid
+    @AppStorage(AppStorageKeys.moviesViewMode) private var viewMode: ViewMode = .grid
+    @AppStorage(AppStorageKeys.movieSortField) private var savedSortField: LibraryState.SortField = .title
+    @AppStorage(AppStorageKeys.movieSortAscending) private var savedSortAscending = true
+    @AppStorage(AppStorageKeys.movieFilter) private var savedFilter: LibraryState.LibraryFilter = .all
 
     private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 16)
@@ -85,6 +88,9 @@ struct MoviesTab: View {
             .themedBackground()
         }
         .task {
+            libraryState.movieSortField = savedSortField
+            libraryState.movieSortAscending = savedSortAscending
+            libraryState.movieFilter = savedFilter
             viewModel.configure(appState: appState, libraryState: libraryState)
             await viewModel.loadMovies()
         }
@@ -154,6 +160,8 @@ struct MoviesTab: View {
                         libraryState.movieSortField = field
                         libraryState.movieSortAscending = true
                     }
+                    savedSortField = libraryState.movieSortField
+                    savedSortAscending = libraryState.movieSortAscending
                     Task { await viewModel.loadMovies(forceRefresh: true) }
                 } label: {
                     HStack {
@@ -172,6 +180,7 @@ struct MoviesTab: View {
             ForEach(LibraryState.LibraryFilter.allCases, id: \.self) { filter in
                 Button {
                     libraryState.movieFilter = filter
+                    savedFilter = filter
                 } label: {
                     HStack {
                         Text(filter.displayName)

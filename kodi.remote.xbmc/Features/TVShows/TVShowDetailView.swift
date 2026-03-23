@@ -27,9 +27,13 @@ struct TVShowDetailView: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Hero Image with overlay content on iPad
                 GeometryReader { geo in
+                    let sidebarVisible = isIPad && geo.frame(in: .global).minX > 50
+
                     ZStack(alignment: .bottomLeading) {
-                        AsyncArtworkImage(path: show.fanartPath ?? show.posterPath, host: appState.currentHost)
-                            .frame(width: geo.size.width, height: geo.size.height)
+                        Color.clear
+                            .overlay {
+                                AsyncArtworkImage(path: show.fanartPath ?? show.posterPath, host: appState.currentHost)
+                            }
                             .clipped()
 
                         // Gradient overlay at bottom (adapts to color scheme)
@@ -48,6 +52,10 @@ struct TVShowDetailView: View {
                         heroOverlayContent
                             .padding(isIPad ? 32 : 16)
                     }
+                    .clipShape(RoundedRectangle(cornerRadius: sidebarVisible ? 20 : 0))
+                    .padding(.top, sidebarVisible ? geo.safeAreaInsets.top + 16 : 0)
+                    .padding([.horizontal, .bottom], sidebarVisible ? 16 : 0)
+                    .animation(.smooth, value: sidebarVisible)
                 }
                 .frame(height: isIPad ? 550 : 350)
 

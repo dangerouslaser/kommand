@@ -117,13 +117,10 @@ struct ContentView: View {
             if appState.hosts.isEmpty {
                 OnboardingView()
             } else {
-                GeometryReader { geo in
-                    let isLandscapeIPad = horizontalSizeClass == .regular && geo.size.width > geo.size.height
-                    if isLandscapeIPad {
-                        sidebarView
-                    } else {
-                        mainTabView
-                    }
+                if horizontalSizeClass == .regular {
+                    sidebarView
+                } else {
+                    mainTabView
                 }
             }
         }
