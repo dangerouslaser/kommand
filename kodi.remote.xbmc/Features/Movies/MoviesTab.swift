@@ -26,12 +26,11 @@ struct MoviesTab: View {
         NavigationStack {
             Group {
                 if libraryState.isLoadingMovies && libraryState.movies.isEmpty {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                        Text("Loading Movies...")
-                            .foregroundStyle(.secondary)
+                    if viewMode == .grid {
+                        LibraryGridSkeleton(columns: columns)
+                    } else {
+                        LibraryListSkeleton()
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = libraryState.moviesError {
                     ContentUnavailableView {
                         Label("Error", systemImage: "exclamationmark.triangle")

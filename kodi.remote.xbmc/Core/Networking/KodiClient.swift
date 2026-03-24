@@ -16,6 +16,7 @@ actor KodiClient {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 120
+        config.httpMaximumConnectionsPerHost = 2
         self.session = URLSession(configuration: config)
     }
 

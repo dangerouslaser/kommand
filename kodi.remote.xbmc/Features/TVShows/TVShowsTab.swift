@@ -26,12 +26,11 @@ struct TVShowsTab: View {
         NavigationStack {
             Group {
                 if libraryState.isLoadingTVShows && libraryState.tvShows.isEmpty {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                        Text("Loading TV Shows...")
-                            .foregroundStyle(.secondary)
+                    if viewMode == .grid {
+                        LibraryGridSkeleton(columns: columns)
+                    } else {
+                        LibraryListSkeleton()
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = libraryState.tvShowsError {
                     ContentUnavailableView {
                         Label("Error", systemImage: "exclamationmark.triangle")

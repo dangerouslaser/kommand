@@ -17,14 +17,7 @@ struct DashboardTab: View {
                 if !searchText.isEmpty {
                     // Search Results
                     searchResultsView
-                } else if viewModel.isInitialLoad && viewModel.isLoadingInProgress && viewModel.isLoadingRecent {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                        Text("Loading...")
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if !viewModel.hasContinueWatching && !viewModel.hasRecentlyAdded {
+                } else if !viewModel.isInitialLoad && !viewModel.hasContinueWatching && !viewModel.hasRecentlyAdded {
                     ContentUnavailableView {
                         Label("Nothing Here Yet", systemImage: "play.square.stack")
                     } description: {
@@ -36,19 +29,28 @@ struct DashboardTab: View {
                             // Continue Watching
                             if viewModel.hasContinueWatching {
                                 continueWatchingSection
+                            } else if viewModel.isLoadingInProgress {
+                                continueWatchingSkeleton
                             }
 
                             // Recently Added Movies
                             if !viewModel.recentMovies.isEmpty {
                                 recentMoviesSection
+                            } else if viewModel.isLoadingRecent {
+                                recentMoviesSkeleton
                             }
 
                             // Recently Added Shows
                             if !viewModel.recentShows.isEmpty {
                                 recentShowsSection
+                            } else if viewModel.isLoadingRecent {
+                                recentShowsSkeleton
                             }
                         }
                         .padding(.vertical)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.hasContinueWatching)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.recentMovies.isEmpty)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.recentShows.isEmpty)
                     }
                 }
             }
@@ -259,6 +261,95 @@ struct DashboardTab: View {
                 .padding(.horizontal)
             }
         }
+    }
+    // MARK: - Section Skeletons
+
+    private var continueWatchingSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Continue Watching")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.horizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.secondarySystemFill))
+                            .aspectRatio(16/9, contentMode: .fit)
+                            .frame(width: 280)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+        .redacted(reason: .placeholder)
+    }
+
+    private var recentMoviesSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recently Added Movies")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.horizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(0..<5, id: \.self) { _ in
+                        VStack(alignment: .leading, spacing: 8) {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.secondarySystemFill))
+                                .aspectRatio(2/3, contentMode: .fit)
+                                .frame(width: 120)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(.tertiarySystemFill))
+                                    .frame(width: 100, height: 12)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(.tertiarySystemFill))
+                                    .frame(width: 50, height: 10)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+        .redacted(reason: .placeholder)
+    }
+
+    private var recentShowsSkeleton: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recently Added Shows")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.horizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(0..<4, id: \.self) { _ in
+                        VStack(alignment: .leading, spacing: 8) {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.secondarySystemFill))
+                                .aspectRatio(16/9, contentMode: .fit)
+                                .frame(width: 200)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(.tertiarySystemFill))
+                                    .frame(width: 140, height: 12)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(.tertiarySystemFill))
+                                    .frame(width: 70, height: 10)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+        .redacted(reason: .placeholder)
     }
 }
 

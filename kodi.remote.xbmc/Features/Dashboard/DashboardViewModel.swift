@@ -95,10 +95,11 @@ final class DashboardViewModel {
     // MARK: - Load All
 
     func loadAll() async {
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { await self.loadInProgress() }
-            group.addTask { await self.loadRecentlyAdded() }
-        }
+        // Load sequentially to avoid overwhelming Kodi's web server.
+        // Recently added first (cache-backed, appears instantly),
+        // then in-progress (smaller payload, no cache).
+        await loadRecentlyAdded()
+        await loadInProgress()
         await MainActor.run {
             isInitialLoad = false
         }
@@ -112,10 +113,8 @@ final class DashboardViewModel {
         }
 
         do {
-            async let moviesTask = client.getInProgressMovies()
-            async let episodesTask = client.getInProgressEpisodes()
-
-            let (moviesResponse, episodesResponse) = try await (moviesTask, episodesTask)
+            let moviesResponse = try await client.getInProgressMovies()
+            let episodesResponse = try await client.getInProgressEpisodes()
 
             // Filter to only items with actual resume points
             let movies = (moviesResponse.movies ?? []).filter { $0.hasResume }
@@ -154,10 +153,8 @@ final class DashboardViewModel {
         }
 
         do {
-            async let moviesTask = client.getRecentlyAddedMovies(limit: 20)
-            async let episodesTask = client.getRecentlyAddedEpisodes(limit: 200)
-
-            let (moviesResponse, episodesResponse) = try await (moviesTask, episodesTask)
+            let moviesResponse = try await client.getRecentlyAddedMovies(limit: 20)
+            let episodesResponse = try await client.getRecentlyAddedEpisodes(limit: 200)
 
             let movies = moviesResponse.movies ?? []
             let episodes = episodesResponse.episodes ?? []
