@@ -23,29 +23,46 @@ A native iOS remote control app for [Kodi](https://kodi.tv) media center.
 
 ## Features
 
-- **Remote Control** - Full directional pad, playback controls, and volume
-- **Now Playing** - Real-time display of current media with artwork
-- **Live Activity** - Control playback from Lock Screen and Dynamic Island
-- **Movie Library** - Browse, search, and play your movie collection
-- **TV Shows** - Navigate shows by season and episode
-- **Music** - Browse artists, albums, and songs
-- **Live TV (PVR)** - Access channels, recordings, and timers
-- **Dashboard** - Continue watching and recently added content
-- **CoreELEC Support** - Enhanced features for CoreELEC devices
-- **Themes** - Multiple color themes including OLED-optimized options
-- **Live Activity** - Lock Screen and Dynamic Island controls with now playing info
-- **Dolby Vision Info** - Detailed DV profile information (P5, P7, P8.1, etc.)
+### Remote & Playback
+- **Remote Control** — Full directional pad, playback controls, and volume with haptic feedback
+- **Now Playing** — Real-time display of current media with artwork via WebSocket
+- **Interactive Seek** — Seek bars with real-time progress estimation
+- **Live Activity** — Control playback from Lock Screen and Dynamic Island
+
+### Library
+- **Movies** — Browse, search, and play your movie collection
+- **TV Shows** — Navigate shows by season and episode
+- **Music** — Browse artists, albums, and songs with artist detail views
+- **Live TV (PVR)** — Access channels, EPG, recordings, and timers
+- **Dashboard** — Continue watching, recently added content, and global search
+- **Genre Filtering** — Filter libraries by genre with persistent sort/filter preferences
+- **Disk Caching** — Library data cached to disk for instant loading
+- **Skeleton Loading** — Smooth loading states while content loads
+
+### Platform
+- **iPad Support** — Sidebar navigation, flexible layouts, and hero artwork
+- **Themes** — Multiple color themes including OLED-optimized options
+- **DV Info** — Detailed Dolby Vision profile information (P5, P7, P8.1, etc.)
+- **Configurable Power** — Power/sleep controls for any Kodi device
+
+## Technical Details
+
+- **Swift 6** with strict concurrency
+- **SwiftUI** + `@Observable` macro — no Combine, no UIKit
+- **Zero external dependencies** — pure SwiftUI + Foundation
+- **Actor-based networking** — JSON-RPC over HTTP with WebSocket notifications
+- **Request throttling** — concurrent Kodi request limiting for stability
 
 ## Requirements
 
-- iOS 17.0+
+- iOS/iPadOS 17.0+
 - Kodi with JSON-RPC enabled (Settings → Services → Control)
 
 ## Installation
 
 1. Clone the repository
 2. Open `kodi.remote.xbmc.xcodeproj` in Xcode
-3. Build and run on your device or simulator
+3. Build and run — no package resolution, no pods, no SPM
 
 ## Configuration
 
@@ -68,5 +85,4 @@ This project is licensed under the GNU GPLv3 License - see the [LICENSE](LICENSE
 
 ## Acknowledgments
 
-- [Kodi](https://kodi.tv) - The amazing open source media center
-- Built with SwiftUI and Swift Concurrency
+- [Kodi](https://kodi.tv) — The amazing open source media center
