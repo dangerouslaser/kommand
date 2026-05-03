@@ -113,7 +113,7 @@ final class LibraryState {
         case .dateadded:
             return tvShows.sorted { tvShowSortAscending ? ($0.dateadded ?? "") < ($1.dateadded ?? "") : ($0.dateadded ?? "") > ($1.dateadded ?? "") }
         case .lastplayed:
-            return tvShows.sorted { tvShowSortAscending ? ($0.dateadded ?? "") < ($1.dateadded ?? "") : ($0.dateadded ?? "") > ($1.dateadded ?? "") }
+            return tvShows.sorted { tvShowSortAscending ? ($0.lastplayed ?? "") < ($1.lastplayed ?? "") : ($0.lastplayed ?? "") > ($1.lastplayed ?? "") }
         case .random:
             return tvShows // Shuffled in-place when user selects random
         }
