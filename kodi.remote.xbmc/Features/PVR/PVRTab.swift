@@ -22,11 +22,7 @@ struct PVRTab: View {
         NavigationStack {
             Group {
                 if viewModel.isCheckingAvailability {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                        Text("Checking PVR...")
-                            .foregroundStyle(.secondary)
-                    }
+                    LoadingPlaceholder(message: "Checking PVR...")
                 } else if !viewModel.isPVRAvailable {
                     ContentUnavailableView {
                         Label("PVR Not Available", systemImage: "tv.slash")
@@ -119,11 +115,7 @@ struct PVRTab: View {
     private var tvChannelsView: some View {
         Group {
             if viewModel.isLoadingChannels && viewModel.tvChannels.isEmpty {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading Channels...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading Channels...")
             } else if filteredTVChannels.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -165,11 +157,7 @@ struct PVRTab: View {
     private var radioChannelsView: some View {
         Group {
             if viewModel.isLoadingChannels && viewModel.radioChannels.isEmpty {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading Stations...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading Stations...")
             } else if filteredRadioChannels.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -211,11 +199,7 @@ struct PVRTab: View {
     private var recordingsView: some View {
         Group {
             if viewModel.isLoadingRecordings && viewModel.recordings.isEmpty {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading Recordings...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading Recordings...")
             } else if filteredRecordings.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -265,11 +249,7 @@ struct PVRTab: View {
     private var timersView: some View {
         Group {
             if viewModel.isLoadingTimers && viewModel.timers.isEmpty {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading Timers...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading Timers...")
             } else if filteredTimers.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {

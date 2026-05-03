@@ -294,13 +294,9 @@ struct ActorFilmographyView: View {
     var body: some View {
         ScrollView {
             if viewModel.isLoadingActorMovies {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading...")
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 60)
+                LoadingPlaceholder(message: "Loading...")
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
             } else if viewModel.actorMovies.isEmpty {
                 ContentUnavailableView {
                     Label("No Movies Found", systemImage: "film")

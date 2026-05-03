@@ -104,12 +104,8 @@ struct DashboardTab: View {
     private var searchResultsView: some View {
         Group {
             if viewModel.isSearching {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Searching...")
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                LoadingPlaceholder(message: "Searching...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !viewModel.hasSearchResults {
                 ContentUnavailableView.search(text: searchText)
             } else {
@@ -561,11 +557,7 @@ struct DashboardShowDetailWrapper: View {
     var body: some View {
         Group {
             if isLoading {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading show...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading show...")
             } else if let tvShow = tvShow {
                 TVShowDetailView(show: tvShow, viewModel: viewModel)
             } else if let error = error {

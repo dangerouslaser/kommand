@@ -130,11 +130,7 @@ struct MusicTab: View {
     private var artistsView: some View {
         Group {
             if viewModel.isLoading && viewModel.artists.isEmpty {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading Artists...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading Artists...")
             } else if filteredArtists.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -177,11 +173,7 @@ struct MusicTab: View {
     private var albumsView: some View {
         Group {
             if viewModel.isLoading && viewModel.albums.isEmpty {
-                VStack(spacing: 12) {
-                    ProgressView()
-                    Text("Loading Albums...")
-                        .foregroundStyle(.secondary)
-                }
+                LoadingPlaceholder(message: "Loading Albums...")
             } else if filteredAlbums.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
