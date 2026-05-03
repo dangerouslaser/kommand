@@ -13,12 +13,15 @@ import Combine
 @Observable
 final class VolumeButtonHandler {
     private var audioSession: AVAudioSession?
-    // nonisolated(unsafe) is required for mutable stored properties — plain
-    // `nonisolated` is rejected by the compiler on `var`. The (unsafe) qualifier
-    // is sound here: NSKeyValueObservation.invalidate() is thread-safe, and the
-    // property is only mutated from start()/stop() on the main actor. deinit only
-    // runs when no other reference exists, so its read can't race with a writer.
-    nonisolated(unsafe) private var volumeObserver: NSKeyValueObservation?
+    // The compiler emits a warning that `(unsafe)` has no effect here because
+    // NSKeyValueObservation is already Sendable — but plain `nonisolated` is
+    // rejected on *any* mutable stored property regardless of Sendability, so
+    // there's no way to drop the (unsafe) qualifier without making the property
+    // a `let` (impossible — start/stop reassign it). Suppress the warning by
+    // accepting it; the alternative is removing the deinit entirely and losing
+    // the leak protection. @ObservationIgnored keeps @Observable from generating
+    // tracked accessors that would also reject the qualifier.
+    @ObservationIgnored nonisolated(unsafe) private var volumeObserver: NSKeyValueObservation?
     private var lastVolume: Float = 0.5
     private(set) var isActive = false
 
