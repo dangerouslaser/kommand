@@ -290,7 +290,8 @@ struct SeasonRow: View {
                 file: nil,
                 imdbnumber: nil,
                 premiered: nil,
-                dateadded: nil
+                dateadded: nil,
+                lastplayed: nil
             ),
             viewModel: TVShowsViewModel()
         )

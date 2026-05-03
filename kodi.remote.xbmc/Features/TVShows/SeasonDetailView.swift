@@ -251,7 +251,8 @@ struct CompactTagBadge: View {
                 file: nil,
                 imdbnumber: nil,
                 premiered: nil,
-                dateadded: nil
+                dateadded: nil,
+                lastplayed: nil
             ),
             season: Season(
                 seasonid: 1,

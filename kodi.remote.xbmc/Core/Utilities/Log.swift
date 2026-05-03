@@ -11,10 +11,12 @@ extension Logger {
     // Live Activity widget extension land in the same Console.app bucket. Using
     // Bundle.main.bundleIdentifier would split logs across two subsystems
     // (the host app's vs the extension's) and make diagnosis harder.
-    private static let subsystem = "group.decent.mid.range.kommand"
+    nonisolated private static let subsystem = "group.decent.mid.range.kommand"
 
-    static let networking = Logger(subsystem: subsystem, category: "networking")
-    static let playback = Logger(subsystem: subsystem, category: "playback")
-    static let ui = Logger(subsystem: subsystem, category: "ui")
-    static let general = Logger(subsystem: subsystem, category: "general")
+    // nonisolated so non-main actors (e.g. KodiClient, ImageCacheService) can
+    // log without an actor hop. Logger is Sendable and thread-safe.
+    nonisolated static let networking = Logger(subsystem: subsystem, category: "networking")
+    nonisolated static let playback = Logger(subsystem: subsystem, category: "playback")
+    nonisolated static let ui = Logger(subsystem: subsystem, category: "ui")
+    nonisolated static let general = Logger(subsystem: subsystem, category: "general")
 }

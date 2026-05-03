@@ -25,6 +25,7 @@ nonisolated struct TVShow: Identifiable, Codable, Hashable, Sendable {
     let imdbnumber: String?
     let premiered: String?
     let dateadded: String?
+    let lastplayed: String?
 
     var id: Int { tvshowid }
 

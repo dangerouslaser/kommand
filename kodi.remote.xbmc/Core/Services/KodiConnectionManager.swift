@@ -28,7 +28,7 @@ final class KodiConnectionManager {
         // Tear down the previous client so its in-flight requests / WebSocket
         // don't keep running for a host we no longer care about.
         if let oldClient = self.client {
-            await oldClient.shutdown()
+            await oldClient.cancelInFlightWork()
         }
 
         self.currentHost = host

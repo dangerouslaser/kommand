@@ -195,7 +195,8 @@ final class TVShowsViewModel {
                     file: nil,
                     imdbnumber: nil,
                     premiered: nil,
-                    dateadded: nil
+                    dateadded: nil,
+                    lastplayed: nil
                 )
                 await loadEpisodes(for: show, season: episode.season)
             }

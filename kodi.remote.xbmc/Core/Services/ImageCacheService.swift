@@ -36,9 +36,9 @@ actor ImageCacheService {
         }
     }
 
-    private func registerMemoryPressureObserver() async {
+    private func registerMemoryPressureObserver() {
         let stream = NotificationCenter.default.notifications(
-            named: await UIApplication.didReceiveMemoryWarningNotification
+            named: UIApplication.didReceiveMemoryWarningNotification
         )
         Task { [weak self] in
             for await _ in stream {

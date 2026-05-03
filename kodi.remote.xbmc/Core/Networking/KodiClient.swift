@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import os
 
 actor KodiClient {
     private var host: KodiHost?
@@ -49,7 +50,9 @@ actor KodiClient {
     /// Cancel any in-flight HTTP requests and tear down the WebSocket. Use when
     /// discarding a client (e.g. before replacing it with a new one) so background
     /// requests don't continue against a host that nothing is listening for.
-    func shutdown() async {
+    /// Named `cancelInFlightWork` (not `shutdown`) to avoid colliding with the
+    /// `shutdown()` method that issues `System.Shutdown` to Kodi.
+    func cancelInFlightWork() async {
         await disconnectWebSocket()
         session.invalidateAndCancel()
     }
@@ -444,7 +447,7 @@ actor KodiClient {
         var params: [String: Any] = [
             "properties": ["title", "year", "rating", "plot", "genre", "studio", "cast",
                           "thumbnail", "fanart", "art", "episode", "watchedepisodes", "season",
-                          "playcount", "file", "imdbnumber", "premiered", "dateadded"],
+                          "playcount", "file", "imdbnumber", "premiered", "dateadded", "lastplayed"],
             "sort": ["method": sort.field, "order": sort.ascending ? "ascending" : "descending"]
         ]
         if let limit {
@@ -792,7 +795,7 @@ actor KodiClient {
         try await send(method: "VideoLibrary.GetTVShows", params: [
             "properties": ["title", "year", "rating", "plot", "genre", "studio", "cast",
                           "thumbnail", "fanart", "art", "episode", "watchedepisodes", "season",
-                          "playcount", "file", "imdbnumber", "premiered", "dateadded"],
+                          "playcount", "file", "imdbnumber", "premiered", "dateadded", "lastplayed"],
             "filter": ["field": "title", "operator": "contains", "value": query],
             "sort": ["method": "title", "order": "ascending"],
             "limits": ["start": 0, "end": limit]

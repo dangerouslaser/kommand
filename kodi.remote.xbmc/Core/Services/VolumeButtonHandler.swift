@@ -13,7 +13,11 @@ import Combine
 @Observable
 final class VolumeButtonHandler {
     private var audioSession: AVAudioSession?
-    private var volumeObserver: NSKeyValueObservation?
+    // nonisolated(unsafe) so the deinit (which runs in a nonisolated context) can
+    // call invalidate() on it. NSKeyValueObservation.invalidate() is thread-safe,
+    // and the property is only mutated from start()/stop() on the main actor —
+    // deinit only happens when no other reference exists, so the read is race-free.
+    nonisolated(unsafe) private var volumeObserver: NSKeyValueObservation?
     private var lastVolume: Float = 0.5
     private(set) var isActive = false
 
