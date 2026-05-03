@@ -43,16 +43,7 @@ struct MovieDetailView: View {
                             .clipped()
 
                         // Gradient overlay at bottom (adapts to color scheme)
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0),
-                                .init(color: gradientColor.opacity(0.3), location: 0.4),
-                                .init(color: gradientColor.opacity(0.85), location: 0.75),
-                                .init(color: gradientColor, location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+                        HeroGradientOverlay(color: gradientColor)
 
                         // Show logo/title overlay on hero
                         heroOverlayContent
