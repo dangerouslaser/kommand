@@ -6,10 +6,10 @@
 import SwiftUI
 
 struct LibrarySettingsView: View {
-    @AppStorage("showMoviesTab") private var showMoviesTab = true
-    @AppStorage("showTVShowsTab") private var showTVShowsTab = true
-    @AppStorage("showMusicTab") private var showMusicTab = true
-    @AppStorage("showPVRTab") private var showPVRTab = false
+    @AppStorage(AppStorageKeys.showMoviesTab) private var showMoviesTab = true
+    @AppStorage(AppStorageKeys.showTVShowsTab) private var showTVShowsTab = true
+    @AppStorage(AppStorageKeys.showMusicTab) private var showMusicTab = true
+    @AppStorage(AppStorageKeys.showPVRTab) private var showPVRTab = false
 
     var body: some View {
         Form {

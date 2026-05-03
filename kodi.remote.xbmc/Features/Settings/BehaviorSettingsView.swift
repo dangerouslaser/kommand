@@ -6,11 +6,11 @@
 import SwiftUI
 
 struct BehaviorSettingsView: View {
-    @AppStorage("hapticFeedback") private var hapticFeedback = true
-    @AppStorage("seekInterval") private var seekInterval = 30
-    @AppStorage("keepScreenOn") private var keepScreenOn = true
-    @AppStorage("showVolumeSlider") private var showVolumeSlider = false
-    @AppStorage("liveActivityEnabled") private var liveActivityEnabled = false
+    @AppStorage(AppStorageKeys.hapticFeedback) private var hapticFeedback = true
+    @AppStorage(AppStorageKeys.seekInterval) private var seekInterval = 30
+    @AppStorage(AppStorageKeys.keepScreenOn) private var keepScreenOn = true
+    @AppStorage(AppStorageKeys.showVolumeSlider) private var showVolumeSlider = false
+    @AppStorage(AppStorageKeys.liveActivityEnabled) private var liveActivityEnabled = false
 
     @State private var imageCacheSize: String = "Calculating..."
     @State private var showClearCacheConfirm = false

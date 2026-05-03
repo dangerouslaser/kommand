@@ -7,10 +7,10 @@ import SwiftUI
 
 struct AppearanceSettingsView: View {
     @Environment(\.colorScheme) private var systemColorScheme
-    @AppStorage("colorScheme") private var colorSchemeSetting = 0 // 0=System, 1=Light, 2=Dark
-    @AppStorage("selectedTheme") private var selectedThemeId = "default"
-    @AppStorage("nowPlayingBackground") private var nowPlayingBackground = 0 // 0=Blur, 1=Solid
-    @AppStorage("showDolbyVisionProfile") private var showDolbyVisionProfile = false
+    @AppStorage(AppStorageKeys.colorScheme) private var colorSchemeSetting = 0 // 0=System, 1=Light, 2=Dark
+    @AppStorage(AppStorageKeys.selectedTheme) private var selectedThemeId = "default"
+    @AppStorage(AppStorageKeys.nowPlayingBackground) private var nowPlayingBackground = 0 // 0=Blur, 1=Solid
+    @AppStorage(AppStorageKeys.showDolbyVisionProfile) private var showDolbyVisionProfile = false
     @AppStorage(AppStorageKeys.showLibraryCounts) private var showLibraryCounts = true
     private var effectiveColorScheme: ColorScheme {
         switch colorSchemeSetting {

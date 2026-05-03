@@ -85,12 +85,12 @@ struct ContentView: View {
     @Environment(\.colorScheme) private var systemColorScheme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    @AppStorage("showMoviesTab") private var showMoviesTab = true
-    @AppStorage("showTVShowsTab") private var showTVShowsTab = true
-    @AppStorage("showMusicTab") private var showMusicTab = true
-    @AppStorage("showPVRTab") private var showPVRTab = false
-    @AppStorage("colorScheme") private var colorSchemeSetting = 0 // 0=System, 1=Light, 2=Dark
-    @AppStorage("selectedTheme") private var selectedThemeId = "default"
+    @AppStorage(AppStorageKeys.showMoviesTab) private var showMoviesTab = true
+    @AppStorage(AppStorageKeys.showTVShowsTab) private var showTVShowsTab = true
+    @AppStorage(AppStorageKeys.showMusicTab) private var showMusicTab = true
+    @AppStorage(AppStorageKeys.showPVRTab) private var showPVRTab = false
+    @AppStorage(AppStorageKeys.colorScheme) private var colorSchemeSetting = 0 // 0=System, 1=Light, 2=Dark
+    @AppStorage(AppStorageKeys.selectedTheme) private var selectedThemeId = "default"
 
     private var preferredColorScheme: ColorScheme? {
         switch colorSchemeSetting {

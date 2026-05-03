@@ -10,8 +10,8 @@ struct RemoteTab: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var viewModel = RemoteViewModel()
-    @AppStorage("showVolumeSlider") private var showVolumeSlider = false
-    @AppStorage("useVolumeButtons") private var useVolumeButtons = true
+    @AppStorage(AppStorageKeys.showVolumeSlider) private var showVolumeSlider = false
+    @AppStorage(AppStorageKeys.useVolumeButtons) private var useVolumeButtons = true
     @State private var showingTextInput = false
     @State private var textInput = ""
     @State private var volumeButtonHandler = VolumeButtonHandler()

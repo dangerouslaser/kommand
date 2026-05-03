@@ -16,7 +16,7 @@ struct NowPlayingCard: View {
     @State private var isExpanded = false
     @State private var isSeeking = false
     @State private var seekProgress: Double = 0
-    @AppStorage("showDolbyVisionProfile") private var showDolbyVisionProfile = false
+    @AppStorage(AppStorageKeys.showDolbyVisionProfile) private var showDolbyVisionProfile = false
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var isIPad: Bool { horizontalSizeClass == .regular }
