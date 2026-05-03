@@ -47,6 +47,9 @@ final class TVShowsViewModel {
                     libraryState.tvShows = cached.tvShows
                     libraryState.tvShowsTotalCount = cached.tvShows.count
                     libraryState.lastTVShowsSync = cached.savedAt
+                    // Clear the skeleton flag now that real data is on screen.
+                    // The background refresh handles its own staleness silently.
+                    libraryState.isLoadingTVShows = false
                 }
                 if !forceRefresh {
                     await backgroundRefreshTVShows(hostId: hostId)

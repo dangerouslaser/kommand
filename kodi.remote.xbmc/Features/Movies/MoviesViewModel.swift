@@ -46,6 +46,9 @@ final class MoviesViewModel {
                     libraryState.movies = cached.movies
                     libraryState.moviesTotalCount = cached.movies.count
                     libraryState.lastMoviesSync = cached.savedAt
+                    // Clear the skeleton flag now that real data is on screen.
+                    // The background refresh handles its own staleness silently.
+                    libraryState.isLoadingMovies = false
                 }
                 // Background refresh unless explicitly forced
                 if !forceRefresh {
