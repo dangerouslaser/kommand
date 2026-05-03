@@ -18,7 +18,10 @@ final class MusicViewModel {
     var recentSongs: [Song] = []
     var songs: [Song] = [] // For album detail
 
-    var isLoading = false
+    // Default true so section skeletons render on the very first paint —
+    // otherwise the user sees a brief blank/empty-state frame before the
+    // network call begins and flips the flag.
+    var isLoading = true
     var error: String?
 
     private var loadedSections: Set<MusicSection> = []

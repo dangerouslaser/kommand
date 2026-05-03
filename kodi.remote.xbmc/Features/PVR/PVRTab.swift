@@ -115,7 +115,7 @@ struct PVRTab: View {
     private var tvChannelsView: some View {
         Group {
             if viewModel.isLoadingChannels && viewModel.tvChannels.isEmpty {
-                LoadingPlaceholder(message: "Loading Channels...")
+                LibraryListSkeleton()
             } else if filteredTVChannels.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -157,7 +157,7 @@ struct PVRTab: View {
     private var radioChannelsView: some View {
         Group {
             if viewModel.isLoadingChannels && viewModel.radioChannels.isEmpty {
-                LoadingPlaceholder(message: "Loading Stations...")
+                LibraryListSkeleton()
             } else if filteredRadioChannels.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -199,7 +199,7 @@ struct PVRTab: View {
     private var recordingsView: some View {
         Group {
             if viewModel.isLoadingRecordings && viewModel.recordings.isEmpty {
-                LoadingPlaceholder(message: "Loading Recordings...")
+                LibraryListSkeleton()
             } else if filteredRecordings.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -249,7 +249,7 @@ struct PVRTab: View {
     private var timersView: some View {
         Group {
             if viewModel.isLoadingTimers && viewModel.timers.isEmpty {
-                LoadingPlaceholder(message: "Loading Timers...")
+                LibraryListSkeleton()
             } else if filteredTimers.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {

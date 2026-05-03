@@ -33,11 +33,13 @@ final class PVRViewModel {
     // EPG
     var epgBroadcasts: [Int: [EPGEvent]] = [:] // channelId -> broadcasts
 
-    // Loading states
-    var isLoadingChannels = false
-    var isLoadingRecordings = false
-    var isLoadingTimers = false
-    var isCheckingAvailability = false
+    // Loading states. All default to true so the skeleton/spinner renders on
+    // the first paint of each section — otherwise the empty states briefly
+    // flash before the network calls begin and flip the flags.
+    var isLoadingChannels = true
+    var isLoadingRecordings = true
+    var isLoadingTimers = true
+    var isCheckingAvailability = true
 
     // Errors
     var error: String?

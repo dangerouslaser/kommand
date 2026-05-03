@@ -7,15 +7,17 @@ import Foundation
 
 @Observable
 final class LibraryState {
-    // Movies
+    // Movies. isLoadingMovies defaults to true so the grid/list skeleton renders
+    // on the very first paint — otherwise the empty-state view ("No Movies")
+    // briefly shows before the network call begins and flips the flag.
     var movies: [Movie] = [] { didSet { invalidateMovieCache() } }
-    var isLoadingMovies = false
+    var isLoadingMovies = true
     var moviesError: String?
     var moviesTotalCount = 0
 
-    // TV Shows
+    // TV Shows. Same first-paint reasoning as isLoadingMovies above.
     var tvShows: [TVShow] = [] { didSet { invalidateTVShowCache() } }
-    var isLoadingTVShows = false
+    var isLoadingTVShows = true
     var tvShowsError: String?
     var tvShowsTotalCount = 0
 
@@ -141,8 +143,11 @@ final class LibraryState {
         tvShowsTotalCount = 0
         lastTVShowsSync = nil
 
-        isLoadingMovies = false
-        isLoadingTVShows = false
+        // Leave the loading flags ON so the skeleton stays up while the new
+        // host's data is fetched — flipping them off here would briefly render
+        // the empty state between hosts.
+        isLoadingMovies = true
+        isLoadingTVShows = true
     }
 
     /// Shuffle movies in-place for random sort

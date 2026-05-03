@@ -110,19 +110,83 @@ struct MusicTab: View {
                     }
                 }
 
-                if viewModel.recentAlbums.isEmpty && viewModel.recentSongs.isEmpty && !viewModel.isLoading {
-                    ContentUnavailableView {
-                        Label("No Recent Music", systemImage: "music.note")
-                    } description: {
-                        Text("Recently added music will appear here")
+                if viewModel.recentAlbums.isEmpty && viewModel.recentSongs.isEmpty {
+                    if viewModel.isLoading {
+                        recentlyAddedSkeleton
+                    } else {
+                        ContentUnavailableView {
+                            Label("No Recent Music", systemImage: "music.note")
+                        } description: {
+                            Text("Recently added music will appear here")
+                        }
                     }
                 }
             }
             .padding(.vertical)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.recentAlbums.isEmpty)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.recentSongs.isEmpty)
         }
         .navigationDestination(for: Album.self) { album in
             AlbumDetailView(album: album, viewModel: viewModel)
         }
+    }
+
+    // Skeleton for the Recently Added section while initial data loads.
+    // Mirrors the section structure (horizontal album row + vertical song rows)
+    // so the layout doesn't reflow when content arrives.
+    private var recentlyAddedSkeleton: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("New Albums")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(0..<5, id: \.self) { _ in
+                            VStack(alignment: .leading, spacing: 8) {
+                                RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail)
+                                    .fill(Color(.secondarySystemFill))
+                                    .frame(width: 140, height: 140)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(.tertiarySystemFill))
+                                    .frame(width: 110, height: 12)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(.tertiarySystemFill))
+                                    .frame(width: 80, height: 10)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("New Songs")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                ForEach(0..<6, id: \.self) { _ in
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(.secondarySystemFill))
+                            .frame(width: 48, height: 48)
+                        VStack(alignment: .leading, spacing: 6) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(.tertiarySystemFill))
+                                .frame(width: 180, height: 14)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(.tertiarySystemFill))
+                                .frame(width: 120, height: 10)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+        .redacted(reason: .placeholder)
+        .allowsHitTesting(false)
     }
 
     // MARK: - Artists
@@ -130,7 +194,7 @@ struct MusicTab: View {
     private var artistsView: some View {
         Group {
             if viewModel.isLoading && viewModel.artists.isEmpty {
-                LoadingPlaceholder(message: "Loading Artists...")
+                LibraryListSkeleton()
             } else if filteredArtists.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
@@ -173,7 +237,7 @@ struct MusicTab: View {
     private var albumsView: some View {
         Group {
             if viewModel.isLoading && viewModel.albums.isEmpty {
-                LoadingPlaceholder(message: "Loading Albums...")
+                LibraryGridSkeleton(columns: [GridItem(.adaptive(minimum: 150), spacing: 16)])
             } else if filteredAlbums.isEmpty {
                 if searchText.isEmpty {
                     ContentUnavailableView {
