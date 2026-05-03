@@ -46,6 +46,19 @@ nonisolated struct JSONRPCNotification: Decodable, @unchecked Sendable {
 
 // MARK: - AnyCodable for flexible JSON handling
 
+/// Type-erased Codable wrapper used to build JSON-RPC request params from
+/// `[String: Any]` call-site dictionaries.
+///
+/// **Sendable safety contract** — the `@unchecked Sendable` is sound because:
+/// 1. `value` is a `let`, so each instance is immutable after construction.
+/// 2. `AnyCodable` is only ever instantiated inside `JSONRPCRequest.init` (and recursively
+///    by its own `encode(to:)`). It is never produced by decoding a server response, so
+///    it never escapes the actor that built the request.
+/// 3. The encoded bytes — not the wrapper — are what cross the actor boundary into URLSession.
+///
+/// Decoded JSON-RPC responses use typed `Decodable & Sendable` structs (see the response
+/// types below), or the enum-based `AnyCodableValue` in `KodiClient.swift` for settings
+/// values. Don't introduce new code paths that decode `AnyCodable` from the network.
 nonisolated struct AnyCodable: Codable, @unchecked Sendable {
     let value: Any
 
