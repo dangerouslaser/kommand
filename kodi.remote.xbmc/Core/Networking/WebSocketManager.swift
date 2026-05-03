@@ -209,9 +209,14 @@ actor WebSocketManager {
                     maxReconnectDelay
                 )
 
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-
-                if Task.isCancelled { break }
+                // Use `try await` (not `try?`) so cancellation propagates promptly:
+                // a host switch during a 30s backoff should abort the loop now,
+                // not wait out the sleep.
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                } catch {
+                    return
+                }
 
                 await establishConnection()
 
