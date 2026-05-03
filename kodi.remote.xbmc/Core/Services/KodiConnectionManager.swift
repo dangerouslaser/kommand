@@ -25,6 +25,12 @@ final class KodiConnectionManager {
 
     /// Configure the connection manager with a host
     func configure(with host: KodiHost) async {
+        // Tear down the previous client so its in-flight requests / WebSocket
+        // don't keep running for a host we no longer care about.
+        if let oldClient = self.client {
+            await oldClient.shutdown()
+        }
+
         self.currentHost = host
         self.client = KodiClient()
         await client?.configure(with: host)

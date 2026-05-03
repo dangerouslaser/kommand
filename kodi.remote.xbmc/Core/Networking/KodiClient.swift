@@ -46,6 +46,14 @@ actor KodiClient {
         webSocketManager = nil
     }
 
+    /// Cancel any in-flight HTTP requests and tear down the WebSocket. Use when
+    /// discarding a client (e.g. before replacing it with a new one) so background
+    /// requests don't continue against a host that nothing is listening for.
+    func shutdown() async {
+        await disconnectWebSocket()
+        session.invalidateAndCancel()
+    }
+
     var isWebSocketConnected: Bool {
         get async {
             await webSocketManager?.isConnected ?? false
