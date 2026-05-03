@@ -13,6 +13,7 @@ final class RemoteViewModel {
     private var client = KodiClient() // Replaced in configure() with shared instance
     private var pollingTask: Task<Void, Never>?
     private var notificationTask: Task<Void, Never>?
+    private var refreshTask: Task<Void, Never>?
     private var isPolling = false
     private var usePollingFallback = false
 
@@ -172,8 +173,10 @@ final class RemoteViewModel {
     func stopPolling() {
         pollingTask?.cancel()
         notificationTask?.cancel()
+        refreshTask?.cancel()
         pollingTask = nil
         notificationTask = nil
+        refreshTask = nil
         isPolling = false
         usePollingFallback = false
 
@@ -348,11 +351,14 @@ final class RemoteViewModel {
     // MARK: - State Refresh
 
     /// Forces an immediate refresh of the now playing state
-    /// Call this when returning from background or after Live Activity actions
+    /// Call this when returning from background or after Live Activity actions.
+    /// Cancels any prior in-flight refresh so rapid re-entries (e.g. multiple
+    /// Live Activity intents firing in quick succession) don't pile up Tasks.
     func refreshNowPlaying() {
-        Task {
-            await updateNowPlaying()
-            await updateVolume()
+        refreshTask?.cancel()
+        refreshTask = Task { [weak self] in
+            await self?.updateNowPlaying()
+            await self?.updateVolume()
         }
     }
 
