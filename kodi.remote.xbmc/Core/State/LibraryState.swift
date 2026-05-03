@@ -8,13 +8,13 @@ import Foundation
 @Observable
 final class LibraryState {
     // Movies
-    var movies: [Movie] = []
+    var movies: [Movie] = [] { didSet { invalidateMovieCache() } }
     var isLoadingMovies = false
     var moviesError: String?
     var moviesTotalCount = 0
 
     // TV Shows
-    var tvShows: [TVShow] = []
+    var tvShows: [TVShow] = [] { didSet { invalidateTVShowCache() } }
     var isLoadingTVShows = false
     var tvShowsError: String?
     var tvShowsTotalCount = 0
@@ -24,16 +24,25 @@ final class LibraryState {
     var lastTVShowsSync: Date?
 
     // Sorting
-    var movieSortField: SortField = .title
-    var movieSortAscending = true
-    var tvShowSortField: SortField = .title
-    var tvShowSortAscending = true
+    var movieSortField: SortField = .title { didSet { invalidateMovieCache() } }
+    var movieSortAscending = true { didSet { invalidateMovieCache() } }
+    var tvShowSortField: SortField = .title { didSet { invalidateTVShowCache() } }
+    var tvShowSortAscending = true { didSet { invalidateTVShowCache() } }
 
     // Filtering
-    var movieFilter: LibraryFilter = .all
-    var tvShowFilter: LibraryFilter = .all
-    var selectedMovieGenres: Set<String> = []
-    var selectedTVShowGenres: Set<String> = []
+    var movieFilter: LibraryFilter = .all { didSet { invalidateMovieCache() } }
+    var tvShowFilter: LibraryFilter = .all { didSet { invalidateTVShowCache() } }
+    var selectedMovieGenres: Set<String> = [] { didSet { invalidateMovieCache() } }
+    var selectedTVShowGenres: Set<String> = [] { didSet { invalidateTVShowCache() } }
+
+    // Memoized filter+sort results. Marked @ObservationIgnored so writes from
+    // inside the computed-property getter don't generate observation events
+    // (which would cause re-render loops).
+    @ObservationIgnored private var cachedFilteredMovies: [Movie]?
+    @ObservationIgnored private var cachedFilteredTVShows: [TVShow]?
+
+    private func invalidateMovieCache() { cachedFilteredMovies = nil }
+    private func invalidateTVShowCache() { cachedFilteredTVShows = nil }
 
     enum SortField: String, CaseIterable {
         case title = "title"
@@ -139,6 +148,8 @@ final class LibraryState {
     /// Shuffle movies in-place for random sort
     func shuffleMovies() {
         movies.shuffle()
+        // didSet on `movies` already invalidates the cache, but be explicit
+        // for readers: the new order is what filteredMovies should reflect.
     }
 
     /// Shuffle TV shows in-place for random sort
@@ -149,6 +160,7 @@ final class LibraryState {
     // MARK: - Filtering (chains off sorted)
 
     var filteredMovies: [Movie] {
+        if let cached = cachedFilteredMovies { return cached }
         var source = sortedMovies
         switch movieFilter {
         case .all: break
@@ -163,10 +175,12 @@ final class LibraryState {
                 return !selectedMovieGenres.isDisjoint(with: genres)
             }
         }
+        cachedFilteredMovies = source
         return source
     }
 
     var filteredTVShows: [TVShow] {
+        if let cached = cachedFilteredTVShows { return cached }
         var source = sortedTVShows
         switch tvShowFilter {
         case .all: break
@@ -181,6 +195,7 @@ final class LibraryState {
                 return !selectedTVShowGenres.isDisjoint(with: genres)
             }
         }
+        cachedFilteredTVShows = source
         return source
     }
 }
