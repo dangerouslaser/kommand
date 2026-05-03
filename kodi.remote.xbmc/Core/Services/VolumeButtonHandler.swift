@@ -64,6 +64,13 @@ final class VolumeButtonHandler {
         volumeObserver = nil
     }
 
+    deinit {
+        // Belt-and-suspenders: if a view ever forgets to call stop() (lifecycle
+        // mismatch, exception during teardown), the KVO observation would
+        // otherwise keep the handler alive indefinitely. invalidate() is safe
+        // to call from any thread and on a nil/already-invalidated observer.
+        volumeObserver?.invalidate()
+    }
 }
 
 // MARK: - Hidden Volume View (hides system HUD and allows volume reset)
