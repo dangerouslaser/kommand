@@ -171,7 +171,7 @@ struct AddHostView: View {
         )
 
         if !password.isEmpty {
-            KeychainHelper.setPassword(password, for: host.id)
+            KeychainService.setPassword(password, for: host.id)
         }
 
         appState.addHost(host)

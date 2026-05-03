@@ -211,7 +211,7 @@ actor ImageCacheService {
 
         // Add basic auth if credentials exist
         if let username = host.username, !username.isEmpty {
-            let password = KeychainHelper.getPassword(for: host.id) ?? ""
+            let password = KeychainService.getPassword(for: host.id) ?? ""
             let credentials = "\(username):\(password)"
             if let data = credentials.data(using: .utf8) {
                 let base64 = data.base64EncodedString()

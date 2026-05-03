@@ -119,7 +119,7 @@ final class AppState {
         saveHosts()
 
         // Clean up credentials
-        KeychainHelper.deletePassword(for: host.id)
+        KeychainService.deletePassword(for: host.id)
     }
 
     // MARK: - Set Default

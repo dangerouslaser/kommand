@@ -70,7 +70,7 @@ actor KodiClient {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let username = host.username, !username.isEmpty {
-            let password = passwordOverride ?? KeychainHelper.getPassword(for: host.id) ?? ""
+            let password = passwordOverride ?? KeychainService.getPassword(for: host.id) ?? ""
             let credentials = "\(username):\(password)"
             if let data = credentials.data(using: .utf8) {
                 let base64 = data.base64EncodedString()
@@ -1134,6 +1134,3 @@ nonisolated enum KodiError: LocalizedError, Sendable {
     }
 }
 
-// MARK: - Keychain Helper (alias for backward compatibility)
-
-typealias KeychainHelper = KeychainService
