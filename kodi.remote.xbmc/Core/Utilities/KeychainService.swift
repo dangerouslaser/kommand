@@ -8,11 +8,16 @@
 //
 
 import Foundation
+import os
 import Security
 
 nonisolated enum KeychainService {
     private static let serviceName = "kommand-kodi-host"
     private static let accessGroup = "group.decent.mid.range.kommand"
+    private static let log = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "kommand",
+        category: "keychain"
+    )
 
     // MARK: - Public API
 
@@ -29,11 +34,17 @@ nonisolated enum KeychainService {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
 
-        guard status == errSecSuccess, let data = result as? Data else {
-            return nil
+        if status == errSecSuccess, let data = result as? Data {
+            return String(data: data, encoding: .utf8)
         }
 
-        return String(data: data, encoding: .utf8)
+        // errSecItemNotFound is the normal "no password configured" case — don't log it.
+        // Anything else (permission denied, interaction not allowed, corrupt entry) is
+        // a real problem that masquerades as "wrong password" at the auth layer.
+        if status != errSecItemNotFound {
+            log.error("getPassword failed with OSStatus \(status) for host \(hostId.uuidString, privacy: .public)")
+        }
+        return nil
     }
 
     static func setPassword(_ password: String, for hostId: UUID) {
@@ -51,7 +62,10 @@ nonisolated enum KeychainService {
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
 
-        SecItemAdd(query as CFDictionary, nil)
+        let status = SecItemAdd(query as CFDictionary, nil)
+        if status != errSecSuccess {
+            log.error("setPassword failed with OSStatus \(status) for host \(hostId.uuidString, privacy: .public)")
+        }
     }
 
     static func deletePassword(for hostId: UUID) {
@@ -62,7 +76,11 @@ nonisolated enum KeychainService {
             kSecAttrAccessGroup as String: accessGroup
         ]
 
-        SecItemDelete(query as CFDictionary)
+        let status = SecItemDelete(query as CFDictionary)
+        // errSecItemNotFound on delete is normal (e.g. host had no saved password).
+        if status != errSecSuccess && status != errSecItemNotFound {
+            log.error("deletePassword failed with OSStatus \(status) for host \(hostId.uuidString, privacy: .public)")
+        }
     }
 
     // MARK: - Migration
