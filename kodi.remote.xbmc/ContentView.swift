@@ -332,7 +332,7 @@ struct OnboardingView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(colors.accent, in: RoundedRectangle(cornerRadius: 12))
+                        .background(colors.accent, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
                         .foregroundStyle(.white)
                     }
 

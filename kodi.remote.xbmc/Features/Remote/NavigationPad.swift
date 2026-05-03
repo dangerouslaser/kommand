@@ -66,8 +66,8 @@ struct NavigationPad: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
-        .themeCardBorder(cornerRadius: 20)
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.card))
+        .themeCardBorder(cornerRadius: DesignSystem.Radius.card)
     }
 }
 
@@ -112,7 +112,7 @@ struct DirectionButton: View {
                 .frame(width: width, height: height)
                 .background(
                     isPressed ? colors.secondaryFill.opacity(1.5) : colors.secondaryFill,
-                    in: RoundedRectangle(cornerRadius: 12)
+                    in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button)
                 )
                 .foregroundStyle(colors.textPrimary)
         }

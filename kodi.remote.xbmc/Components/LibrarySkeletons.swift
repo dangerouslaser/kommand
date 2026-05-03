@@ -15,7 +15,7 @@ struct LibraryGridSkeleton: View {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(0..<12, id: \.self) { _ in
                     VStack(alignment: .leading, spacing: 8) {
-                        RoundedRectangle(cornerRadius: 8)
+                        RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail)
                             .fill(Color(.secondarySystemFill))
                             .aspectRatio(2/3, contentMode: .fit)
 

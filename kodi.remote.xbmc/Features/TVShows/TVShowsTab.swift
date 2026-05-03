@@ -210,7 +210,7 @@ struct TVShowPosterCard: View {
                         AsyncArtworkImage(path: show.posterPath, host: host)
                     }
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
                 if show.isFullyWatched {
                     Image(systemName: "checkmark.circle.fill")

@@ -103,7 +103,7 @@ struct SubtitlePicker: View {
             )
         }
         .background(Color(UIColor.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
         .environment(\.colorScheme, .dark)
 
         // Light mode preview
@@ -119,7 +119,7 @@ struct SubtitlePicker: View {
             )
         }
         .background(Color(UIColor.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
         .environment(\.colorScheme, .light)
     }
     .padding()

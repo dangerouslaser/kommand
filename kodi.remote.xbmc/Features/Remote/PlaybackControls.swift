@@ -79,8 +79,8 @@ struct PlaybackControls: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
-        .themeCardBorder(cornerRadius: 20)
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.card))
+        .themeCardBorder(cornerRadius: DesignSystem.Radius.card)
     }
 }
 

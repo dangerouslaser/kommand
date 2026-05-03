@@ -70,10 +70,10 @@ struct AsyncArtworkImage: View, Equatable {
     VStack {
         AsyncArtworkImage(path: nil, host: nil)
             .frame(width: 100, height: 150)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
         AsyncArtworkImage(path: "image://some/path.jpg/", host: .preview)
             .frame(width: 100, height: 150)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
     }
 }

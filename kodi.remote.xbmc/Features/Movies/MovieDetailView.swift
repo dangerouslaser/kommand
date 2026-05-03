@@ -373,7 +373,7 @@ struct ActorMovieCard: View {
                         AsyncArtworkImage(path: movie.posterPath, host: host)
                     }
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
                 if movie.isWatched {
                     Image(systemName: "checkmark.circle.fill")
@@ -501,7 +501,7 @@ struct MediaTagBadge: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+        .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
         .foregroundStyle(color)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel ?? text)

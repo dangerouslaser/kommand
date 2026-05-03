@@ -82,7 +82,7 @@ struct AudioPicker: View {
             )
         }
         .background(Color(UIColor.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
         .environment(\.colorScheme, .dark)
 
         // Light mode preview
@@ -97,7 +97,7 @@ struct AudioPicker: View {
             )
         }
         .background(Color(UIColor.tertiarySystemFill))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
         .environment(\.colorScheme, .light)
     }
     .padding()

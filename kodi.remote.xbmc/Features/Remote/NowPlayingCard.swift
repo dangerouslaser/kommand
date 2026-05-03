@@ -22,7 +22,7 @@ struct NowPlayingCard: View {
     private var isIPad: Bool { horizontalSizeClass == .regular }
     var flexibleHeight: Bool = false
     private var cardHeight: CGFloat { 180 }
-    private let cornerRadius: CGFloat = 20
+    private let cornerRadius: CGFloat = DesignSystem.Radius.card
     private var contentPadding: CGFloat { isIPad ? 24 : 16 }
     private var posterWidth: CGFloat { item.type == .song ? (isIPad ? 128 : 64) : (isIPad ? 104 : 52) }
     private var posterHeight: CGFloat { item.type == .song ? (isIPad ? 128 : 64) : (isIPad ? 156 : 78) }
@@ -344,8 +344,8 @@ struct NowPlayingCard: View {
                     }
                 }
                 .background(themeColors.secondaryFill)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .themeCardBorder(cornerRadius: 12)
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
+                .themeCardBorder(cornerRadius: DesignSystem.Radius.button)
             }
         }
         .padding(.horizontal, 4)

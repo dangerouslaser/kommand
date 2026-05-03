@@ -37,7 +37,7 @@ struct CECVolumeControl: View {
                         .foregroundStyle(colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(colors.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
+                        .background(colors.secondaryFill, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Volume Down")
@@ -49,7 +49,7 @@ struct CECVolumeControl: View {
                     Image(systemName: "speaker.slash.fill")
                         .font(.title2)
                         .frame(width: 60, height: 50)
-                        .background(Color.red.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+                        .background(Color.red.opacity(0.2), in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
                         .foregroundStyle(.red)
                 }
                 .buttonStyle(.plain)
@@ -64,15 +64,15 @@ struct CECVolumeControl: View {
                         .foregroundStyle(colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(colors.secondaryFill, in: RoundedRectangle(cornerRadius: 12))
+                        .background(colors.secondaryFill, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Volume Up")
             }
         }
         .padding()
-        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: 20))
-        .themeCardBorder(cornerRadius: 20)
+        .background(colors.cardBackground, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.card))
+        .themeCardBorder(cornerRadius: DesignSystem.Radius.card)
     }
 }
 

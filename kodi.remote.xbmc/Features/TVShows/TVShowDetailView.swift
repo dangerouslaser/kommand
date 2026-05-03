@@ -235,7 +235,7 @@ struct SeasonRow: View {
         HStack(spacing: 12) {
             AsyncArtworkImage(path: season.posterPath, host: host)
                 .frame(width: 80, height: 120)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(season.displayName)
@@ -264,7 +264,7 @@ struct SeasonRow: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
     }
 }
 

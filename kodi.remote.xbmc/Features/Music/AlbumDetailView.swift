@@ -17,7 +17,7 @@ struct AlbumDetailView: View {
                 HStack(spacing: 16) {
                     AsyncArtworkImage(path: album.artworkPath, host: appState.currentHost)
                         .frame(width: 160, height: 160)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
                         .shadow(radius: 8)
 
                     VStack(alignment: .leading, spacing: 8) {

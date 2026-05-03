@@ -202,7 +202,7 @@ struct AlbumRow: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
     }
 }
 

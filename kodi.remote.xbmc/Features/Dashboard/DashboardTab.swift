@@ -270,7 +270,7 @@ struct DashboardTab: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(0..<3, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: DesignSystem.Radius.button)
                             .fill(Color(.secondarySystemFill))
                             .aspectRatio(16/9, contentMode: .fit)
                             .frame(width: 280)
@@ -293,7 +293,7 @@ struct DashboardTab: View {
                 HStack(spacing: 16) {
                     ForEach(0..<5, id: \.self) { _ in
                         VStack(alignment: .leading, spacing: 8) {
-                            RoundedRectangle(cornerRadius: 8)
+                            RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail)
                                 .fill(Color(.secondarySystemFill))
                                 .aspectRatio(2/3, contentMode: .fit)
                                 .frame(width: 120)
@@ -326,7 +326,7 @@ struct DashboardTab: View {
                 HStack(spacing: 16) {
                     ForEach(0..<4, id: \.self) { _ in
                         VStack(alignment: .leading, spacing: 8) {
-                            RoundedRectangle(cornerRadius: 8)
+                            RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail)
                                 .fill(Color(.secondarySystemFill))
                                 .aspectRatio(16/9, contentMode: .fit)
                                 .frame(width: 200)
@@ -384,7 +384,7 @@ struct ContinueWatchingCardView: View {
                         AsyncArtworkImage(path: artworkPath, host: host)
                     }
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
 
                 // Gradient overlay
                 LinearGradient(
@@ -392,7 +392,7 @@ struct ContinueWatchingCardView: View {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
 
                 // Clearlogo or title centered
                 if let clearlogoPath = clearlogoPath {
@@ -451,7 +451,7 @@ struct RecentPosterCardView: View {
                         AsyncArtworkImage(path: artworkPath, host: host)
                     }
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
                 if isWatched {
                     Image(systemName: "checkmark.circle.fill")
@@ -499,7 +499,7 @@ struct RecentShowCardView: View {
                         AsyncArtworkImage(path: artworkPath, host: host)
                     }
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
                 // New episodes badge
                 Text("\(newEpisodeCount) new")

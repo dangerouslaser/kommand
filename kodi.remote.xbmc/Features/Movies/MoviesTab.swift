@@ -212,7 +212,7 @@ struct MoviePosterCard: View {
                         AsyncArtworkImage(path: movie.posterPath, host: host)
                     }
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
                 if movie.isWatched {
                     Image(systemName: "checkmark.circle.fill")

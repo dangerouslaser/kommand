@@ -228,7 +228,7 @@ struct AlbumCard: View {
                     AsyncArtworkImage(path: album.artworkPath, host: host)
                 }
                 .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.thumbnail))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(album.title)
