@@ -119,6 +119,23 @@ final class LibraryState {
         }
     }
 
+    /// Clear all loaded data; preserves user-chosen sort/filter preferences.
+    /// Call when switching hosts so stale library data from another host doesn't leak through.
+    func reset() {
+        movies = []
+        moviesError = nil
+        moviesTotalCount = 0
+        lastMoviesSync = nil
+
+        tvShows = []
+        tvShowsError = nil
+        tvShowsTotalCount = 0
+        lastTVShowsSync = nil
+
+        isLoadingMovies = false
+        isLoadingTVShows = false
+    }
+
     /// Shuffle movies in-place for random sort
     func shuffleMovies() {
         movies.shuffle()

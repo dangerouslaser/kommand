@@ -133,8 +133,7 @@ struct MoviesTab: View {
         }
         .onChange(of: appState.currentHost?.id) { _, _ in
             // Host changed - reconfigure client and reload
-            libraryState.movies = []
-            libraryState.moviesError = nil
+            libraryState.reset()
             viewModel.configure(appState: appState, libraryState: libraryState)
             Task {
                 await viewModel.loadMovies(forceRefresh: true)
