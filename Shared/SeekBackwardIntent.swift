@@ -8,7 +8,7 @@ import ActivityKit
 
 struct SeekBackwardIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Seek Backward"
-    static let description = IntentDescription("Seek backward 10 seconds")
+    static let description = IntentDescription("Seek backward 30 seconds")
 
     @MainActor
     func perform() async throws -> some IntentResult {

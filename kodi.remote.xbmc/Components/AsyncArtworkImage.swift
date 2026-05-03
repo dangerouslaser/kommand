@@ -23,15 +23,19 @@ struct AsyncArtworkImage: View, Equatable {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .accessibilityLabel("Artwork")
             } else if isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityHidden(true)
             } else if loadFailed {
                 Image(systemName: "photo")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityLabel("Artwork unavailable")
             } else {
                 Color.clear
+                    .accessibilityHidden(true)
             }
         }
         .task(id: path) {
