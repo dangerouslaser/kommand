@@ -85,7 +85,14 @@ final class AppState {
 
     // MARK: - Add Host
 
-    func addHost(_ host: KodiHost) {
+    /// Returns `false` when an address+port duplicate already exists. The caller is expected
+    /// to surface a warning. We don't throw because the only failure mode is "already present"
+    /// and the view layer wants to render a friendly message either way.
+    @discardableResult
+    func addHost(_ host: KodiHost) -> Bool {
+        if hosts.contains(where: { $0.address == host.address && $0.httpPort == host.httpPort }) {
+            return false
+        }
         var newHost = host
         if hosts.isEmpty {
             newHost.isDefault = true
@@ -95,6 +102,7 @@ final class AppState {
         if newHost.isDefault {
             currentHost = newHost
         }
+        return true
     }
 
     // MARK: - Update Host

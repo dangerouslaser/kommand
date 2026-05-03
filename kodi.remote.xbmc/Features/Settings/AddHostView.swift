@@ -19,6 +19,7 @@ struct AddHostView: View {
 
     @State private var isTesting = false
     @State private var testResult: TestResult?
+    @State private var showDuplicateAlert = false
 
     enum TestResult {
         case success
@@ -108,6 +109,11 @@ struct AddHostView: View {
             }
             .navigationTitle("Add Host")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Host Already Exists", isPresented: $showDuplicateAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("A host at \(address):\(httpPort) is already configured. Edit the existing entry instead.")
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -170,11 +176,15 @@ struct AddHostView: View {
             macAddress: macAddress.isEmpty ? nil : macAddress
         )
 
+        let added = appState.addHost(host)
+        guard added else {
+            showDuplicateAlert = true
+            return
+        }
+
         if !password.isEmpty {
             KeychainService.setPassword(password, for: host.id)
         }
-
-        appState.addHost(host)
         dismiss()
     }
 }
