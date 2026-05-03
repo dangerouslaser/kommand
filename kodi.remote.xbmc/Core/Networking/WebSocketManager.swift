@@ -118,14 +118,29 @@ actor WebSocketManager {
     }
 
     private func sendPing() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            webSocketTask?.sendPing { error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume()
+        // sendPing's callback may never fire if the server accepts the TCP connection but
+        // never replies. Race a 5s timeout so establishConnection can move on and reconnect.
+        guard let task = webSocketTask else { throw URLError(.cancelled) }
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    task.sendPing { error in
+                        if let error = error {
+                            continuation.resume(throwing: error)
+                        } else {
+                            continuation.resume()
+                        }
+                    }
                 }
             }
+            group.addTask {
+                try await Task.sleep(nanoseconds: 5_000_000_000)
+                throw URLError(.timedOut)
+            }
+            // First task to finish (success or error) wins; cancel the rest.
+            try await group.next()
+            group.cancelAll()
         }
     }
 
