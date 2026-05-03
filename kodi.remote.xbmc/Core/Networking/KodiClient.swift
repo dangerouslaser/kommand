@@ -96,6 +96,7 @@ actor KodiClient {
         }
 
         guard httpResponse.statusCode == 200 else {
+            Logger.networking.error("HTTP \(httpResponse.statusCode) from \(request.method, privacy: .public)")
             throw KodiError.httpError(httpResponse.statusCode)
         }
 
@@ -1131,7 +1132,13 @@ nonisolated enum KodiError: LocalizedError, Sendable {
         case .invalidResponse:
             return "Invalid response from Kodi"
         case .httpError(let code):
-            return "HTTP error: \(code)"
+            switch code {
+            case 401: return "Authentication failed (HTTP 401) — check the username and password for this host"
+            case 403: return "Access forbidden (HTTP 403) — Kodi rejected the credentials"
+            case 404: return "Not found (HTTP 404) — JSON-RPC endpoint missing or wrong port"
+            case 500...599: return "Kodi server error (HTTP \(code))"
+            default: return "HTTP error \(code)"
+            }
         case .rpcError(let code, let message):
             return "RPC error \(code): \(message)"
         case .noResult:
