@@ -37,9 +37,12 @@ final class DashboardViewModel {
     var searchChannels: [PVRChannel] = []
     var isSearching = false
 
-    // Loading states
-    var isLoadingInProgress = false
-    var isLoadingRecent = false
+    // Loading states. Default to `true` so the section skeletons render on the
+    // very first paint — otherwise they only appear after the first network
+    // call begins, producing a visible "pop in" as the skeletons themselves
+    // fade into existence before the real content arrives.
+    var isLoadingInProgress = true
+    var isLoadingRecent = true
     var isInitialLoad = true
 
     // Errors
@@ -95,11 +98,13 @@ final class DashboardViewModel {
     // MARK: - Load All
 
     func loadAll() async {
-        // Load sequentially to avoid overwhelming Kodi's web server.
-        // Recently added first (cache-backed, appears instantly),
-        // then in-progress (smaller payload, no cache).
-        await loadRecentlyAdded()
-        await loadInProgress()
+        // Run the two loads in parallel so neither section lags behind on first
+        // paint. The KodiClient's URLSession is configured for 2 concurrent
+        // connections per host, so this fans out exactly to the supported limit
+        // without queuing further.
+        async let recents: Void = loadRecentlyAdded()
+        async let inProgress: Void = loadInProgress()
+        _ = await (recents, inProgress)
         await MainActor.run {
             isInitialLoad = false
         }
