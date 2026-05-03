@@ -428,25 +428,6 @@ private struct BadgesRow: View {
             }
         }
     }
-
-    private func formatHDR(_ type: String) -> String {
-        switch type.lowercased() {
-        case "dolbyvision": return "DV"
-        case "hdr10": return "HDR10"
-        case "hdr10plus": return "HDR10+"
-        case "hlg": return "HLG"
-        default: return type.uppercased()
-        }
-    }
-
-    private func hdrColor(_ type: String) -> Color {
-        switch type.lowercased() {
-        case "dolbyvision": return .purple
-        case "hdr10", "hdr10plus": return .orange
-        case "hlg": return .green
-        default: return .orange
-        }
-    }
 }
 
 private struct Badge: View {

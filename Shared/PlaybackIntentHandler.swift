@@ -56,39 +56,32 @@ enum PlaybackIntentHandler {
 
     @MainActor
     static func seekForward() async {
-        // Record intent action to prevent polling from overwriting
-        AppGroupConstants.recordIntentAction()
-
-        let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": 30]])
-        if success {
-            let now = Date()
-            await updateActivityState { state in
-                // Calculate estimated current position before seeking
-                let estimatedElapsed = state.isPlaying
-                    ? state.elapsedTime + now.timeIntervalSince(state.lastUpdated)
-                    : state.elapsedTime
-                state.elapsedTime = min(estimatedElapsed + 30, state.totalDuration)
-                state.lastUpdated = now
-            }
-        }
+        await performSeek(offset: 30)
     }
 
     @MainActor
     static func seekBackward() async {
-        // Record intent action to prevent polling from overwriting
+        await performSeek(offset: -30)
+    }
+
+    /// Shared seek logic. The forward/backward variants only differ in sign;
+    /// keeping one implementation prevents drift if the optimistic-update math
+    /// or cooldown handling needs to change later.
+    @MainActor
+    private static func performSeek(offset: TimeInterval) async {
         AppGroupConstants.recordIntentAction()
 
-        let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": -30]])
-        if success {
-            let now = Date()
-            await updateActivityState { state in
-                // Calculate estimated current position before seeking
-                let estimatedElapsed = state.isPlaying
-                    ? state.elapsedTime + now.timeIntervalSince(state.lastUpdated)
-                    : state.elapsedTime
-                state.elapsedTime = max(estimatedElapsed - 30, 0)
-                state.lastUpdated = now
-            }
+        let success = await sendCommand("Player.Seek", extraParams: ["value": ["seconds": Int(offset)]])
+        guard success else { return }
+
+        let now = Date()
+        await updateActivityState { state in
+            let estimatedElapsed = state.isPlaying
+                ? state.elapsedTime + now.timeIntervalSince(state.lastUpdated)
+                : state.elapsedTime
+            let target = estimatedElapsed + offset
+            state.elapsedTime = min(max(target, 0), state.totalDuration)
+            state.lastUpdated = now
         }
     }
 
