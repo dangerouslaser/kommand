@@ -37,6 +37,11 @@ actor WebSocketManager {
     // MARK: - Public API
 
     func connect(to host: KodiHost) -> AsyncStream<JSONRPCNotification> {
+        // Tear down any prior connection: finishes the previous stream's continuation,
+        // cancels the reconnect / receive / socket tasks. Without this, calling connect()
+        // a second time (e.g. host switch) leaks the prior continuation and tasks.
+        teardown()
+
         self.host = host
 
         let stream = AsyncStream<JSONRPCNotification> { continuation in
@@ -57,6 +62,10 @@ actor WebSocketManager {
     }
 
     func disconnect() {
+        teardown()
+    }
+
+    private func teardown() {
         reconnectTask?.cancel()
         reconnectTask = nil
         receiveTask?.cancel()
