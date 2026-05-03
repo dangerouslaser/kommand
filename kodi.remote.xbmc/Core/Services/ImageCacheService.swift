@@ -27,6 +27,28 @@ actor ImageCacheService {
         if let cacheURL, !fileManager.fileExists(atPath: cacheURL.path) {
             try? fileManager.createDirectory(at: cacheURL, withIntermediateDirectories: true)
         }
+
+        // NSCache does NOT auto-respond to memory warnings — observe explicitly
+        // and dump the in-memory cache. Disk cache is preserved so re-decoding is
+        // cheap on the next access. Run as a Task so we hop into the actor.
+        Task { [weak self] in
+            await self?.registerMemoryPressureObserver()
+        }
+    }
+
+    private func registerMemoryPressureObserver() async {
+        let stream = NotificationCenter.default.notifications(
+            named: await UIApplication.didReceiveMemoryWarningNotification
+        )
+        Task { [weak self] in
+            for await _ in stream {
+                await self?.flushMemoryCache()
+            }
+        }
+    }
+
+    private func flushMemoryCache() {
+        memoryCache.removeAllObjects()
     }
 
     // MARK: - Public API
