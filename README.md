@@ -4,7 +4,7 @@ A native iOS remote control app for [Kodi](https://kodi.tv) media center.
 
 ## Download
 
-<a href="https://testflight.apple.com/join/ZXRz9Se1">
+<a href="https://apps.apple.com/us/app/kommand-for-kodi/id6757195093">
   <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on TestFlight" height="50">
 </a>
 
