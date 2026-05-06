@@ -4,11 +4,15 @@ A native iOS remote control app for [Kodi](https://kodi.tv) media center.
 
 ## Download
 
+Available on the app store for $2.99 ( hopefully help to cover a portion of my Apple Developer License).
+
+Test flight will remain free.
+
 <a href="https://apps.apple.com/us/app/kommand-for-kodi/id6757195093">
-  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on TestFlight" height="50">
+  <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="50">
 </a>
 
-**[Join the TestFlight Beta](https://testflight.apple.com/join/ZXRz9Se1)** to get early access.
+**[Join the TestFlight Beta](https://testflight.apple.com/join/ZXRz9Se1)**
 
 ## Screenshots
 
