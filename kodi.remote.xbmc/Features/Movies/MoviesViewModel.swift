@@ -17,11 +17,6 @@ final class MoviesViewModel {
         self.appState = appState
         self.libraryState = libraryState
         self.client = appState.client
-        if let host = appState.currentHost {
-            Task {
-                await client.configure(with: host)
-            }
-        }
     }
 
     // For actor filmography view

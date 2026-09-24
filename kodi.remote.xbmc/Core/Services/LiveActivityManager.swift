@@ -20,6 +20,8 @@ final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
     private var currentActivity: Activity<NowPlayingAttributes>?
+    private var generation = UUID()
+    private var activityTask: Task<Void, Never>?
 
     // Track current artwork paths to avoid re-downloading
     private var currentPosterPath: String?
@@ -49,16 +51,25 @@ final class LiveActivityManager {
             return
         }
 
-        Task {
-            // End any existing activity first (without clearing shared data)
-            await endActivitiesForTransition()
+        activityTask?.cancel()
+        generation = UUID()
+        let generation = self.generation
+        let previousActivities = Activity<NowPlayingAttributes>.activities
+        currentActivity = nil
+        activityTask = Task {
+            // End only activities captured before this transition.
+            for activity in previousActivities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+            guard self.generation == generation, !Task.isCancelled else { return }
 
             // Now update shared UserDefaults for widget intents
             // This must happen AFTER ending old activities, not before
             updateSharedData(host: host, playerId: playerId)
 
             // Cache artwork before starting activity
-            await cacheArtwork(for: item, host: host)
+            await cacheArtwork(for: item, host: host, generation: generation)
+            guard self.generation == generation, !Task.isCancelled else { return }
 
             let attributes = NowPlayingAttributes(
                 mediaType: item.type.rawValue,
@@ -86,7 +97,7 @@ final class LiveActivityManager {
         guard isEnabled else {
             // If disabled but activity exists, end it
             if currentActivity != nil {
-                Task { await endAllActivities() }
+                endActivity()
             }
             return
         }
@@ -104,9 +115,12 @@ final class LiveActivityManager {
             updateSharedData(host: host, playerId: playerId)
         }
 
-        Task {
+        activityTask?.cancel()
+        let generation = self.generation
+        activityTask = Task {
             // Cache artwork if it changed
-            await cacheArtwork(for: item, host: host)
+            await cacheArtwork(for: item, host: host, generation: generation)
+            guard self.generation == generation, !Task.isCancelled else { return }
 
             var state = contentState(from: item)
 
@@ -125,8 +139,11 @@ final class LiveActivityManager {
 
     /// End the current Live Activity
     func endActivity() {
+        let activities = invalidateActivity()
         Task {
-            await endAllActivities()
+            for activity in activities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
         }
     }
 
@@ -147,22 +164,23 @@ final class LiveActivityManager {
 
     /// End all Live Activities for this app (clears shared data - use when playback stops)
     func endAllActivities() async {
-        for activity in Activity<NowPlayingAttributes>.activities {
-            await activity.end(nil, dismissalPolicy: .immediate)
+        let activities = invalidateActivity()
+        for activity in activities {
+            // ActivityKit's reference type is not Sendable; the captured activity
+            // is only ended here, matching refreshActivityState's SDK workaround.
+            nonisolated(unsafe) let activityRef = activity
+            await activityRef.end(nil, dismissalPolicy: .immediate)
         }
-        currentActivity = nil
-
-        // Clear shared data and cached artwork
-        clearSharedData()
     }
 
-    /// End activities for transition to a new activity (preserves shared data)
-    private func endActivitiesForTransition() async {
-        for activity in Activity<NowPlayingAttributes>.activities {
-            await activity.end(nil, dismissalPolicy: .immediate)
-        }
+    /// Clear synchronously so delayed teardown cannot erase a new host's data.
+    private func invalidateActivity() -> [Activity<NowPlayingAttributes>] {
+        generation = UUID()
+        activityTask?.cancel()
+        activityTask = nil
         currentActivity = nil
-        // Note: Do NOT clear shared data here - new activity will update it
+        clearSharedData()
+        return Activity<NowPlayingAttributes>.activities
     }
 
     // MARK: - Private Helpers
@@ -228,14 +246,15 @@ final class LiveActivityManager {
     }
 
     /// Cache artwork images to App Group container
-    private func cacheArtwork(for item: NowPlayingItem, host: KodiHost) async {
+    private func cacheArtwork(for item: NowPlayingItem, host: KodiHost, generation: UUID) async {
+        guard self.generation == generation, !Task.isCancelled else { return }
         // Cache poster if artwork path changed
         if item.artworkPath != currentPosterPath {
             currentPosterPath = item.artworkPath
 
             if let artworkPath = item.artworkPath,
                let url = host.imageURL(for: artworkPath) {
-                await cacheImage(from: url, to: AppGroupConstants.posterURL, host: host, maxWidth: 200)
+                await cacheImage(from: url, to: AppGroupConstants.posterURL, host: host, maxWidth: 200, generation: generation)
             } else {
                 // No artwork - delete cached file
                 if let posterURL = AppGroupConstants.posterURL {
@@ -244,13 +263,14 @@ final class LiveActivityManager {
             }
         }
 
+        guard self.generation == generation, !Task.isCancelled else { return }
         // Cache fanart if fanart path changed
         if item.fanartPath != currentFanartPath {
             currentFanartPath = item.fanartPath
 
             if let fanartPath = item.fanartPath,
                let url = host.imageURL(for: fanartPath) {
-                await cacheImage(from: url, to: AppGroupConstants.fanartURL, host: host, maxWidth: 400)
+                await cacheImage(from: url, to: AppGroupConstants.fanartURL, host: host, maxWidth: 400, generation: generation)
             } else {
                 // No fanart - delete cached file
                 if let fanartURL = AppGroupConstants.fanartURL {
@@ -261,7 +281,7 @@ final class LiveActivityManager {
     }
 
     /// Download, resize, and cache image to App Group container
-    private func cacheImage(from url: URL, to fileURL: URL?, host: KodiHost, maxWidth: CGFloat) async {
+    private func cacheImage(from url: URL, to fileURL: URL?, host: KodiHost, maxWidth: CGFloat, generation: UUID) async {
         guard let fileURL = fileURL else { return }
 
         do {
@@ -279,6 +299,7 @@ final class LiveActivityManager {
             }
 
             let (data, response) = try await URLSession.shared.data(for: request)
+            guard self.generation == generation, !Task.isCancelled else { return }
 
             // Check HTTP response
             guard let httpResponse = response as? HTTPURLResponse,
@@ -362,6 +383,7 @@ final class LiveActivityManager {
         defaults.removeObject(forKey: AppGroupConstants.hostUsernameKey)
         defaults.removeObject(forKey: AppGroupConstants.hostPasswordKey)
         defaults.removeObject(forKey: AppGroupConstants.activePlayerIdKey)
+        defaults.removeObject(forKey: "currentHostId")
 
         // Clear tracked paths
         currentPosterPath = nil

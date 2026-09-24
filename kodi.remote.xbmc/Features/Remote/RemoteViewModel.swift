@@ -9,7 +9,7 @@ import os
 
 @Observable
 final class RemoteViewModel {
-    private var appState: AppState?
+    private weak var appState: AppState?
     private var client = KodiClient() // Replaced in configure() with shared instance
     private var pollingTask: Task<Void, Never>?
     private var notificationTask: Task<Void, Never>?
@@ -25,36 +25,35 @@ final class RemoteViewModel {
     func configure(appState: AppState) {
         self.appState = appState
         self.client = appState.client
+    }
 
-        if let host = appState.currentHost {
-            Task {
-                await client.configure(with: host)
-            }
-        }
+    private var isCurrentSession: Bool {
+        !Task.isCancelled && appState?.currentHost != nil && appState?.client === client
+    }
+
+    /// Old requests may complete after a host change; only the current session may publish.
+    private func updateCurrentSession(_ update: () -> Void) {
+        guard isCurrentSession else { return }
+        update()
     }
 
     // MARK: - Connection
 
     func startPolling() async {
-        guard !isPolling else { return }
+        guard !isPolling, isCurrentSession else { return }
         isPolling = true
 
-        // Ensure client is configured
-        if let host = appState?.currentHost {
-            await client.configure(with: host)
-            // Also configure the shared connection manager for Live Activity intents
-            await KodiConnectionManager.shared.configure(with: host)
-        }
-
-        await MainActor.run {
+        updateCurrentSession {
             appState?.connectionState = .connecting
         }
 
         // Test connection first
         await testConnection()
+        guard isCurrentSession else { return }
 
         // Check for CoreELEC on initial connection
         await checkCoreELEC()
+        guard isCurrentSession else { return }
 
         // Try WebSocket first, fall back to polling if it fails
         if !usePollingFallback {
@@ -72,21 +71,23 @@ final class RemoteViewModel {
             usePollingFallback = true
             return
         }
+        guard isCurrentSession else { return }
 
         // Initial fetch to populate state
         await updateNowPlaying()
         await updateVolume()
+        guard isCurrentSession else { return }
 
         // Start WebSocket notification listener
         notificationTask = Task {
             for await notification in stream {
-                if Task.isCancelled { break }
+                guard isCurrentSession else { break }
                 await handleNotification(notification)
             }
 
             // Stream ended (WebSocket disconnected) - fall back to polling
-            if !Task.isCancelled {
-                await MainActor.run {
+            if isCurrentSession {
+                updateCurrentSession {
                     usePollingFallback = true
                 }
                 startPollingFallback()
@@ -99,8 +100,9 @@ final class RemoteViewModel {
     }
 
     private func startProgressPolling() {
+        pollingTask?.cancel()
         pollingTask = Task {
-            while !Task.isCancelled {
+            while isCurrentSession {
                 try? await Task.sleep(for: .seconds(5))
                 guard !Task.isCancelled else { break }
 
@@ -128,7 +130,7 @@ final class RemoteViewModel {
             await updateNowPlaying()
 
         case .videoLibraryOnUpdate, .audioLibraryOnUpdate:
-            await MainActor.run {
+            updateCurrentSession {
                 appState?.libraryUpdateSignal = Date()
             }
 
@@ -138,8 +140,10 @@ final class RemoteViewModel {
     }
 
     private func startPollingFallback() {
+        guard isCurrentSession else { return }
+        pollingTask?.cancel()
         pollingTask = Task {
-            while !Task.isCancelled {
+            while isCurrentSession {
                 await updateNowPlaying()
                 await updateVolume()
                 try? await Task.sleep(for: .seconds(2))
@@ -151,11 +155,11 @@ final class RemoteViewModel {
     private func testConnection() async {
         do {
             _ = try await client.testConnection()
-            await MainActor.run {
+            updateCurrentSession {
                 appState?.connectionState = .connected
             }
         } catch {
-            await MainActor.run {
+            updateCurrentSession {
                 appState?.connectionState = .error(error.localizedDescription)
             }
         }
@@ -164,7 +168,7 @@ final class RemoteViewModel {
     private func checkCoreELEC() async {
         let isCoreELEC = await client.detectCoreELEC()
 
-        await MainActor.run {
+        updateCurrentSession {
             appState?.isCoreELEC = isCoreELEC
             appState?.serverCapabilities.isCoreELEC = isCoreELEC
         }
@@ -180,26 +184,28 @@ final class RemoteViewModel {
         isPolling = false
         usePollingFallback = false
 
+        let previousClient = client
         Task {
-            await client.disconnectWebSocket()
+            await previousClient.disconnectWebSocket()
         }
     }
 
     private func updateNowPlaying() async {
-        guard appState?.currentHost != nil else { return }
+        guard isCurrentSession else { return }
 
         do {
             let players = try await client.getActivePlayers()
+            guard isCurrentSession else { return }
             let playerId = players.first?.playerid
 
-            await MainActor.run {
+            updateCurrentSession {
                 appState?.activePlayerId = playerId
                 // Update connection manager for Live Activity intents
                 KodiConnectionManager.shared.setActivePlayer(id: playerId)
             }
 
             guard let playerId = playerId else {
-                await MainActor.run {
+                updateCurrentSession {
                     if appState?.nowPlaying != nil {
                         appState?.nowPlaying = nil
                         // End Live Activity when playback stops
@@ -218,6 +224,7 @@ final class RemoteViewModel {
             async let propertiesTask = client.getPlayerProperties(playerId: playerId)
 
             let (itemResponse, properties) = try await (itemTask, propertiesTask)
+            guard isCurrentSession else { return }
 
             let item = itemResponse.item
             let mediaType = MediaType(rawValue: item.type) ?? .unknown
@@ -307,7 +314,7 @@ final class RemoteViewModel {
                 hasAtmos: hasAtmos
             )
 
-            await MainActor.run {
+            updateCurrentSession {
                 let previousNowPlaying = appState?.nowPlaying
                 appState?.nowPlaying = nowPlaying
                 appState?.connectionState = .connected
@@ -328,7 +335,7 @@ final class RemoteViewModel {
                 }
             }
         } catch {
-            await MainActor.run {
+            updateCurrentSession {
                 if case KodiError.notConnected = error {
                     appState?.connectionState = .disconnected
                 }
@@ -337,9 +344,10 @@ final class RemoteViewModel {
     }
 
     private func updateVolume() async {
+        guard isCurrentSession else { return }
         do {
             let volumeInfo = try await client.getVolume()
-            await MainActor.run {
+            updateCurrentSession {
                 appState?.volume = volumeInfo.volume
                 appState?.isMuted = volumeInfo.muted
             }
@@ -368,6 +376,7 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 try await client.sendInput(action)
             } catch {
@@ -380,6 +389,7 @@ final class RemoteViewModel {
         HapticService.impact(.medium)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 try await client.sendText(text, done: done)
             } catch {
@@ -394,10 +404,10 @@ final class RemoteViewModel {
         HapticService.impact(.medium)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 let response = try await client.playPause(playerId: playerId)
-                await MainActor.run {
+                updateCurrentSession {
                     // Replace the struct to trigger @Observable update
                     if var nowPlaying = appState?.nowPlaying {
                         nowPlaying.speed = response.speed
@@ -414,10 +424,10 @@ final class RemoteViewModel {
         HapticService.impact(.medium)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.stop(playerId: playerId)
-                await MainActor.run {
+                updateCurrentSession {
                     appState?.nowPlaying = nil
                     appState?.activePlayerId = nil
                     // End Live Activity when stopping playback
@@ -433,7 +443,7 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.skipPrevious(playerId: playerId)
             } catch {
@@ -446,7 +456,7 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.skipNext(playerId: playerId)
             } catch {
@@ -459,11 +469,11 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.seekRelative(playerId: playerId, seconds: -30)
                 // Optimistic update based on estimated position
-                await MainActor.run {
+                updateCurrentSession {
                     if var nowPlaying = appState?.nowPlaying {
                         let now = Date()
                         let estimatedPosition = nowPlaying.estimatedPosition(at: now)
@@ -482,11 +492,11 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.seekRelative(playerId: playerId, seconds: 30)
                 // Optimistic update based on estimated position
-                await MainActor.run {
+                updateCurrentSession {
                     if var nowPlaying = appState?.nowPlaying {
                         let now = Date()
                         let estimatedPosition = nowPlaying.estimatedPosition(at: now)
@@ -505,7 +515,7 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 // Clamp percentage to valid range
                 let clamped = min(100, max(0, percentage * 100))
@@ -522,17 +532,17 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 // Index of -1 means disable subtitles ("off")
                 if index == -1 {
                     try await client.disableSubtitles(playerId: playerId)
-                    await MainActor.run {
+                    updateCurrentSession {
                         appState?.nowPlaying?.subtitlesEnabled = false
                     }
                 } else {
                     try await client.setSubtitle(playerId: playerId, subtitleIndex: index)
-                    await MainActor.run {
+                    updateCurrentSession {
                         appState?.nowPlaying?.currentSubtitleIndex = index
                         appState?.nowPlaying?.subtitlesEnabled = true
                     }
@@ -547,10 +557,10 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
-            guard let playerId = appState?.activePlayerId else { return }
+            guard isCurrentSession, let playerId = appState?.activePlayerId else { return }
             do {
                 try await client.setAudioStream(playerId: playerId, streamIndex: index)
-                await MainActor.run {
+                updateCurrentSession {
                     appState?.nowPlaying?.currentAudioStreamIndex = index
                 }
             } catch {
@@ -563,6 +573,7 @@ final class RemoteViewModel {
 
     func setVolume(_ volume: Int) {
         Task {
+            guard isCurrentSession else { return }
             do {
                 _ = try await client.setVolume(volume)
             } catch {
@@ -575,9 +586,10 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 let muted = try await client.toggleMute()
-                await MainActor.run {
+                updateCurrentSession {
                     appState?.isMuted = muted
                 }
             } catch {
@@ -592,6 +604,7 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 try await client.cecVolumeUp()
             } catch {
@@ -604,6 +617,7 @@ final class RemoteViewModel {
         HapticService.impact(.light)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 try await client.cecVolumeDown()
             } catch {
@@ -616,6 +630,7 @@ final class RemoteViewModel {
         HapticService.impact(.medium)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 try await client.cecMute()
             } catch {
@@ -630,6 +645,7 @@ final class RemoteViewModel {
         HapticService.impact(.heavy)
 
         Task {
+            guard isCurrentSession else { return }
             do {
                 switch action {
                 case .quitKodi: try await client.quit()

@@ -16,6 +16,7 @@ actor WebSocketManager {
     private var webSocketTask: URLSessionWebSocketTask?
     private var session: URLSession
     private var host: KodiHost?
+    private var password: String?
     private(set) var connectionState: ConnectionState = .disconnected
 
     private var notificationContinuation: AsyncStream<JSONRPCNotification>.Continuation?
@@ -36,13 +37,14 @@ actor WebSocketManager {
 
     // MARK: - Public API
 
-    func connect(to host: KodiHost) -> AsyncStream<JSONRPCNotification> {
+    func connect(to host: KodiHost, password: String? = nil) -> AsyncStream<JSONRPCNotification> {
         // Tear down any prior connection: finishes the previous stream's continuation,
         // cancels the reconnect / receive / socket tasks. Without this, calling connect()
         // a second time (e.g. host switch) leaks the prior continuation and tasks.
         teardown()
 
         self.host = host
+        self.password = password
 
         let stream = AsyncStream<JSONRPCNotification> { continuation in
             self.notificationContinuation = continuation
@@ -95,8 +97,7 @@ actor WebSocketManager {
 
         // Add basic auth if credentials exist
         if let username = host.username, !username.isEmpty {
-            let password = KeychainService.getPassword(for: host.id) ?? ""
-            let credentials = "\(username):\(password)"
+            let credentials = "\(username):\(password ?? "")"
             if let data = credentials.data(using: .utf8) {
                 let base64 = data.base64EncodedString()
                 request.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")

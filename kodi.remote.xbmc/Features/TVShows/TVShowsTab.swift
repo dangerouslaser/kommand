@@ -130,14 +130,6 @@ struct TVShowsTab: View {
             viewModel.configure(appState: appState, libraryState: libraryState)
             await viewModel.loadTVShows()
         }
-        .onChange(of: appState.currentHost?.id) { _, _ in
-            // Host changed - reconfigure client and reload
-            libraryState.reset()
-            viewModel.configure(appState: appState, libraryState: libraryState)
-            Task {
-                await viewModel.loadTVShows(forceRefresh: true)
-            }
-        }
         .onChange(of: appState.libraryUpdateSignal) { _, _ in
             Task {
                 await viewModel.loadTVShows(forceRefresh: true)

@@ -9,7 +9,7 @@ struct RemoteTab: View {
     @Environment(AppState.self) private var appState
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var viewModel = RemoteViewModel()
+    private var viewModel: RemoteViewModel { appState.remote }
     @AppStorage(AppStorageKeys.showVolumeSlider) private var showVolumeSlider = false
     @AppStorage(AppStorageKeys.useVolumeButtons) private var useVolumeButtons = true
     @State private var showingTextInput = false
@@ -94,10 +94,6 @@ struct RemoteTab: View {
                     Text(action.confirmationMessage)
                 }
             }
-        }
-        .task {
-            viewModel.configure(appState: appState)
-            await viewModel.startPolling()
         }
         .onAppear {
             setupVolumeButtonHandler()

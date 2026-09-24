@@ -34,7 +34,9 @@ nonisolated enum ConnectionState: Equatable {
 @Observable
 final class AppState {
     var hosts: [KodiHost] = []
-    var currentHost: KodiHost?
+    private(set) var currentHost: KodiHost? {
+        didSet { replaceConnection() }
+    }
     var connectionState: ConnectionState = .disconnected
     var nowPlaying: NowPlayingItem?
     var volume: Int = 100
@@ -42,8 +44,10 @@ final class AppState {
     var activePlayerId: Int?
     var isCoreELEC: Bool = false
 
-    // Shared networking client — all ViewModels should use this instead of creating their own
-    let client = KodiClient()
+    // One immutable client/model pair per host session. Views never reconfigure it.
+    private(set) var client = KodiClient()
+    private(set) var remote = RemoteViewModel()
+    private(set) var connectionRevision = UUID()
 
     // Library update signal — set by WebSocket when VideoLibrary.OnUpdate fires
     var libraryUpdateSignal: Date?
@@ -52,11 +56,11 @@ final class AppState {
     var serverCapabilities: ServerCapabilities = ServerCapabilities()
 
     private let hostsKey = "saved_hosts"
+    private let defaults: UserDefaults
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         loadHosts()
-        // Migrate passwords from UserDefaults to Keychain (one-time)
-        KeychainService.migrateFromUserDefaults(hostIds: hosts.map(\.id))
     }
 
     var hasActivePlayer: Bool {
@@ -66,9 +70,11 @@ final class AppState {
     // MARK: - Host Management
 
     func loadHosts() {
-        if let data = UserDefaults.standard.data(forKey: hostsKey),
+        if let data = defaults.data(forKey: hostsKey),
            let decoded = try? JSONDecoder().decode([KodiHost].self, from: data) {
             hosts = decoded
+            // Migrate before taking the session's credential snapshot.
+            KeychainService.migrateFromUserDefaults(hostIds: hosts.map(\.id))
             currentHost = hosts.first { $0.isDefault } ?? hosts.first
             return
         }
@@ -79,7 +85,7 @@ final class AppState {
 
     func saveHosts() {
         if let encoded = try? JSONEncoder().encode(hosts) {
-            UserDefaults.standard.set(encoded, forKey: hostsKey)
+            defaults.set(encoded, forKey: hostsKey)
         }
     }
 
@@ -89,13 +95,16 @@ final class AppState {
     /// to surface a warning. We don't throw because the only failure mode is "already present"
     /// and the view layer wants to render a friendly message either way.
     @discardableResult
-    func addHost(_ host: KodiHost) -> Bool {
+    func addHost(_ host: KodiHost, password: String? = nil) -> Bool {
         if hosts.contains(where: { $0.address == host.address && $0.httpPort == host.httpPort }) {
             return false
         }
         var newHost = host
         if hosts.isEmpty {
             newHost.isDefault = true
+        }
+        if let password, !password.isEmpty {
+            KeychainService.setPassword(password, for: newHost.id)
         }
         hosts.append(newHost)
         saveHosts()
@@ -107,8 +116,11 @@ final class AppState {
 
     // MARK: - Update Host
 
-    func updateHost(_ host: KodiHost) {
+    func updateHost(_ host: KodiHost, password: String? = nil) {
         if let index = hosts.firstIndex(where: { $0.id == host.id }) {
+            if let password, !password.isEmpty {
+                KeychainService.setPassword(password, for: host.id)
+            }
             hosts[index] = host
             saveHosts()
             if host.id == currentHost?.id {
@@ -136,15 +148,30 @@ final class AppState {
         for i in hosts.indices {
             hosts[i].isDefault = (hosts[i].id == host.id)
         }
-        currentHost = host
+        currentHost = hosts.first { $0.id == host.id }
         saveHosts()
+    }
 
-        // Reset connection state when switching hosts
-        connectionState = .disconnected
+    private func replaceConnection() {
+        let previousClient = client
+        remote.stopPolling()
+        client = KodiClient(host: currentHost)
+        remote = RemoteViewModel()
+        remote.configure(appState: self)
+        connectionRevision = UUID()
+
+        connectionState = currentHost == nil ? .disconnected : .connecting
         nowPlaying = nil
         activePlayerId = nil
+        volume = 100
+        isMuted = false
         isCoreELEC = false
         serverCapabilities = ServerCapabilities()
+        libraryUpdateSignal = nil
+
+        LiveActivityManager.shared.endActivity()
+        KodiConnectionManager.shared.configure(host: currentHost, client: client)
+        Task { await previousClient.cancelInFlightWork() }
     }
 }
 
