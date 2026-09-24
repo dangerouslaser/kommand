@@ -47,25 +47,43 @@ nonisolated enum KeychainService {
         return nil
     }
 
-    static func setPassword(_ password: String, for hostId: UUID) {
-        guard let data = password.data(using: .utf8) else { return }
+    /// Stores a password without deleting an existing value first.
+    ///
+    /// Returning the operation result lets migration retain its legacy copy when
+    /// Keychain is temporarily unavailable or the app is mis-entitled.
+    @discardableResult
+    static func setPassword(_ password: String, for hostId: UUID) -> Bool {
+        guard let data = password.data(using: .utf8) else { return false }
 
-        // Delete existing item first (update is more complex and this is simpler)
-        deletePassword(for: hostId)
-
-        let query: [String: Any] = [
+        let itemQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: serviceName,
             kSecAttrAccount as String: hostId.uuidString,
-            kSecAttrAccessGroup as String: accessGroup,
+            kSecAttrAccessGroup as String: accessGroup
+        ]
+
+        let updateAttributes: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
 
-        let status = SecItemAdd(query as CFDictionary, nil)
+        var status = SecItemUpdate(
+            itemQuery as CFDictionary,
+            updateAttributes as CFDictionary
+        )
+
+        if status == errSecItemNotFound {
+            var newItem = itemQuery
+            updateAttributes.forEach { newItem[$0.key] = $0.value }
+            status = SecItemAdd(newItem as CFDictionary, nil)
+        }
+
         if status != errSecSuccess {
             log.error("setPassword failed with OSStatus \(status) for host \(hostId.uuidString, privacy: .public)")
+            return false
         }
+
+        return true
     }
 
     static func deletePassword(for hostId: UUID) {
@@ -92,14 +110,21 @@ nonisolated enum KeychainService {
 
         guard !defaults.bool(forKey: migrationKey) else { return }
 
+        var migrationSucceeded = true
+
         for hostId in hostIds {
             let key = "password_\(hostId.uuidString)"
             if let password = defaults.string(forKey: key), !password.isEmpty {
-                setPassword(password, for: hostId)
-                defaults.removeObject(forKey: key)
+                if setPassword(password, for: hostId) {
+                    defaults.removeObject(forKey: key)
+                } else {
+                    migrationSucceeded = false
+                }
             }
         }
 
-        defaults.set(true, forKey: migrationKey)
+        if migrationSucceeded {
+            defaults.set(true, forKey: migrationKey)
+        }
     }
 }
