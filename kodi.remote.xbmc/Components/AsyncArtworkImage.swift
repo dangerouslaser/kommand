@@ -13,6 +13,11 @@ struct AsyncArtworkImage: View, Equatable {
     @State private var isLoading = false
     @State private var loadFailed = false
 
+    private struct LoadID: Hashable {
+        let path: String?
+        let hostID: UUID?
+    }
+
     static func == (lhs: AsyncArtworkImage, rhs: AsyncArtworkImage) -> Bool {
         lhs.path == rhs.path && lhs.host?.id == rhs.host?.id
     }
@@ -38,12 +43,19 @@ struct AsyncArtworkImage: View, Equatable {
                     .accessibilityHidden(true)
             }
         }
-        .task(id: path) {
+        .task(id: LoadID(path: path, hostID: host?.id)) {
             await loadImage()
         }
     }
 
     private func loadImage() async {
+        // State survives SwiftUI view updates. Clear the previous request's result
+        // before validating the new input so an item without artwork cannot keep
+        // displaying the preceding item's image.
+        loadedImage = nil
+        isLoading = false
+        loadFailed = false
+
         guard let path = path, !path.isEmpty, let host = host else {
             return
         }
@@ -53,18 +65,18 @@ struct AsyncArtworkImage: View, Equatable {
         }
 
         isLoading = true
-        loadFailed = false
+        let image = await ImageCacheService.shared.image(for: url, host: host)
 
-        if let image = await ImageCacheService.shared.image(for: url, host: host) {
-            await MainActor.run {
-                loadedImage = image
-                isLoading = false
-            }
+        // `.task(id:)` cancels the previous load when either the path or host
+        // changes. Do not allow that obsolete request to overwrite the new state.
+        guard !Task.isCancelled else { return }
+
+        if let image {
+            loadedImage = image
+            isLoading = false
         } else {
-            await MainActor.run {
-                isLoading = false
-                loadFailed = true
-            }
+            isLoading = false
+            loadFailed = true
         }
     }
 
