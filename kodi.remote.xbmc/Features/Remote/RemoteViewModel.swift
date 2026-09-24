@@ -99,6 +99,8 @@ final class RemoteViewModel {
     }
 
     private func startProgressPolling() {
+        guard isPolling, !Task.isCancelled else { return }
+        pollingTask?.cancel()
         pollingTask = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
@@ -138,6 +140,10 @@ final class RemoteViewModel {
     }
 
     private func startPollingFallback() {
+        guard isPolling, !Task.isCancelled else { return }
+        // Replace the progress loop when the notification stream finishes. Keeping
+        // the previous task alive would leak an idle loop on every fallback.
+        pollingTask?.cancel()
         pollingTask = Task {
             while !Task.isCancelled {
                 await updateNowPlaying()
