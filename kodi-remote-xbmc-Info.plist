@@ -8,7 +8,7 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Kommand needs to access your local network to connect to Kodi and Plex media servers.</string>
+	<string>Kommand needs to access your local network to connect to Kodi media servers.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 </dict>
