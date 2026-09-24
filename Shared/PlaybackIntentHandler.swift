@@ -252,12 +252,36 @@ enum PlaybackIntentHandler {
         request.httpBody = jsonData
 
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
 
-            if let httpResponse = response as? HTTPURLResponse {
-                return httpResponse.statusCode == 200
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                return false
             }
-            return false
+
+            guard let jsonObject = try? JSONSerialization.jsonObject(with: data),
+                  let json = jsonObject as? [String: Any],
+                  let result = json["result"],
+                  !(result is NSNull) else {
+                return false
+            }
+
+            // Kodi acknowledges stop and skip commands with a string (usually
+            // "OK"), while Player.Seek returns the updated player properties.
+            // In both cases an HTTP 200 can still contain a JSON-RPC error, so
+            // only accept the result shape expected for the command.
+            if let error = json["error"], !(error is NSNull) {
+                return false
+            }
+
+            switch method {
+            case "Player.Seek":
+                return result is [String: Any]
+            case "Player.Stop", "Player.GoTo":
+                return result is String
+            default:
+                return true
+            }
         } catch {
             return false
         }
