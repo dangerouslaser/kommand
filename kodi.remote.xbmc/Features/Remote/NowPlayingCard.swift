@@ -13,35 +13,34 @@ struct NowPlayingCard: View {
     @Environment(AppState.self) private var appState
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.themeColors) private var themeColors
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var isExpanded = false
     @State private var isSeeking = false
     @State private var seekProgress: Double = 0
     @AppStorage(AppStorageKeys.showDolbyVisionProfile) private var showDolbyVisionProfile = false
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    var flexibleHeight: Bool = false
 
     private var isIPad: Bool { horizontalSizeClass == .regular }
-    var flexibleHeight: Bool = false
     private var cardHeight: CGFloat { 180 }
     private let cornerRadius: CGFloat = DesignSystem.Radius.card
     private var contentPadding: CGFloat { isIPad ? 24 : 16 }
     private var posterWidth: CGFloat { item.type == .song ? (isIPad ? 128 : 64) : (isIPad ? 104 : 52) }
     private var posterHeight: CGFloat { item.type == .song ? (isIPad ? 128 : 64) : (isIPad ? 156 : 78) }
-
     private var isDarkMode: Bool { colorScheme == .dark }
+    private var metadata: NowPlayingMediaMetadata {
+        NowPlayingMediaMetadata(item: item, showDolbyVisionProfile: showDolbyVisionProfile)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Main hero card
             ZStack(alignment: .bottom) {
-                // Sizing element — Color.clear defines the ZStack size,
-                // backgroundView is in an overlay so it doesn't inflate it
                 Color.clear
                     .overlay {
-                        backgroundView
+                        NowPlayingArtworkBackground(item: item, host: appState.currentHost)
                     }
                     .clipped()
 
-                // Gradient overlay (lighter in light mode)
                 LinearGradient(
                     stops: isDarkMode ? [
                         .init(color: .clear, location: 0),
@@ -56,155 +55,15 @@ struct NowPlayingCard: View {
                     endPoint: .bottom
                 )
 
-                // Content overlay — compact, pinned to bottom by ZStack alignment
                 VStack(spacing: 8) {
+                    heroContent
 
-                    HStack(alignment: .bottom, spacing: 12) {
-                        // Small poster/album art thumbnail
-                        AsyncArtworkImage(path: item.artworkPath, host: appState.currentHost)
-                            .frame(width: posterWidth, height: posterHeight)
-                            .clipShape(RoundedRectangle(cornerRadius: item.type == .song ? 8 : 6))
-                            .shadow(color: .black.opacity(isDarkMode ? 0.5 : 0.3), radius: isDarkMode ? 8 : 6, x: 0, y: 4)
-
-                        // Title and badges
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(item.title)
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .lineLimit(2)
-
-                            if let subtitle = item.subtitle {
-                                Text(subtitle)
-                                    .font(.footnote)
-                                    .foregroundStyle(.white.opacity(0.7))
-                                    .lineLimit(1)
-                            }
-
-                            // Badges row
-                            if item.videoCodec != nil || item.hdrType != nil {
-                                HStack(spacing: 4) {
-                                    HeroBadge(text: colorspaceBadge, color: colorspaceBadgeColor)
-
-                                    if showDolbyVisionProfile && hasFEL {
-                                        HeroBadge(text: "FEL", color: .green)
-                                    }
-
-                                    if let resolution = formattedResolution {
-                                        HeroBadge(text: resolution)
-                                    }
-
-                                    if let audioCodec = item.audioCodec {
-                                        HeroBadge(text: formatAudioCodecShort(audioCodec))
-                                    }
-
-                                    if item.hasAtmos {
-                                        HeroBadge(text: "Atmos", color: .blue)
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer()
-
-                        // Play/Pause indicator button
-                        ZStack {
-                            Circle()
-                                .fill(.ultraThinMaterial)
-                                .frame(width: 36, height: 36)
-
-                            Image(systemName: item.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
-                        }
-                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
-                        .accessibilityLabel(item.isPlaying ? "Playing" : "Paused")
-                    }
-                    .padding(.horizontal, contentPadding)
-
-                    // Interactive progress/seek bar
-                    VStack(spacing: 4) {
-                        GeometryReader { geometry in
-                            let displayProgress = isSeeking ? seekProgress : item.progress
-
-                            ZStack(alignment: .leading) {
-                                // Track
-                                RoundedRectangle(cornerRadius: isSeeking ? 2.5 : 1.5)
-                                    .fill(.white.opacity(0.3))
-                                    .frame(height: isSeeking ? 5 : 3)
-
-                                // Progress
-                                RoundedRectangle(cornerRadius: isSeeking ? 2.5 : 1.5)
-                                    .fill(.white)
-                                    .frame(width: geometry.size.width * displayProgress, height: isSeeking ? 5 : 3)
-
-                                // Seek handle (visible when seeking)
-                                if isSeeking && onSeek != nil {
-                                    Circle()
-                                        .fill(.white)
-                                        .frame(width: 12, height: 12)
-                                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                                        .position(x: geometry.size.width * displayProgress, y: 2.5)
-                                }
-                            }
-                            .frame(height: isSeeking ? 5 : 3)
-                            .contentShape(Rectangle().size(width: geometry.size.width, height: 30))
-                            .accessibilityLabel("Playback progress")
-                            .accessibilityValue("\(Int(displayProgress * 100)) percent")
-                            .accessibilityHint("Drag to seek")
-                            .gesture(
-                                onSeek != nil ? DragGesture(minimumDistance: 0)
-                                    .onChanged { value in
-                                        if !isSeeking {
-                                            isSeeking = true
-                                            seekProgress = item.progress
-                                            HapticService.impact(.light)
-                                        }
-                                        let newProgress = max(0, min(1, value.location.x / geometry.size.width))
-                                        seekProgress = newProgress
-                                    }
-                                    .onEnded { value in
-                                        let finalProgress = max(0, min(1, value.location.x / geometry.size.width))
-                                        onSeek?(finalProgress)
-                                        HapticService.impact(.medium)
-                                        // Brief delay before hiding seek UI to show final position
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                            isSeeking = false
-                                        }
-                                    } : nil
-                            )
-                        }
-                        .frame(height: isSeeking ? 5 : 3)
-                        .animation(.easeInOut(duration: 0.15), value: isSeeking)
-
-                        // Time labels — use TimelineView only when playing to save battery
-                        if item.isPlaying && !isSeeking {
-                            TimelineView(.periodic(from: .now, by: 1.0)) { context in
-                                HStack {
-                                    Text(seekTimeDisplay(at: context.date).formattedDuration)
-                                        .font(.caption2)
-                                        .foregroundStyle(.white.opacity(0.6))
-
-                                    Spacer()
-
-                                    Text("-\(seekRemainingDisplay(at: context.date).formattedDuration)")
-                                        .font(.caption2)
-                                        .foregroundStyle(.white.opacity(0.6))
-                                }
-                            }
-                        } else {
-                            HStack {
-                                Text(seekTimeDisplay(at: Date()).formattedDuration)
-                                    .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.6))
-
-                                Spacer()
-
-                                Text("-\(seekRemainingDisplay(at: Date()).formattedDuration)")
-                                    .font(.caption2)
-                                    .foregroundStyle(.white.opacity(0.6))
-                            }
-                        }
-                    }
+                    NowPlayingProgressView(
+                        item: item,
+                        onSeek: onSeek,
+                        isSeeking: $isSeeking,
+                        seekProgress: $seekProgress
+                    )
                     .padding(.horizontal, contentPadding)
                     .padding(.bottom, contentPadding)
                 }
@@ -212,7 +71,6 @@ struct NowPlayingCard: View {
             .frame(minHeight: cardHeight, maxHeight: flexibleHeight ? .infinity : cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
-                // Subtle border in light mode or when theme requires it
                 if !isDarkMode {
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .stroke(Color.black.opacity(0.1), lineWidth: 0.5)
@@ -222,11 +80,15 @@ struct NowPlayingCard: View {
                 }
             }
 
-            // Expanded details (below the card)
             if isExpanded {
-                expandedContent
-                    .padding(.top, 12)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                NowPlayingDetailsView(
+                    item: item,
+                    showDolbyVisionProfile: showDolbyVisionProfile,
+                    onAudioStreamChange: onAudioStreamChange,
+                    onSubtitleChange: onSubtitleChange
+                )
+                .padding(.top, 12)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .contentShape(Rectangle())
@@ -240,6 +102,66 @@ struct NowPlayingCard: View {
         .accessibilityHint("Tap card to \(isExpanded ? "collapse" : "show") details")
     }
 
+    private var heroContent: some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            AsyncArtworkImage(path: item.artworkPath, host: appState.currentHost)
+                .frame(width: posterWidth, height: posterHeight)
+                .clipShape(RoundedRectangle(cornerRadius: item.type == .song ? 8 : 6))
+                .shadow(color: .black.opacity(isDarkMode ? 0.5 : 0.3), radius: isDarkMode ? 8 : 6, x: 0, y: 4)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.title)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+
+                if let subtitle = item.subtitle {
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+
+                if item.videoCodec != nil || item.hdrType != nil {
+                    HStack(spacing: 4) {
+                        HeroBadge(text: metadata.colorspaceBadge, color: metadata.colorspaceBadgeColor)
+
+                        if showDolbyVisionProfile && metadata.hasFEL {
+                            HeroBadge(text: "FEL", color: .green)
+                        }
+
+                        if let resolution = metadata.formattedResolution {
+                            HeroBadge(text: resolution)
+                        }
+
+                        if let audioCodec = item.audioCodec {
+                            HeroBadge(text: metadata.formatAudioCodecShort(audioCodec))
+                        }
+
+                        if item.hasAtmos {
+                            HeroBadge(text: "Atmos", color: .blue)
+                        }
+                    }
+                }
+            }
+
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 36, height: 36)
+
+                Image(systemName: item.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+            .accessibilityLabel(item.isPlaying ? "Playing" : "Paused")
+        }
+        .padding(.horizontal, contentPadding)
+    }
+
     private var accessibilityDescription: String {
         var description = "Now playing: \(item.title)"
         if let subtitle = item.subtitle {
@@ -248,343 +170,6 @@ struct NowPlayingCard: View {
         description += ". \(item.position.formattedDuration) of \(item.duration.formattedDuration)"
         description += item.isPlaying ? ". Playing" : ". Paused"
         return description
-    }
-
-    // MARK: - Seek Time Display
-
-    private func seekTimeDisplay(at date: Date) -> TimeInterval {
-        if isSeeking {
-            return seekProgress * Double(item.duration)
-        }
-        return item.estimatedPosition(at: date)
-    }
-
-    private func seekRemainingDisplay(at date: Date) -> TimeInterval {
-        if isSeeking {
-            return max(0, Double(item.duration) - seekProgress * Double(item.duration))
-        }
-        return item.estimatedRemainingTime(at: date)
-    }
-
-    // MARK: - Background View
-
-    @ViewBuilder
-    private var backgroundView: some View {
-        if let fanartPath = item.fanartPath, !fanartPath.isEmpty {
-            // Primary: Use fanart
-            AsyncArtworkImage(path: fanartPath, host: appState.currentHost)
-                .clipped()
-        } else if let artworkPath = item.artworkPath, !artworkPath.isEmpty {
-            // Fallback: Blurred and scaled poster
-            AsyncArtworkImage(path: artworkPath, host: appState.currentHost)
-                .blur(radius: 20)
-                .scaleEffect(1.2)
-                .clipped()
-        } else {
-            // Final fallback: Dark gradient
-            LinearGradient(
-                colors: [Color(white: 0.2), Color(white: 0.1)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-    }
-
-    // MARK: - Expanded Content
-
-    private var expandedContent: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Video info
-            if item.videoCodec != nil || item.videoWidth != nil {
-                DetailRow(
-                    icon: "film",
-                    label: "Video",
-                    value: videoInfoString
-                )
-            }
-
-            // Audio info
-            if item.audioCodec != nil {
-                DetailRow(
-                    icon: "speaker.wave.2",
-                    label: "Audio",
-                    value: formatAudioCodecFull(item.audioCodec, channels: item.audioChannels)
-                )
-            }
-
-            // Audio & Subtitle Pickers (grouped settings-style)
-            if (item.audioStreams.count > 1 && onAudioStreamChange != nil) ||
-               (!item.subtitles.isEmpty && onSubtitleChange != nil) {
-                Divider()
-
-                VStack(spacing: 0) {
-                    if item.audioStreams.count > 1, let onAudioStreamChange {
-                        AudioPicker(
-                            audioStreams: item.audioStreams,
-                            currentIndex: item.currentAudioStreamIndex,
-                            onSelect: onAudioStreamChange
-                        )
-
-                        // Separator if both pickers are shown
-                        if !item.subtitles.isEmpty, onSubtitleChange != nil {
-                            Rectangle()
-                                .fill(Color.primary.opacity(0.1))
-                                .frame(height: 0.5)
-                                .padding(.leading, 14)
-                        }
-                    }
-
-                    if !item.subtitles.isEmpty, let onSubtitleChange {
-                        SubtitlePicker(
-                            subtitles: item.subtitles,
-                            currentIndex: item.currentSubtitleIndex,
-                            isEnabled: item.subtitlesEnabled,
-                            onSelect: onSubtitleChange
-                        )
-                    }
-                }
-                .background(themeColors.secondaryFill)
-                .clipShape(RoundedRectangle(cornerRadius: DesignSystem.Radius.button))
-                .themeCardBorder(cornerRadius: DesignSystem.Radius.button)
-            }
-        }
-        .padding(.horizontal, 4)
-    }
-
-    // MARK: - Colorspace
-
-    private var colorspaceBadge: String {
-        if let hdr = item.hdrType, !hdr.isEmpty {
-            return formatHDR(hdr)
-        }
-        return "SDR"
-    }
-
-    private var colorspaceBadgeColor: Color {
-        guard let hdr = item.hdrType?.lowercased(), !hdr.isEmpty else {
-            return .white.opacity(0.6)
-        }
-        switch hdr {
-        case "dolbyvision": return .purple
-        case "hdr10", "hdr10plus": return .orange
-        case "hlg": return .green
-        default: return .orange
-        }
-    }
-
-    private func formatHDR(_ type: String) -> String {
-        switch type.lowercased() {
-        case "dolbyvision": return "DV"
-        case "hdr10": return "HDR10"
-        case "hdr10plus": return "HDR10+"
-        case "hlg": return "HLG"
-        default: return type.uppercased()
-        }
-    }
-
-    private var hasFEL: Bool {
-        item.dolbyVisionProfile?.contains("FEL") == true
-    }
-
-    // MARK: - Resolution
-
-    private var formattedResolution: String? {
-        guard let width = item.videoWidth, let height = item.videoHeight else { return nil }
-        if width >= 3840 {
-            return "4K"
-        } else if width >= 1920 {
-            return "1080p"
-        } else if width >= 1280 {
-            return "720p"
-        } else if width >= 720 {
-            return "480p"
-        }
-        return "\(width)x\(height)"
-    }
-
-    // MARK: - Video Info
-
-    private var videoInfoString: String {
-        var parts: [String] = []
-        if let codec = item.videoCodec {
-            parts.append(formatVideoCodec(codec))
-        }
-        if let width = item.videoWidth, let height = item.videoHeight {
-            parts.append("\(width)x\(height)")
-        }
-        if let hdr = item.hdrType, !hdr.isEmpty {
-            parts.append(formatHDRFull(hdr))
-        } else {
-            parts.append("SDR")
-        }
-        return parts.joined(separator: " • ")
-    }
-
-    private func formatHDRFull(_ type: String) -> String {
-        switch type.lowercased() {
-        case "dolbyvision":
-            if showDolbyVisionProfile, let dvProfile = item.dolbyVisionProfile {
-                return "DV \(dvProfile)"
-            }
-            return "DV"
-        case "hdr10": return "HDR10"
-        case "hdr10plus": return "HDR10+"
-        case "hlg": return "HLG"
-        default: return type.uppercased()
-        }
-    }
-
-    private func formatVideoCodec(_ codec: String) -> String {
-        switch codec.lowercased() {
-        case "hevc", "h265": return "HEVC"
-        case "h264", "avc": return "H.264"
-        case "av1": return "AV1"
-        case "vp9": return "VP9"
-        case "mpeg2video": return "MPEG-2"
-        default: return codec.uppercased()
-        }
-    }
-
-    // MARK: - Audio Info
-
-    private func formatAudioCodecShort(_ codec: String?) -> String {
-        guard let codec = codec else { return "" }
-        let lower = codec.lowercased()
-
-        if lower.contains("truehd") {
-            return "TrueHD"
-        } else if lower.contains("dts") {
-            if lower.contains("hd") || lower.contains("ma") {
-                return "DTS-HD"
-            } else if lower.contains("x") {
-                return "DTS:X"
-            }
-            return "DTS"
-        } else if lower.contains("eac3") || lower.contains("ec3") || lower.contains("ddp") {
-            return "DD+"
-        } else if lower.contains("ac3") || lower.contains("dolby") {
-            return "DD"
-        } else if lower.contains("aac") {
-            return "AAC"
-        } else if lower.contains("flac") {
-            return "FLAC"
-        } else if lower.contains("pcm") {
-            return "PCM"
-        }
-        return codec.uppercased()
-    }
-
-    private func formatAudioCodecFull(_ codec: String?, channels: Int?) -> String {
-        guard let codec = codec else { return "Unknown" }
-        let lower = codec.lowercased()
-
-        var name: String
-
-        if lower.contains("truehd") {
-            name = "Dolby TrueHD"
-        } else if lower.contains("dts") {
-            if lower.contains("hd") && lower.contains("ma") {
-                name = "DTS-HD Master Audio"
-            } else if lower.contains("hd") {
-                name = "DTS-HD"
-            } else if lower.contains("x") {
-                name = "DTS:X"
-            } else {
-                name = "DTS"
-            }
-        } else if lower.contains("eac3") || lower.contains("ec3") || lower.contains("ddp") {
-            name = "Dolby Digital Plus"
-        } else if lower.contains("ac3") {
-            name = "Dolby Digital"
-        } else if lower.contains("aac") {
-            name = "AAC"
-        } else if lower.contains("flac") {
-            name = "FLAC"
-        } else if lower.contains("pcm") {
-            name = "PCM"
-        } else {
-            name = codec.uppercased()
-        }
-
-        if let ch = channels {
-            let channelStr = formatChannels(ch)
-            name += " \(channelStr)"
-        }
-
-        if item.hasAtmos {
-            name += " (Atmos)"
-        }
-
-        return name
-    }
-
-    private func formatChannels(_ channels: Int) -> String {
-        switch channels {
-        case 1: return "1.0"
-        case 2: return "2.0"
-        case 6: return "5.1"
-        case 8: return "7.1"
-        default: return "\(channels)ch"
-        }
-    }
-}
-
-// MARK: - Hero Badge (for use on dark backgrounds)
-
-struct HeroBadge: View {
-    let text: String
-    var color: Color = .white.opacity(0.6)
-
-    var body: some View {
-        Text(text)
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.25), in: RoundedRectangle(cornerRadius: 3))
-            .foregroundStyle(color == .white.opacity(0.6) ? .white.opacity(0.8) : color)
-    }
-}
-
-// MARK: - Legacy CodecBadge (for expanded details)
-
-struct CodecBadge: View {
-    let text: String
-    var color: Color = .secondary
-
-    var body: some View {
-        Text(text)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.2), in: RoundedRectangle(cornerRadius: 4))
-            .foregroundStyle(color)
-    }
-}
-
-struct DetailRow: View {
-    let icon: String
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 16)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.caption)
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-        }
     }
 }
 
