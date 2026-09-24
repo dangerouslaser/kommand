@@ -48,7 +48,7 @@ A native iOS remote control app for [Kodi](https://kodi.tv) media center.
 ## Technical Details
 
 - **Swift 6** with strict concurrency
-- **SwiftUI** + `@Observable` macro — no Combine, no UIKit
+- **SwiftUI** + `@Observable` macro, with limited UIKit interoperability for system integrations
 - **Zero external dependencies** — pure SwiftUI + Foundation
 - **Actor-based networking** — JSON-RPC over HTTP with WebSocket notifications
 - **Request throttling** — concurrent Kodi request limiting for stability
