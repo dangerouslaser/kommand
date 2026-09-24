@@ -17,7 +17,7 @@ xcrun swiftc -swift-version 6 -default-isolation MainActor -parse-as-library \
     kodi.remote.xbmc/Core/Models/PVR.swift \
     kodi.remote.xbmc/Core/Models/NowPlaying.swift \
     kodi.remote.xbmc/Core/Networking/JSONRPCModels.swift \
-    kodi.remote.xbmc/Core/Networking/KodiClient.swift \
+    kodi.remote.xbmc/Core/Networking/KodiClient/*.swift \
     kodi.remote.xbmc/Core/Networking/WebSocketManager.swift \
     kodi.remote.xbmc/Core/Utilities/KeychainService.swift \
     kodi.remote.xbmc/Core/Utilities/Log.swift \
