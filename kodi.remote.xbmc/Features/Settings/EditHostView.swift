@@ -115,11 +115,7 @@ struct EditHostView: View {
         updatedHost.username = username.isEmpty ? nil : username
         updatedHost.macAddress = macAddress.isEmpty ? nil : macAddress
 
-        if !password.isEmpty {
-            KeychainService.setPassword(password, for: host.id)
-        }
-
-        appState.updateHost(updatedHost)
+        appState.updateHost(updatedHost, password: password)
         dismiss()
     }
 }

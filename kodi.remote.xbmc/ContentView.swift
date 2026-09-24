@@ -124,13 +124,16 @@ struct ContentView: View {
                 }
             }
         }
+        // Discard navigation, library state, and models tied to the previous session,
+        // including edits that retain the host's ID and password-only saves.
+        .id(appState.connectionRevision)
         .environment(appState)
         .environment(\.currentTheme, currentTheme)
         .environment(\.themeColors, themeColors)
         .preferredColorScheme(preferredColorScheme)
         .tint(themeColors.accent)
-        .task {
-            await connectAndDetect()
+        .task(id: appState.connectionRevision) {
+            await appState.remote.startPolling()
         }
     }
 
@@ -260,35 +263,6 @@ struct ContentView: View {
         UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 
-    private func connectAndDetect() async {
-        guard let host = appState.currentHost else { return }
-
-        await MainActor.run {
-            appState.connectionState = .connecting
-        }
-
-        let client = appState.client
-        await client.configure(with: host)
-
-        // Test connection
-        do {
-            _ = try await client.testConnection()
-            await MainActor.run {
-                appState.connectionState = .connected
-            }
-
-            // Check for CoreELEC
-            let isCoreELEC = await client.detectCoreELEC()
-            await MainActor.run {
-                appState.isCoreELEC = isCoreELEC
-                appState.serverCapabilities.isCoreELEC = isCoreELEC
-            }
-        } catch {
-            await MainActor.run {
-                appState.connectionState = .error(error.localizedDescription)
-            }
-        }
-    }
 }
 
 // MARK: - Onboarding

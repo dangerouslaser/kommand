@@ -47,11 +47,6 @@ final class PVRViewModel {
     func configure(appState: AppState) {
         self.appState = appState
         self.client = appState.client
-        if let host = appState.currentHost {
-            Task {
-                await client.configure(with: host)
-            }
-        }
     }
 
     // MARK: - PVR Availability

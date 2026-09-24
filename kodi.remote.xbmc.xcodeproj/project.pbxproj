@@ -13,6 +13,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		B7UT00012F2000000025C1DE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7A4EA662F0347870025C1DE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7A4EA6D2F0347870025C1DE;
+			remoteInfo = kodi.remote.xbmc;
+		};
 		B7LA00102F0347870025C1DE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B7A4EA662F0347870025C1DE /* Project object */;
@@ -38,6 +45,7 @@
 
 /* Begin PBXFileReference section */
 		B7A4EA6E2F0347870025C1DE /* kodi.remote.xbmc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = kodi.remote.xbmc.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7UT00022F2000000025C1DE /* kodi.remote.xbmcTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = kodi.remote.xbmcTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B7LA00002F0347870025C1DE /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		B7LA00032F0347870025C1DE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KommandLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -72,6 +80,11 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		B7UT00032F2000000025C1DE /* kodi.remote.xbmcTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = kodi.remote.xbmcTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +104,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7UT00042F2000000025C1DE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -100,6 +120,7 @@
 				B7A4EA702F0347870025C1DE /* kodi.remote.xbmc */,
 				B7LA00062F0347870025C1DE /* KommandLiveActivity */,
 				B7LA00072F0347870025C1DE /* Shared */,
+				B7UT00032F2000000025C1DE /* kodi.remote.xbmcTests */,
 				B7LA00162F0347870025C1DE /* Frameworks */,
 				B7A4EA6F2F0347870025C1DE /* Products */,
 			);
@@ -110,6 +131,7 @@
 			children = (
 				B7A4EA6E2F0347870025C1DE /* kodi.remote.xbmc.app */,
 				B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */,
+				B7UT00022F2000000025C1DE /* kodi.remote.xbmcTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -174,6 +196,29 @@
 			productReference = B7LA00052F0347870025C1DE /* KommandLiveActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		B7UT00052F2000000025C1DE /* kodi.remote.xbmcTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7UT000A2F2000000025C1DE /* Build configuration list for PBXNativeTarget "kodi.remote.xbmcTests" */;
+			buildPhases = (
+				B7UT00062F2000000025C1DE /* Sources */,
+				B7UT00042F2000000025C1DE /* Frameworks */,
+				B7UT00072F2000000025C1DE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B7UT00082F2000000025C1DE /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B7UT00032F2000000025C1DE /* kodi.remote.xbmcTests */,
+			);
+			name = kodi.remote.xbmcTests;
+			packageProductDependencies = (
+			);
+			productName = kodi.remote.xbmcTests;
+			productReference = B7UT00022F2000000025C1DE /* kodi.remote.xbmcTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -189,6 +234,10 @@
 					};
 					B7LA00042F0347870025C1DE = {
 						CreatedOnToolsVersion = 26.1;
+					};
+					B7UT00052F2000000025C1DE = {
+						CreatedOnToolsVersion = 26.1;
+						TestTargetID = B7A4EA6D2F0347870025C1DE;
 					};
 				};
 			};
@@ -208,6 +257,7 @@
 			targets = (
 				B7A4EA6D2F0347870025C1DE /* kodi.remote.xbmc */,
 				B7LA00042F0347870025C1DE /* KommandLiveActivityExtension */,
+				B7UT00052F2000000025C1DE /* kodi.remote.xbmcTests */,
 			);
 		};
 /* End PBXProject section */
@@ -221,6 +271,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B7LA000A2F0347870025C1DE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7UT00072F2000000025C1DE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -244,6 +301,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7UT00062F2000000025C1DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -251,6 +315,11 @@
 			isa = PBXTargetDependency;
 			target = B7LA00042F0347870025C1DE /* KommandLiveActivityExtension */;
 			targetProxy = B7LA00102F0347870025C1DE /* PBXContainerItemProxy */;
+		};
+		B7UT00082F2000000025C1DE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7A4EA6D2F0347870025C1DE /* kodi.remote.xbmc */;
+			targetProxy = B7UT00012F2000000025C1DE /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -309,7 +378,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -368,7 +437,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -386,14 +455,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = kodi.remote.xbmc/kodi.remote.xbmc.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = NVLAD3PLS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "kodi-remote-xbmc-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Kommand;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Kommand needs to access your local network to connect to Kodi and Plex media servers.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Kommand needs to access your local network to connect to Kodi media servers.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,14 +493,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = kodi.remote.xbmc/kodi.remote.xbmc.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = NVLAD3PLS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "kodi-remote-xbmc-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Kommand;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Kommand needs to access your local network to connect to Kodi and Plex media servers.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Kommand needs to access your local network to connect to Kodi media servers.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -460,7 +529,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = KommandLiveActivity/KommandLiveActivityExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = NVLAD3PLS3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "KommandLiveActivity-Info.plist";
@@ -490,7 +559,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = KommandLiveActivity/KommandLiveActivityExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = NVLAD3PLS3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "KommandLiveActivity-Info.plist";
@@ -511,6 +580,50 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B7UT000B2F2000000025C1DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NVLAD3PLS3;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = decent.mid.range.kommandTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/kodi.remote.xbmc.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/kodi.remote.xbmc";
+			};
+			name = Debug;
+		};
+		B7UT000C2F2000000025C1DE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NVLAD3PLS3;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = decent.mid.range.kommandTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/kodi.remote.xbmc.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/kodi.remote.xbmc";
 			};
 			name = Release;
 		};
@@ -540,6 +653,15 @@
 			buildConfigurations = (
 				B7LA000B2F0347880025C1DE /* Debug */,
 				B7LA000C2F0347880025C1DE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7UT000A2F2000000025C1DE /* Build configuration list for PBXNativeTarget "kodi.remote.xbmcTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7UT000B2F2000000025C1DE /* Debug */,
+				B7UT000C2F2000000025C1DE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
