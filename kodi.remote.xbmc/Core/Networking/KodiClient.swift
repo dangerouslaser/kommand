@@ -191,14 +191,14 @@ actor KodiClient {
     }
 
     func setAudioStream(playerId: Int, streamIndex: Int) async throws {
-        let _: EmptyResponse = try await send(method: "Player.SetAudioStream", params: [
+        let _: String = try await send(method: "Player.SetAudioStream", params: [
             "playerid": playerId,
             "stream": streamIndex
         ])
     }
 
     func setSubtitle(playerId: Int, subtitleIndex: Int) async throws {
-        let _: EmptyResponse = try await send(method: "Player.SetSubtitle", params: [
+        let _: String = try await send(method: "Player.SetSubtitle", params: [
             "playerid": playerId,
             "subtitle": subtitleIndex,
             "enable": true
@@ -206,7 +206,7 @@ actor KodiClient {
     }
 
     func disableSubtitles(playerId: Int) async throws {
-        let _: EmptyResponse = try await send(method: "Player.SetSubtitle", params: [
+        let _: String = try await send(method: "Player.SetSubtitle", params: [
             "playerid": playerId,
             "subtitle": "off"
         ])
@@ -335,7 +335,7 @@ actor KodiClient {
     }
 
     func setSettingValue(setting: String, value: Any) async throws {
-        let _: EmptyResponse = try await send(method: "Settings.SetSettingValue", params: [
+        let _: Bool = try await send(method: "Settings.SetSettingValue", params: [
             "setting": setting,
             "value": value
         ])
@@ -1151,4 +1151,3 @@ nonisolated enum KodiError: LocalizedError, Sendable {
         }
     }
 }
-
