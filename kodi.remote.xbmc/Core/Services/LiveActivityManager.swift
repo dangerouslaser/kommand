@@ -250,39 +250,41 @@ final class LiveActivityManager {
         guard self.generation == generation, !Task.isCancelled else { return }
         // Cache poster if artwork path changed
         if item.artworkPath != currentPosterPath {
-            currentPosterPath = item.artworkPath
-
             if let artworkPath = item.artworkPath,
                let url = host.imageURL(for: artworkPath) {
-                await cacheImage(from: url, to: AppGroupConstants.posterURL, host: host, maxWidth: 200, generation: generation)
+                if await cacheImage(from: url, to: AppGroupConstants.posterURL, host: host, maxWidth: 200, generation: generation) {
+                    currentPosterPath = artworkPath
+                }
             } else {
                 // No artwork - delete cached file
                 if let posterURL = AppGroupConstants.posterURL {
                     try? FileManager.default.removeItem(at: posterURL)
                 }
+                currentPosterPath = nil
             }
         }
 
         guard self.generation == generation, !Task.isCancelled else { return }
         // Cache fanart if fanart path changed
         if item.fanartPath != currentFanartPath {
-            currentFanartPath = item.fanartPath
-
             if let fanartPath = item.fanartPath,
                let url = host.imageURL(for: fanartPath) {
-                await cacheImage(from: url, to: AppGroupConstants.fanartURL, host: host, maxWidth: 400, generation: generation)
+                if await cacheImage(from: url, to: AppGroupConstants.fanartURL, host: host, maxWidth: 400, generation: generation) {
+                    currentFanartPath = fanartPath
+                }
             } else {
                 // No fanart - delete cached file
                 if let fanartURL = AppGroupConstants.fanartURL {
                     try? FileManager.default.removeItem(at: fanartURL)
                 }
+                currentFanartPath = nil
             }
         }
     }
 
     /// Download, resize, and cache image to App Group container
-    private func cacheImage(from url: URL, to fileURL: URL?, host: KodiHost, maxWidth: CGFloat, generation: UUID) async {
-        guard let fileURL = fileURL else { return }
+    private func cacheImage(from url: URL, to fileURL: URL?, host: KodiHost, maxWidth: CGFloat, generation: UUID) async -> Bool {
+        guard let fileURL = fileURL else { return false }
 
         do {
             var request = URLRequest(url: url)
@@ -299,20 +301,20 @@ final class LiveActivityManager {
             }
 
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard self.generation == generation, !Task.isCancelled else { return }
+            guard self.generation == generation, !Task.isCancelled else { return false }
 
             // Check HTTP response
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                return
+                return false
             }
 
             // Don't cache empty data
-            guard data.count > 100 else { return }
+            guard data.count > 100 else { return false }
 
             // Verify it's actually an image and resize it
             guard let originalImage = UIImage(data: data) else {
-                return
+                return false
             }
 
             // Resize image to fit widget constraints
@@ -320,7 +322,7 @@ final class LiveActivityManager {
 
             // Convert to JPEG for smaller file size
             guard let jpegData = resizedImage.jpegData(compressionQuality: 0.8) else {
-                return
+                return false
             }
 
             // Write to file with no file protection (needed for lock screen access)
@@ -332,8 +334,11 @@ final class LiveActivityManager {
                 ofItemAtPath: fileURL.path
             )
 
+            return true
+
         } catch {
             // Image caching failed silently
+            return false
         }
     }
 
