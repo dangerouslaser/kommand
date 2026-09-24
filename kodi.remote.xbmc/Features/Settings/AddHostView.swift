@@ -146,8 +146,7 @@ struct AddHostView: View {
         )
 
         Task {
-            let client = KodiClient()
-            await client.configure(with: host, password: password.isEmpty ? nil : password)
+            let client = KodiClient(host: host, password: password.isEmpty ? nil : password)
 
             do {
                 let success = try await client.testConnection()
@@ -176,15 +175,12 @@ struct AddHostView: View {
             macAddress: macAddress.isEmpty ? nil : macAddress
         )
 
-        let added = appState.addHost(host)
+        let added = appState.addHost(host, password: password)
         guard added else {
             showDuplicateAlert = true
             return
         }
 
-        if !password.isEmpty {
-            KeychainService.setPassword(password, for: host.id)
-        }
         dismiss()
     }
 }

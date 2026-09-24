@@ -24,11 +24,6 @@ final class KodiSettingsViewModel {
     func configure(host: KodiHost?, client: KodiClient) {
         self.host = host
         self.client = client
-        if let host = host {
-            Task {
-                await client.configure(with: host)
-            }
-        }
     }
 
     func loadSections() async {

@@ -85,13 +85,6 @@ struct DashboardTab: View {
             viewModel.configure(appState: appState)
             await viewModel.loadAll()
         }
-        .onChange(of: appState.currentHost?.id) { _, _ in
-            // Host changed - reconfigure client and reload
-            viewModel.configure(appState: appState)
-            Task {
-                await viewModel.refresh()
-            }
-        }
         .onChange(of: appState.libraryUpdateSignal) { _, _ in
             Task {
                 await viewModel.loadRecentlyAdded()

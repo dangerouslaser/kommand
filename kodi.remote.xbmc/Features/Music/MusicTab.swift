@@ -57,13 +57,6 @@ struct MusicTab: View {
                 await viewModel.loadSection(newSection)
             }
         }
-        .onChange(of: appState.currentHost?.id) { _, _ in
-            // Host changed - reconfigure client and reload
-            viewModel.configure(appState: appState)
-            Task {
-                await viewModel.refresh(section: selectedSection)
-            }
-        }
     }
 
     // MARK: - Recently Added

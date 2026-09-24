@@ -23,20 +23,20 @@ final class KodiConnectionManager {
 
     // MARK: - Configuration
 
-    /// Configure the connection manager with a host
-    func configure(with host: KodiHost) async {
-        // Tear down the previous client so its in-flight requests / WebSocket
-        // don't keep running for a host we no longer care about.
-        if let oldClient = self.client {
-            await oldClient.cancelInFlightWork()
+    /// AppState owns connection lifetimes; intents use the same session as the UI.
+    func configure(host: KodiHost?, client: KodiClient) {
+        currentHost = host
+        self.client = host == nil ? nil : client
+        setActivePlayer(id: nil)
+        if let host {
+            updateSharedDefaults(host: host)
+        } else if let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName) {
+            for key in [AppGroupConstants.hostAddressKey, AppGroupConstants.hostPortKey,
+                        AppGroupConstants.hostUsernameKey, AppGroupConstants.hostPasswordKey,
+                        "currentHostId"] {
+                defaults.removeObject(forKey: key)
+            }
         }
-
-        self.currentHost = host
-        self.client = KodiClient()
-        await client?.configure(with: host)
-
-        // Also update shared UserDefaults for widget
-        updateSharedDefaults(host: host)
     }
 
     /// Set the active player ID

@@ -7,13 +7,16 @@ import Foundation
 import os
 
 actor KodiClient {
-    private var host: KodiHost?
-    private var passwordOverride: String?
+    private let host: KodiHost?
+    private let password: String?
     private var session: URLSession
     private var requestId: Int = 0
     private var webSocketManager: WebSocketManager?
+    private var isCancelled = false
 
-    init() {
+    init(host: KodiHost? = nil, password: String? = nil) {
+        self.host = host
+        self.password = password ?? host.flatMap { KeychainService.getPassword(for: $0.id) }
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 120
@@ -23,11 +26,6 @@ actor KodiClient {
 
     // MARK: - Connection
 
-    func configure(with host: KodiHost, password: String? = nil) {
-        self.host = host
-        self.passwordOverride = password
-    }
-
     func testConnection() async throws -> Bool {
         let _: String = try await send(method: "JSONRPC.Ping")
         return true
@@ -36,15 +34,24 @@ actor KodiClient {
     // MARK: - WebSocket
 
     func connectWebSocket() async -> AsyncStream<JSONRPCNotification>? {
-        guard let host = host else { return nil }
-
-        webSocketManager = WebSocketManager()
-        return await webSocketManager?.connect(to: host)
+        guard !isCancelled, !Task.isCancelled, let host else { return nil }
+        let manager = WebSocketManager()
+        let previousManager = webSocketManager
+        webSocketManager = manager
+        await previousManager?.disconnect()
+        guard !isCancelled, !Task.isCancelled, webSocketManager === manager else { return nil }
+        let stream = await manager.connect(to: host, password: password)
+        guard !isCancelled, !Task.isCancelled, webSocketManager === manager else {
+            await manager.disconnect()
+            return nil
+        }
+        return stream
     }
 
     func disconnectWebSocket() async {
-        await webSocketManager?.disconnect()
+        let manager = webSocketManager
         webSocketManager = nil
+        await manager?.disconnect()
     }
 
     /// Cancel any in-flight HTTP requests and tear down the WebSocket. Use when
@@ -53,8 +60,9 @@ actor KodiClient {
     /// Named `cancelInFlightWork` (not `shutdown`) to avoid colliding with the
     /// `shutdown()` method that issues `System.Shutdown` to Kodi.
     func cancelInFlightWork() async {
-        await disconnectWebSocket()
+        isCancelled = true
         session.invalidateAndCancel()
+        await disconnectWebSocket()
     }
 
     var isWebSocketConnected: Bool {
@@ -71,6 +79,8 @@ actor KodiClient {
     }
 
     func send<T: Decodable & Sendable>(method: String, params: [String: Any] = [:]) async throws -> T {
+        try Task.checkCancellation()
+        guard !isCancelled else { throw CancellationError() }
         guard let host = host, let url = host.jsonRPCURL else {
             throw KodiError.notConnected
         }
@@ -81,8 +91,7 @@ actor KodiClient {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let username = host.username, !username.isEmpty {
-            let password = passwordOverride ?? KeychainService.getPassword(for: host.id) ?? ""
-            let credentials = "\(username):\(password)"
+            let credentials = "\(username):\(password ?? "")"
             if let data = credentials.data(using: .utf8) {
                 let base64 = data.base64EncodedString()
                 urlRequest.setValue("Basic \(base64)", forHTTPHeaderField: "Authorization")
@@ -93,6 +102,8 @@ actor KodiClient {
         urlRequest.httpBody = try encoder.encode(request)
 
         let (data, response) = try await session.data(for: urlRequest)
+        try Task.checkCancellation()
+        guard !isCancelled else { throw CancellationError() }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw KodiError.invalidResponse
